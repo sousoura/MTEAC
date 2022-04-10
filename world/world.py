@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from state import State
 
 
 class World(metaclass=ABCMeta):
