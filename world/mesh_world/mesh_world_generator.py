@@ -5,5 +5,5 @@ from world.mesh_world.mesh_state import Mesh_state as State
 
 class Concrete_world_generator(World_generator):
     def generate_a_world(self):
-        state = State()
+        state = State([[0, 0, 0], [0, 1, 0], [0, 0, 0]])
         return World(state)
