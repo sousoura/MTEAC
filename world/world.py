@@ -7,9 +7,13 @@ class World(metaclass=ABCMeta):
         self.state = state
 
     @abstractmethod
-    def evolution(self):
+    def evolution_a_turn(self):
         pass
 
     @abstractmethod
     def expansion(self):
+        pass
+
+    @abstractmethod
+    def evolution(self):
         pass
