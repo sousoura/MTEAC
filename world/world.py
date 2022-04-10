@@ -1,10 +1,11 @@
 from abc import ABCMeta, abstractmethod
+from state import State
 
 
-class world(metaclass=ABCMeta):
+class World(metaclass=ABCMeta):
     @abstractmethod
     def __init__(self, state):
-        pass
+        self.state = state
 
     @abstractmethod
     def evolution(self):
