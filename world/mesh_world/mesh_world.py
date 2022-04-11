@@ -29,8 +29,8 @@ class Mesh_world(World):
         for ones in move_list:
             map_line_index = ones[0]
             map_point_index = ones[1]
-            landform_map[map_line_index][map_point_index] = 0
-            landform_map[map_line_index][(map_point_index + 1) % len(landform_map[map_line_index])] = 1
+            landform_map[map_line_index][map_point_index] -= 1
+            landform_map[map_line_index][(map_point_index + 1) % len(landform_map[map_line_index])] += 1
 
         # 更新地图变化
         self.state.renew_map(landform_map)

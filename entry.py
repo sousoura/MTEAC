@@ -4,7 +4,7 @@ def get_generator(generator_file):
 
 
 def get_world(generator):
-    return generator.generate_a_world()
+    return generator.generate_a_world(3, 3, 2)
 
 
 def run():
