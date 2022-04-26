@@ -5,9 +5,16 @@ class Mesh_world(World):
     def __init__(self, state):
         super(Mesh_world, self).__init__(state)
 
+    # 时间推进一次
     def evolution_a_turn(self):
+        self.animal_action()
         self.landform_evolution()
 
+    # 一回合内的动物运动
+    def animal_action(self):
+        self.state.animal_action()
+
+    # 地图变化一次
     def landform_evolution(self):
         # 从状态中得到地图
         landform_map = self.state.get_map()
@@ -39,13 +46,16 @@ class Mesh_world(World):
         # 「可视化」输出
         for map_line in self.state.get_map():
             print(map_line)
+        self.state.print_show_creature()
         gate = input("按回车键继续 或输入x结束： ")
         if gate == 'x':
             return False
         return True
 
+    # 地图不断推进
     def evolution(self):
         gate = self.expansion()
+        # 用gate判断是否结束
         while gate:
             self.evolution_a_turn()
             gate = self.expansion()
