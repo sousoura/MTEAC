@@ -8,7 +8,7 @@ class World(metaclass=ABCMeta):
         self.state = state
 
     @abstractmethod
-    def evolution_a_turn(self):
+    def evolution_a_turn(self, gate):
         pass
 
     @abstractmethod

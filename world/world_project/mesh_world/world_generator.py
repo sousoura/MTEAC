@@ -20,7 +20,7 @@ class Concrete_world_generator(World_generator):
         ''' 如果不给定具体参数 就用默认的生成方法 '''
         if creature_para == "random_creature":
             ''' 这里生成生物表 '''
-            creature_list.append(Wolf([1, 1], 5))
+            creature_list.append(Wolf([1, 2], 5))
             creature_list.append(Human_being([3, 3], 5))
 
         else:
