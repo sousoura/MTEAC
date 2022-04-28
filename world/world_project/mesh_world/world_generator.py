@@ -1,8 +1,8 @@
 from world.world_generator import World_generator
 from world.world_project.mesh_world.world import Mesh_world as World
 from world.world_project.mesh_world.state import Mesh_state as State
-from world.world_project.mesh_world.entity.big_entity.big_creature.big_animal.wolf import Wolf
-from world.world_project.mesh_world.entity.big_entity.big_creature.big_animal.human.human_being import Human_being
+from world.world_project.mesh_world.entity.creature.animal.wolf import Wolf
+from world.world_project.mesh_world.entity.creature.animal.human.human_being import Human_being
 
 
 # 网格世界的世界生成器类
@@ -34,6 +34,10 @@ class Concrete_world_generator(World_generator):
             pass
         return State(terrain, terrain_size, creature_list, obj_list)
 
+    # 读档时用既有信息建造一个世界
+    def building_a_state(self, terrain, terrain_size, creature_list, obj_list):
+        return State(terrain, terrain_size, creature_list, obj_list)
+
     ''' 随机生成特定大小的网格世界 '''
     def randomMatrix(self, terrain_types_number, columns, rows):
         import random
@@ -43,3 +47,7 @@ class Concrete_world_generator(World_generator):
             for j in range(rows):
                 matrix[i].append(random.randrange(terrain_types_number))
         return matrix
+
+    # 以state构造世界
+    def generate_a_world_by_state(self, state):
+        return World(state)

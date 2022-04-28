@@ -1,4 +1,4 @@
-from world.entity.big_entity.big_creature.big_animal.human.human import Human
+from world.entity.creature.animal.human.human import Human
 
 
 class Human_being(Human):

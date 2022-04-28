@@ -3,12 +3,12 @@ from world.world_project.mesh_world.exhibitor import Exhibitor
 
 
 class Mesh_state(State):
-    def __init__(self, terrain, terrain_size, creatures, obj):
+    def __init__(self, terrain, terrain_size, creatures, objs):
         self.terrain = terrain
         self.terrain_size = terrain_size
         self.creatures = creatures
         self.things_position = self.get_things_position()
-        self.objects = obj
+        self.objects = objs
         self.exhibitor = Exhibitor(self.terrain_size, (1000, 1000))
 
     # 初始化位置字典
@@ -20,10 +20,6 @@ class Mesh_state(State):
             else:
                 things_position[tuple(creature.get_position())] = [creature]
         return things_position
-
-    # 返回地图的方法
-    def get_map(self):
-        return self.terrain[:]
 
     # 更新新地图
     def renew_map(self, new_map):
@@ -37,7 +33,9 @@ class Mesh_state(State):
                 # 玩家输入的键盘值控制的对象是谁
                 # 这里是有缺陷的 因为所有人类都会受影响 而不是某一个人类
                 if type(creature).__name__ == "Wolf":
-                    if player_cmd.split("_")[0] in ['left', 'right', 'up', 'down']:
+                    if not player_cmd:
+                        return
+                    elif player_cmd.split("_")[0] in ['left', 'right', 'up', 'down']:
                         cmd = ["go", player_cmd]
                     elif player_cmd.split("_")[0] == "eat":
                         cmd = player_cmd.split("_")
@@ -128,3 +126,19 @@ class Mesh_state(State):
     # 可视化 关闭时返回False
     def visualization(self):
         return self.exhibitor.display(self.terrain, self.things_position)
+
+    # 返回地图的方法
+    def get_terrain(self):
+        return self.terrain[:]
+
+    # 返回地图大小
+    def get_terrain_size(self):
+        return self.terrain_size
+
+    # 返回生物表
+    def get_creatures(self):
+        return self.creatures
+
+    # 返回物品表
+    def get_objects(self):
+        return self.objects

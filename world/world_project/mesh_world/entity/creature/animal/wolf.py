@@ -1,7 +1,7 @@
-from world.entity.big_entity.big_creature.big_animal.big_animal import Big_animal
+from world.entity.creature.animal.animal import Animal
 
 
-class Wolf(Big_animal):
+class Wolf(Animal):
     def __init__(self, position, life):
         super(Wolf, self).__init__(position, life)
 

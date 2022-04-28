@@ -1,4 +1,4 @@
-import entry
+from world_controller import World_controller
 
 # 程序入口
-entry.run()
+World_controller()

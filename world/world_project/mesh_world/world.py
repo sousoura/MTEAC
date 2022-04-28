@@ -5,11 +5,6 @@ class Mesh_world(World):
     def __init__(self, state):
         super(Mesh_world, self).__init__(state)
 
-    # 时间推进一次
-    def evolution_a_turn(self, player_cmd):
-        self.animal_action(player_cmd)
-        self.landform_evolution()
-
     # 一回合内的动物运动
     def animal_action(self, player_cmd):
         self.state.animal_action(player_cmd)
@@ -17,7 +12,7 @@ class Mesh_world(World):
     # 地图变化一次
     def landform_evolution(self):
         # 从状态中得到地图
-        landform_map = self.state.get_map()
+        landform_map = self.state.get_terrain()
 
         # 地图变化的规则
         # new_map = landform_map
@@ -42,26 +37,25 @@ class Mesh_world(World):
         # 更新地图变化
         self.state.renew_map(landform_map)
 
+    # 时间推进一次
     def expansion(self):
         # 「可视化」输出
-        for map_line in self.state.get_map():
-            print(map_line)
-        self.state.print_show_creature()
+        # for map_line in self.state.get_map():
+        #     print(map_line)
+        # self.state.print_show_creature()
+
         # gate = input("按回车键继续 或输入x结束： ")
-        # if gate == 'x':
-        #     return False
-        # return True
 
         return self.visualization()
 
     # 地图不断推进
-    def evolution(self):
-        player_cmd = self.expansion()
-        # 用gate判断是否结束
-        while player_cmd:
-            self.evolution_a_turn(player_cmd)
-            player_cmd = self.expansion()
+    def evolution(self, player_cmd=None):
+        self.animal_action(player_cmd)
+        self.landform_evolution()
 
     # 可视化 读入状态 由状态类实现 地形地图和生物列表 然后可视化
     def visualization(self):
         return self.state.visualization()
+
+    def get_state(self):
+        return self.state
