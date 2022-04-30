@@ -8,9 +8,5 @@ class World(metaclass=ABCMeta):
         self.state = state
 
     @abstractmethod
-    def expansion(self):
-        pass
-
-    @abstractmethod
     def evolution(self):
         pass

@@ -2,7 +2,9 @@ from world.world_generator import World_generator
 from world.world_project.mesh_world.world import Mesh_world as World
 from world.world_project.mesh_world.state import Mesh_state as State
 from world.world_project.mesh_world.entity.creature.animal.wolf import Wolf
+from world.world_project.mesh_world.entity.creature.animal.wolf_brain import Wolf_brain
 from world.world_project.mesh_world.entity.creature.animal.human.human_being import Human_being
+from world.world_project.mesh_world.entity.creature.animal.human.human_brain import Human_brain
 
 
 # 网格世界的世界生成器类
@@ -20,8 +22,8 @@ class Concrete_world_generator(World_generator):
         ''' 如果不给定具体参数 就用默认的生成方法 '''
         if creature_para == "random_creature":
             ''' 这里生成生物表 '''
-            creature_list.append(Wolf([1, 2], 5))
-            creature_list.append(Human_being([3, 3], 5))
+            creature_list.append(Wolf([1, 2], 5, brain=Wolf_brain()))
+            creature_list.append(Human_being([3, 3], 5, brain=Human_brain()))
 
         else:
             ''' 参数生成 '''

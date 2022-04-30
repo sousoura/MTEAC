@@ -45,6 +45,7 @@ class File_processor:
 
     @classmethod
     def load(cls, world_type_name, file_name, generator):
+        # 读取json字典的内容并结构化创建对象
         def json_to_state_obj(json_dict):
             terrain = json_dict["terrain"]
             terrain_size = tuple(json_dict["terrain_size"])
@@ -58,12 +59,17 @@ class File_processor:
             obj_list = json_dict["objects"]
             return generator.building_a_state(terrain, terrain_size, creature_list, obj_list)
 
+        # 读取json存档文件内容
         path = os.getcwd()  # 获取当前路径
         with open(path + "\\" + "world\\world_project" + "\\" + world_type_name +
                   "\\save\\" + file_name + ".json", "r") as save_file:
             json_str = save_file.read()
-            json_dict = json.loads(json_str)
-            state = json_to_state_obj(json_dict)
+
+        # json字符串转为字典
+        json_dict = json.loads(json_str)
+
+        # 根据字典结构化创建状态对象
+        state = json_to_state_obj(json_dict)
 
         print("Successful load.")
         return state

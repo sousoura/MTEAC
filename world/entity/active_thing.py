@@ -15,7 +15,3 @@ class Active_thing(metaclass=ABCMeta):  # 必须实现interface中的所有函�
     @abstractmethod
     def performing_an_act(self, perception):
         pass
-
-    @abstractmethod
-    def devise_an_act(self, command):
-        pass

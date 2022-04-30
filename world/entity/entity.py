@@ -7,10 +7,9 @@ from abc import ABCMeta, abstractmethod
 
 
 class Entity(metaclass=ABCMeta):
-    id = None
-
     def __init__(self, position):
         self.position = position
+        self.id = None
 
     def get_position(self):
         return self.position

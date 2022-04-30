@@ -8,8 +8,10 @@ from abc import ABCMeta, abstractmethod
 
 
 class Animal(Creature, Active_thing, metaclass=ABCMeta):
-    def __init__(self, position, life=5):
+
+    def __init__(self, position, life, brain):
         super(Animal, self).__init__(position, life)
+        self.brain = brain
 
     @abstractmethod
     def move(self, new_position):
@@ -18,3 +20,7 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
     @abstractmethod
     def get_perception(self, terrain, things_position):
         pass
+
+    # 想出一个行为
+    def devise_an_act(self, perception):
+        return self.brain.devise_an_act(perception, self)

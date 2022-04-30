@@ -2,8 +2,8 @@ from world.entity.creature.animal.animal import Animal
 
 
 class Wolf(Animal):
-    def __init__(self, position, life):
-        super(Wolf, self).__init__(position, life)
+    def __init__(self, position, life, brain):
+        super(Wolf, self).__init__(position, life, brain)
 
     def move(self, new_position):
         self.position = new_position
@@ -19,24 +19,8 @@ class Wolf(Animal):
         #             self.position[1] += 1
         pass
 
-    def devise_an_act(self, perception):
-        def find_running_direction(perception):
-            direction = "down"
-            if self.position[1] == len(perception[0]) - 1 and self.position[0] != 0:
-                direction = "left"
-            elif self.position[0] == 0 and self.position[1] != 0:
-                direction = "up"
-            elif self.position[1] == 0 and self.position[0] != len(perception[0][0]) - 1:
-                direction = "right"
-            elif self.position[0] == len(perception[0][0]) - 1 and self.position[1] != 0:
-                direction = "down"
-            return direction
-
-        def get_command(word):
-            return ['go', word]
-
-        direction = find_running_direction(perception)
-        return get_command(direction)
+    # def devise_an_act(self, perception):
+    #     return self.brain.devise_an_act(perception, self)
 
     # 得到感知
     def get_perception(self, terrain, things_position):

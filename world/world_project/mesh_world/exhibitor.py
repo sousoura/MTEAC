@@ -1,6 +1,6 @@
 class Exhibitor:
-    def __init__(self, terrain_size, win_size):
-        self.terrain_size = terrain_size
+    def __init__(self, world, win_size):
+        self.terrain_size = world.state.terrain_size
         self.win_size = win_size
         self.__init_exhibitor()
 
@@ -54,8 +54,10 @@ class Exhibitor:
 
         # 定义不同生物对应不同颜色
 
-    def display(self, terrain, things_position):
-        win_event = True
+    def display(self, world):
+        terrain = world.get_state().get_terrain()
+        things_position = world.get_state().get_things_position()
+        # win_event = True
 
         # 渲染
         # 画方块
