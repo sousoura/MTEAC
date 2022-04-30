@@ -1,5 +1,5 @@
 """
-    人类是能使用技能的大动物
+    人类是能使用技能 工具 会学习 有背包且有社会性的动物
 """
 
 from world.entity.creature.animal.animal import Animal

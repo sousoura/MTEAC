@@ -1,3 +1,10 @@
+"""
+    大脑可以用来思考和记忆
+        得出行动的策略
+        记忆情况
+"""
+
+
 from abc import ABCMeta, abstractmethod
 
 

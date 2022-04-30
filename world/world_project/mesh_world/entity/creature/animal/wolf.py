@@ -1,6 +1,12 @@
 from world.entity.creature.animal.animal import Animal
 
 
+"""
+    狼类 物种类
+    方法用于物种的内部影响
+"""
+
+
 class Wolf(Animal):
     def __init__(self, position, life, brain):
         super(Wolf, self).__init__(position, life, brain)

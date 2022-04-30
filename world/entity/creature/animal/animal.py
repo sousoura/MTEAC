@@ -1,5 +1,5 @@
 """
-    大动物是占据位置而且能运动的大生物
+    动物是会运动 会行动的生物
 """
 
 from world.entity.creature.creature import Creature

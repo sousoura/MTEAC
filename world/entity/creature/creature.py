@@ -1,5 +1,5 @@
 """
-    大生物是占据位置的生物
+    生物是有生命 会死亡的物体
 """
 
 from world.entity.entity import Entity

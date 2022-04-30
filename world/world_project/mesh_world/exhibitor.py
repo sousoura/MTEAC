@@ -1,4 +1,29 @@
+"""
+    展示器类
+    职能：窗口化和可视化都在这个类里头
+    属性：
+        地图大小
+        窗口大小
+        pygame
+        window对象
+        Point类
+        bg_color
+    方法：
+        两个用于初始化的方法
+            __init__
+            __init_exhibitor
+        display用于真正输出
+            本体为框架
+            真正需要编辑的在draw()里面
+                两个分别画地形和生物的工具方法 在draw中使用
+            其中detect_player_input用于渲染完毕后读取用户输入
+"""
+
+
 class Exhibitor:
+    """
+        初始化在__init__和__init_exhibitor中
+    """
     def __init__(self, world, win_size):
         self.terrain_size = world.state.terrain_size
         self.win_size = win_size
@@ -50,28 +75,16 @@ class Exhibitor:
 
         # 定义颜色
         self.bg_color = (255, 255, 255)
-        # 定义不同地形对应不同颜色
 
-        # 定义不同生物对应不同颜色
-
+    """
+        展示的框架
+    """
     def display(self, world):
         terrain = world.get_state().get_terrain()
         things_position = world.get_state().get_things_position()
         # win_event = True
 
-        # 渲染
-        # 画方块
-        # 画背景
-        self.pygame.draw.rect(self.window, self.bg_color, (0, 0, self.win_size[0], self.win_size[1]))
-
-        # 画地形
-        for block_line_index in range(len(terrain)):
-            for block_index in range(len(terrain[block_line_index])):
-                self.draw_terrain((block_index, block_line_index), terrain[block_line_index][block_index])
-
-        # 画生物
-        for position in things_position:
-            self.draw_creatures(position, things_position[position])
+        self.draw(terrain, things_position)
 
         # 让渡控制权
         self.pygame.display.flip()
@@ -81,6 +94,52 @@ class Exhibitor:
 
         return self.detect_player_input("")
 
+    """
+        画图
+    """
+    def draw(self, terrain, things_position):
+        def draw_terrain(position, terrain_type):
+            # 根据一个数字得到一个随机颜色 确保同一数字得到的总是同一颜色
+            def get_terrain_color(terrain_num):
+                import random
+                random.seed(terrain_num)
+                r = random.randrange(0, 255)
+                g = random.randrange(0, 255)
+                b = random.randrange(0, 255)
+                return r, g, b
+
+            self.Point(self, row=position[1], col=position[0]).rect(get_terrain_color(terrain_type))
+
+        def draw_creatures(position, creatures):
+            def get_creature_color(creature):
+                import random
+                # 强行将类名字符串转化为ord数字 作为种子
+                random.seed(''.join(map(str, map(ord, type(creature).__name__))))
+                r = random.randrange(0, 255)
+                g = random.randrange(0, 255)
+                b = random.randrange(0, 255)
+                return r, g, b
+
+            for creature in creatures:
+                self.Point(self, row=position[1], col=position[0]).mid_rect(get_creature_color(creature))
+
+        # 渲染
+        # 画方块
+        # 画背景
+        self.pygame.draw.rect(self.window, self.bg_color, (0, 0, self.win_size[0], self.win_size[1]))
+
+        # 画地形
+        for block_line_index in range(len(terrain)):
+            for block_index in range(len(terrain[block_line_index])):
+                draw_terrain((block_index, block_line_index), terrain[block_line_index][block_index])
+
+        # 画生物
+        for position in things_position:
+            draw_creatures(position, things_position[position])
+
+    """
+        检测玩家输入 玩家输入之前不会跳出循环 可能递归
+    """
     def detect_player_input(self, last_code):
         # 等待按键 否则一直在循环里
         door = True
@@ -111,28 +170,3 @@ class Exhibitor:
                         door = False
 
         return last_code
-
-    def draw_terrain(self, position, terrain_type):
-        # 根据一个数字得到一个随机颜色 确保同一数字得到的总是同一颜色
-        def get_terrain_color(terrain_num):
-            import random
-            random.seed(terrain_num)
-            r = random.randrange(0, 255)
-            g = random.randrange(0, 255)
-            b = random.randrange(0, 255)
-            return r, g, b
-
-        self.Point(self, row=position[1], col=position[0]).rect(get_terrain_color(terrain_type))
-
-    def draw_creatures(self, position, creatures):
-        def get_creature_color(creature):
-            import random
-            # 强行将类名字符串转化为ord数字 作为种子
-            random.seed(''.join(map(str, map(ord, type(creature).__name__))))
-            r = random.randrange(0, 255)
-            g = random.randrange(0, 255)
-            b = random.randrange(0, 255)
-            return r, g, b
-
-        for creature in creatures:
-            self.Point(self, row=position[1], col=position[0]).mid_rect(get_creature_color(creature))

@@ -47,6 +47,15 @@ class Mesh_state(State):
     def renew_map(self, new_map):
         self.terrain = new_map
 
+    """
+        输入  player_cmd：玩家指令 为字符串 格式是"第一段_第二段_第三段_..."
+            中间的if 如果该生物被判断为是玩家控制的 就会使用玩家指令 否则就使用大脑返回的指令
+            指令分段 不同段用_隔开
+                第一段是类型 目前只有eat和go
+                    go的第二段是四个方向中的一个
+                    eat的第二段也是 作为吃这个动作的方向 第三段是吃的对象 不过还没有实现
+        效果  某个动作被执行的效果
+    """
     # 更新动物行为
     # 一回合内的动物运动
     def animal_action(self, player_cmd):
@@ -75,7 +84,7 @@ class Mesh_state(State):
             else:
                 del creature
 
-    # 分析生物行动命令 并调用相应的执行函数
+    # 分析生物行动命令的基本类型 并调用相应的执行函数
     def creature_act(self, creature, command):
         if command[0] == 'go':
             self.moving_position(creature, command[1])
@@ -83,6 +92,10 @@ class Mesh_state(State):
             # 动物吃生物
             self.creature_eating(creature, command[1])
 
+    """
+        输入  某个生物实例 移动的方向
+        效果  会分析移动是否合法 如果合法 则移动之 改变生物的位置状态并更新位置表 反之 不移动之
+    """
     # 生物移动 外部和内部执行
     def moving_position(self, creature, direction):
         # 得到新位置后移动到新位置
@@ -186,7 +199,7 @@ class Mesh_state(State):
 
     # 生物吃
     '''
-        结构为：吃的主体 方向 客体
+        输入      吃的主体 方向 客体
     '''
     def creature_eating(self, eator, eat_direction, be_eator=0):
         eat_position = self.position_and_direction_get_new_position(eator.get_position(), eat_direction)

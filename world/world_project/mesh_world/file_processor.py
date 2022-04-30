@@ -6,11 +6,15 @@ from world.world_project.mesh_world.entity.creature.animal.human.human_brain imp
 
 """
     文件处理类
-    读档和存档之类的 所有和储存读取相关的都在这类
+    职能：读档和存档之类的 所有和储存读取相关的都在这类
 """
 
 
 class File_processor:
+    """
+        结构化存档方法 需要特异性构造结构化函数
+        待改进：实例存档器
+    """
     # 存档
     @classmethod
     def archive(cls, state, world_type_name, file_name):
@@ -50,6 +54,10 @@ class File_processor:
 
         print("Successful archive.")
 
+    """
+        结构化读档方法 需要特异性构造结构化函数
+        待改进：实例读档器
+    """
     @classmethod
     def load(cls, world_type_name, file_name, generator):
         # 读取json字典的内容并结构化创建对象

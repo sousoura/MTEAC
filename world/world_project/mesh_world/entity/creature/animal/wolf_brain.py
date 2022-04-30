@@ -1,6 +1,11 @@
 from world.entity.creature.animal.brain import Brain
 
 
+"""
+    狼这个物种的大脑 放ai的地方
+"""
+
+
 class Wolf_brain(Brain):
     def devise_an_act(self, perception, self_information):
         """

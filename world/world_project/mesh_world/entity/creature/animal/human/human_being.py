@@ -1,6 +1,12 @@
 from world.entity.creature.animal.human.human import Human
 
 
+"""
+    人类类 物种类
+    方法用于物种的行为的内部影响
+"""
+
+
 class Human_being(Human):
     def __init__(self, position, life, brain):
         super(Human, self).__init__(position, life, brain)
