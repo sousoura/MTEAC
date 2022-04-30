@@ -1,6 +1,12 @@
 from world.world import World
 
 
+"""
+    网格世界类
+        状态类型为网格状态的世界
+"""
+
+
 class Mesh_world(World):
     def __init__(self, state):
         super(Mesh_world, self).__init__(state)

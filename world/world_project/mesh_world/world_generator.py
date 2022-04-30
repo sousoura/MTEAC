@@ -7,6 +7,13 @@ from world.world_project.mesh_world.entity.creature.animal.human.human_being imp
 from world.world_project.mesh_world.entity.creature.animal.human.human_brain import Human_brain
 
 
+"""
+    世界类型为网格世界的世界的世界生成器
+        世界生成器的职能为生成或初始化世界和状态
+        把数据或任何东西变成世界或状态对象
+"""
+
+
 # 网格世界的世界生成器类
 class Concrete_world_generator(World_generator):
     def generate_a_world(self, terrain_types_number, terrain_size, creature_para, obj_para):
@@ -44,9 +51,9 @@ class Concrete_world_generator(World_generator):
     def randomMatrix(self, terrain_types_number, columns, rows):
         import random
         matrix = []
-        for i in range(columns):
+        for i in range(rows):
             matrix.append([])
-            for j in range(rows):
+            for j in range(columns):
                 matrix[i].append(random.randrange(terrain_types_number))
         return matrix
 

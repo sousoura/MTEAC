@@ -1,13 +1,47 @@
 from world.state import State
 
 
+"""
+    网格状态
+        其具有属性：
+            地形               用两层列表表示的方块的网格的世界
+                地形大小        网格世界的大小
+            生物列表            生物对象的列表
+                位置-生物字典   由位置找到位置上的生物的字典
+            物品列表            存物品对象的列表
+        网格世界的方法全都有关于状态的修改或状态
+            一回合内各个属性的变化的方法
+                动物行为 animal_action和creature_act
+                    动物移动        moving_position
+                    动物吃          creature_eating
+                地形变化            (去掉了)
+                ...
+            更新属性的方法
+                renew_map
+            规定空间属性的方法
+                规定「相邻」的方法   position_and_direction_get_adjacent
+            得到某生物的类型的方法    print_show_creature（注释掉了）
+            得到状态属性的方法
+                得到各个属性的方法   
+                初始化位置词典的方法  init_things_position
+"""
+
+
 class Mesh_state(State):
     def __init__(self, terrain, terrain_size, creatures, objs):
+        """
+        :param terrain:         类型：二维数组 值为int      意义表示：每个值都是整形 表示高低地形 数字越高地形越高
+        :param terrain_size:    类型：二元元组             意义表示：地图大小 第0个值是行数 第1个值是列数
+        :param creatures:       类型：列表 值为生物对象      意义表示：世界中的所有生物
+        :param objs:            类型：列表 值为物品对象      意义表示：世界中的所有物品
+        """
         self.terrain = terrain
         self.terrain_size = terrain_size
         self.creatures = creatures
-        self.things_position = self.init_things_position()
         self.objects = objs
+
+        # 得到位置字典 方便根据位置找到生物 而不必总是遍历生物表 以空间换时间
+        self.things_position = self.init_things_position()
 
     # 更新新地图
     def renew_map(self, new_map):
@@ -20,7 +54,7 @@ class Mesh_state(State):
         for creature in self.creatures:
             # 判断生物是否死亡
             if not creature.is_die():
-                cmd = creature.devise_an_act(self.get_perception(creature))
+                cmd = creature.devise_an_act(creature.get_perception(self.terrain, self.things_position))
                 # 玩家输入的键盘值控制的对象是谁
                 # 这里是有缺陷的 因为所有人类都会受影响 而不是某一个人类
                 '''
@@ -40,10 +74,6 @@ class Mesh_state(State):
                 self.creature_act(creature, cmd)
             else:
                 del creature
-
-    # 得到特定某个动物的感知
-    def get_perception(self, creature):
-        return creature.get_perception(self.terrain, self.things_position)
 
     # 分析生物行动命令 并调用相应的执行函数
     def creature_act(self, creature, command):
@@ -182,10 +212,10 @@ class Mesh_state(State):
         else:
             pass
 
-    # print生成生物位置
-    def print_show_creature(self):
-        for creature in self.creatures:
-            print(type(creature).__name__, creature.get_position())
+    # # print生成生物位置
+    # def print_show_creature(self):
+    #     for creature in self.creatures:
+    #         print(type(creature).__name__, creature.get_position())
 
     # 返回地图的方法
     def get_terrain(self):
