@@ -24,6 +24,7 @@ class Wolf(Animal):
 
     # 得到感知
     def get_perception(self, terrain, things_position):
+
         return tuple(terrain), things_position
 
     def die(self):

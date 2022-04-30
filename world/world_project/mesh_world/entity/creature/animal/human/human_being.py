@@ -21,6 +21,7 @@ class Human_being(Human):
         感知的结构： 整个是一个元组 其中：一个元组表示地形 另一个字典表示生物表
     '''
     def get_perception(self, terrain, things_position):
+
         return tuple(terrain), things_position
 
     def die(self):
