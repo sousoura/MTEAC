@@ -1,10 +1,6 @@
 from world.world_generator import World_generator
 from world.world_project.mesh_world.mods import *
-from world.world_project.mesh_world.entity.creature.animal.wolf import Wolf
-from world.world_project.mesh_world.entity.creature.animal.wolf_brain import Wolf_brain
-from world.world_project.mesh_world.entity.creature.animal.human.human_being import Human_being
-from world.world_project.mesh_world.entity.creature.animal.human.human_brain import Human_brain
-
+from world.world_project.mesh_world.entity.mesh_entities import *
 
 """
     世界类型为网格世界的世界的世界生成器

@@ -1,4 +1,4 @@
-from world.entity.creature.animal.animal import Animal
+from world.entity.entity_import import *
 
 
 """

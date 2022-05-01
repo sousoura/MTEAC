@@ -1,10 +1,19 @@
 """
-    用于引入所有物种
-    待改进：物种自动引入器
+    物种自动引入器
 """
 
+import os
 
-from world.world_project.mesh_world.entity.creature.animal.wolf import Wolf
-from world.world_project.mesh_world.entity.creature.animal.human.human_being import Human_being
-from world.world_project.mesh_world.entity.creature.animal.human.human_brain import Human_brain
-from world.world_project.mesh_world.entity.creature.animal.wolf_brain import Wolf_brain
+current_path = "world/world_project/mesh_world/entity"
+current_py = "mesh_entities.py"
+
+for root, dirs, files in os.walk(current_path):
+    for name in files:
+        if name[-3:] == ".py" and name != current_py:
+            class_name = name[: name.rfind(".py")].capitalize()
+            path = os.path.join(root, name).replace("/", ".").\
+                replace("..", ".").replace(".py", "").replace("\\", ".")
+
+            import_string = "from " + path + " import " + class_name
+            # print(import_string)
+            exec(import_string)
