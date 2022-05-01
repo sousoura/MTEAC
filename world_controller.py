@@ -130,6 +130,8 @@ class World_controller:
                 break
             elif cmd[0] == "save":
                 self.save(cmd[1])
+            elif cmd[0] == "stat":
+                print(self.statistics(cmd))
 
     """
         世界每运行一轮都会调用一次该方法 统计和可视化在这里进行
@@ -171,3 +173,60 @@ class World_controller:
         state = File_processor.load(world_type_name, file_name, self.generator)
         world = self.generator.generate_a_world_by_state(state)
         return world
+
+    """
+        统计数据 指定要统计的数据类型 筛选条件的分类 具体筛选条件（以数组形式）
+        数据类型：num, avg_life
+        筛选条件的分类，用哈夫曼编码：
+            物种为1;
+            生命值为2;
+            饥饿值为4;
+            位置为8.
+        具体筛选条件以物种、生命值、饥饿值、位置的顺序排序，如没有则不用填，其中生命值、饥饿值为具体数值，位置暂时留在这里，尚未开发
+        例如:
+            stat num 3 Human_being 5  为查询生命值为5的人类的个数
+            stat num 1 Human_being 为查询人类的个数
+    """
+    # 统计数据
+    def statistics(self, cmd):
+        # 这里默认了所有世界都有生物
+        creatures = self.world.state.creatures
+        num = 0
+        sum_life = 0
+        for creature in creatures:
+            pos = len(cmd) - 1
+            # 对于未死亡的生物，进行大量的筛选
+            if not creature.is_die():
+                cmd_num = int(cmd[2])
+                if cmd_num >= 8:
+                    cmd_num -= 8
+                    # 进行位置的相关筛选
+                    pos -= 1
+                if cmd_num >= 4:
+                    cmd_num -= 4
+                    # 进行饥饿值的相关筛选
+                    pos -= 1
+                if cmd_num >= 2:
+                    cmd_num -= 2
+                    # 进行生命值的相关筛选
+                    if creature.life != int(cmd[pos]):
+                        continue
+                    pos -= 1
+                if cmd_num >= 1:
+                    cmd_num -= 1
+                    # 进行物种的相关筛选
+                    if type(creature).__name__ != cmd[pos]:
+                        continue
+
+            # 走到这里，就完成了筛选
+            num += 1
+            if cmd[1] == "avg_life":
+                sum_life += creature.life
+
+        # 完成了遍历
+        if cmd[1] == "avg_life":
+            return sum_life/num
+        return num
+
+
+
