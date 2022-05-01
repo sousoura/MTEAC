@@ -1,6 +1,5 @@
 from world.world_generator import World_generator
-from world.world_project.mesh_world.world import Mesh_world as World
-from world.world_project.mesh_world.state import Mesh_state as State
+from world.world_project.mesh_world.mods import *
 from world.world_project.mesh_world.entity.creature.animal.wolf import Wolf
 from world.world_project.mesh_world.entity.creature.animal.wolf_brain import Wolf_brain
 from world.world_project.mesh_world.entity.creature.animal.human.human_being import Human_being

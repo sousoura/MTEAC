@@ -1,6 +1,6 @@
 import importlib
 import threading
-from world.world_project.mesh_world.file_processor import File_processor
+from world.file_processor import File_processor
 from world.world_project.mesh_world.exhibitor import Exhibitor
 
 
@@ -78,6 +78,7 @@ class World_controller:
 
         # 读取命令 这个也可以用前端干
         entry_mode = input("Please choose world mode(generate or load): ")
+        # entry_mode = "load"
         world = None
         # 如果生成一个世界
         if entry_mode == "generate":
@@ -85,12 +86,14 @@ class World_controller:
                 待改进： 可以进一步询问生成参数
             """
             world_type_name = input("Please input world type name: ")
+            # world_type_name = "mesh_world"
             # 根据世界类型生成世界
             self.generator = get_generator(world_type_name)
             # 通过世界生成器生成世界
             world = get_world(self.generator)
         elif entry_mode == "load":
             world_type_name = input("Please input world type name: ")
+            # world_type_name = "mesh_world"
             world_name = input("Please input world name: ")
             self.generator = get_generator(world_type_name)
             world = self.load(world_type_name, world_name)
@@ -168,6 +171,6 @@ class World_controller:
     """
     # 读档
     def load(self, world_type_name, file_name):
-        state = File_processor.load(world_type_name, file_name, self.generator)
+        state = File_processor.load(world_type_name, file_name)
         world = self.generator.generate_a_world_by_state(state)
         return world

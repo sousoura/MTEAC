@@ -28,17 +28,17 @@ from world.state import State
 
 
 class Mesh_state(State):
-    def __init__(self, terrain, terrain_size, creatures, objs):
+    def __init__(self, terrain, terrain_size, creatures, objects):
         """
         :param terrain:         类型：二维数组 值为int      意义表示：每个值都是整形 表示高低地形 数字越高地形越高
         :param terrain_size:    类型：二元元组             意义表示：地图大小 第0个值是行数 第1个值是列数
         :param creatures:       类型：列表 值为生物对象      意义表示：世界中的所有生物
-        :param objs:            类型：列表 值为物品对象      意义表示：世界中的所有物品
+        :param objects:            类型：列表 值为物品对象      意义表示：世界中的所有物品
         """
         self.terrain = terrain
         self.terrain_size = terrain_size
         self.creatures = creatures
-        self.objects = objs
+        self.objects = objects
 
         # 得到位置字典 方便根据位置找到生物 而不必总是遍历生物表 以空间换时间
         self.things_position = self.init_things_position()
