@@ -7,7 +7,7 @@ from world.entity.entity_import import *
 """
 
 
-class Wolf(Animal):
+class Wolf(Animal, Big_obj):
     def __init__(self, position, life, brain):
         super(Wolf, self).__init__(position, life, brain)
 

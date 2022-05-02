@@ -1,4 +1,4 @@
-from world.entity.creature.animal.human.human import Human
+from world.entity.entity_import import *
 
 
 """
@@ -7,7 +7,7 @@ from world.entity.creature.animal.human.human import Human
 """
 
 
-class Human_being(Human):
+class Human_being(Human, Big_obj):
     def __init__(self, position, life, brain):
         super(Human, self).__init__(position, life, brain)
 

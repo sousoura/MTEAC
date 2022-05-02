@@ -4,16 +4,24 @@
 
 
 from abc import ABCMeta, abstractmethod
+from world.entity.id_maker import Id_maker
 
 
 class Entity(metaclass=ABCMeta):
     """
         编号生成器写在这里
     """
+    id_maker = Id_maker()
 
     def __init__(self, position):
         self.position = position
-        self.id = None
+        self.id = self.id_maker.make_id()
 
     def get_position(self):
         return self.position
+
+    def get_id(self):
+        return self.id
+
+    def is_id(self, in_id):
+        return self.id == in_id
