@@ -71,10 +71,16 @@ class World_controller:
             return generator_module.Concrete_world_generator()
 
         # 使用世界生成器参数化生成世界
-        def get_world(generator, maximum_height=30, map_size=(50, 50), creature_parameter="random_creature",
-                      obj_parameter="random_obj"):
+        def get_world(generator, maximum_height=30, map_size=(50, 50),
+                      creature_para="random_creature", obj_para="random_obj",
+                      water_para="default_water",
+                      landform_para="default_landform",
+                      terrain_para="default_terrain"):
             # 输入参数为 地形类型的数量 地图大小 生物生成参数 物品生成参数
-            return generator.generate_a_world(maximum_height, map_size, creature_parameter, obj_parameter)
+            return generator.generate_a_world(maximum_height=maximum_height
+                                              , map_size=map_size, creature_para=creature_para,
+                                              obj_para=obj_para, water_para=water_para,
+                                              landform_para=landform_para, terrain_para=terrain_para)
 
         # 读取命令 这个也可以用前端干
         # entry_mode = input("Please choose world mode(generate or load): ")

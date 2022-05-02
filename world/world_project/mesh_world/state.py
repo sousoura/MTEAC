@@ -1,12 +1,24 @@
-from world.state import State
-from world.entity.entity_import import *
+if __name__ == "__main__":
+    import sys
+    import os
 
+    CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]  # 当前目录
+    config_path = CURRENT_DIR.rsplit('\\', 2)[0]  # 上三级目录
+    sys.path.insert(0, config_path)
+    from state import State
+else:
+    from world.state import State
+    from world.entity.entity_import import *
 
 """
     网格状态
         其具有属性：
             地形               用两层列表表示的方块的网格的世界
-                地形大小        网格世界的大小
+                高低地形        某个格子的高度 目前用整数表示 以后会变成小数
+                水地图          某个地方的水高 水每回合会流动
+                地貌地形        某个格子是泥地 沙地还是石头地
+                植被表          某个各自的有没有树木 是不是草地
+                    地形大小     网格世界的大小
             生物列表            生物对象的列表
                 位置-生物字典   由位置找到位置上的生物的字典
             物品列表            存物品对象的列表
@@ -29,26 +41,32 @@ from world.entity.entity_import import *
 
 
 class Mesh_state(State):
-    def __init__(self, terrain, terrain_size, creatures, objects):
+    def __init__(self, landform_map, water_map, terrain_map, terrain_size, creatures, objects):
         """
-        :param terrain:         类型：二维数组 值为int      意义表示：每个值都是整形 表示高低地形 数字越高地形越高
+        :param landform_map:   类型：二维数组 值为int      意义表示：每个值都是整形 表示高低地形 数字越高地形越高
         :param terrain_size:    类型：二元元组             意义表示：地图大小 第0个值是行数 第1个值是列数
         :param creatures:       类型：列表 值为生物对象      意义表示：世界中的所有生物
         :param objects:         类型：列表 值为物品对象      意义表示：世界中的所有物品
         """
-        self.terrain = terrain
+        self.landform_map = landform_map
+        self.water_map = water_map
+        self.terrain_map = terrain_map
         self.terrain_size = terrain_size
         self.creatures = creatures
         self.objects = objects
+        self.legal_direction = ["up", "down", "left", "right"]
 
         # 得到位置字典 方便根据位置找到生物 而不必总是遍历生物表 以空间换时间
         self.things_position = self.init_things_position()
 
     # 更新新地图
     def renew_map(self, new_map):
-        self.terrain = new_map
+        self.landform_map = new_map
 
     """
+        ***
+            以下是动物的运动
+        ***
         输入  player_cmd：玩家指令 为字符串 格式是"第一段_第二段_第三段_..."
             中间的if 如果该生物被判断为是玩家控制的 就会使用玩家指令 否则就使用大脑返回的指令
             指令分段 不同段用_隔开
@@ -57,6 +75,7 @@ class Mesh_state(State):
                     eat的第二段也是 作为吃这个动作的方向 第三段是吃的对象 不过还没有实现
         效果  某个动作被执行的效果
     """
+
     # 更新动物行为
     # 一回合内的动物运动
     def animal_action(self, player_cmd):
@@ -64,7 +83,7 @@ class Mesh_state(State):
         for creature in self.creatures:
             # 判断生物是否死亡
             if not creature.is_die():
-                cmd = creature.devise_an_act(creature.get_perception(self.terrain, self.things_position))
+                cmd = creature.devise_an_act(creature.get_perception(self.landform_map, self.things_position))
                 # 玩家输入的键盘值控制的对象是谁
                 # 这里是有缺陷的 因为所有人类都会受影响 而不是某一个人类
                 '''
@@ -97,12 +116,14 @@ class Mesh_state(State):
         输入  某个生物实例 移动的方向
         效果  会分析移动是否合法 如果合法 则移动之 改变生物的位置状态并更新位置表 反之 不移动之
     """
+
     # 生物移动 外部和内部执行
     def moving_position(self, animal, direction):
         # 判断动作合法性方法
         def judge_action_validity(animal, old_position, new_position):
             # 判断落差是否大于生物的爬行能力
-            if abs(self.terrain[old_position[1]][old_position[0]] - self.terrain[new_position[1]][new_position[0]]) > \
+            if abs(self.landform_map[round(old_position[1])][round(old_position[0])] -
+                   self.landform_map[round(new_position[1])][round(new_position[0])]) > \
                     animal.get_crawl_ability():
                 return False
 
@@ -164,16 +185,16 @@ class Mesh_state(State):
             """
             if new_position:
                 # 移动格差过大 不合法
-                if abs(self.terrain[new_position[1]][new_position[0]] -
-                       self.terrain[old_position[1]][old_position[0]]) > 1:
+                if abs(self.landform_map[new_position[1]][new_position[0]] -
+                       self.landform_map[old_position[1]][old_position[0]]) > 1:
                     return False
                 # 升一格移动
-                elif self.terrain[new_position[1]][new_position[0]] - \
-                        self.terrain[old_position[1]][old_position[0]] == 1:
+                elif self.landform_map[new_position[1]][new_position[0]] - \
+                        self.landform_map[old_position[1]][old_position[0]] == 1:
                     return 2
                 # 降一格移动
-                elif self.terrain[new_position[1]][new_position[0]] - \
-                        self.terrain[old_position[1]][old_position[0]] == -1:
+                elif self.landform_map[new_position[1]][new_position[0]] - \
+                        self.landform_map[old_position[1]][old_position[0]] == -1:
                     return -2
                 # 同级移动
                 return True
@@ -216,28 +237,11 @@ class Mesh_state(State):
 
         return False
 
-    # 这里定义了相邻的概念
-    '''
-        输入的旧坐标不能在半格上
-    '''
-    def position_and_direction_get_adjacent(self, old_position, direction):
-        if direction == 'down':
-            if old_position[1] < self.terrain_size[1] - 1:
-                return old_position[0], old_position[1] + 1
-        elif direction == 'up':
-            if old_position[1] > 0:
-                return old_position[0], old_position[1] - 1
-        elif direction == 'right':
-            if old_position[0] < self.terrain_size[0] - 1:
-                return old_position[0] + 1, old_position[1]
-        elif direction == 'left':
-            if old_position[0] > 0:
-                return old_position[0] - 1, old_position[1]
-
     # 生物吃
     '''
         输入      吃的主体 方向 客体
     '''
+
     def creature_eating(self, eator, eat_direction, be_eator=0):
         eat_position = self.position_and_direction_get_new_position(eator.get_position(), eat_direction)
         '''
@@ -267,13 +271,140 @@ class Mesh_state(State):
     #     for creature in self.creatures:
     #         print(type(creature).__name__, creature.get_position())
 
+    """
+        ***
+            以下是水地图的更新
+        ***
+    """
+    def water_flow(self):
+        # 遍历水地图
+        for row_index in range(self.terrain_size[1]):
+            for col_index in range(self.terrain_size[0]):
+                # 若自身相对水高低于0.1 则被土地吸收
+                if self.water_map[row_index][col_index] < 0.1:
+                    self.water_map[row_index][col_index] = 0
+                    continue
+                # 得到自己的绝对水高
+                absolute_water_high = self.water_map[row_index][col_index] + self.landform_map[row_index][col_index]
+                # 得到所有合法方向的位置
+                """
+                    得到的位置的数据结构由输入的位置的数据结构决定
+                        故而此处是 (row_index, col_index)
+                """
+                adjacent_positions = []
+                for direction in self.legal_direction:
+                    adjacent_position = self.position_and_direction_get_adjacent((row_index, col_index), direction)
+                    if adjacent_position:
+                        adjacent_positions. \
+                            append(adjacent_position)
+                # 判断所有合法方向的绝对水高 并只保留可流的位置
+                """
+                    此处的数据结构： {位置：绝对水高}
+                """
+                adjacent_absolute_water_highs = {}
+                sum_absolute_water_high = absolute_water_high
+                for adjacent_position in adjacent_positions:
+                    adjacent_absolute_water_high = \
+                        self.water_map[adjacent_position[0]][adjacent_position[1]] + \
+                        self.landform_map[adjacent_position[0]][adjacent_position[1]]
+                    # 只保留高度更低的 因为水往低处流
+                    if adjacent_absolute_water_high < absolute_water_high:
+                        adjacent_absolute_water_highs[adjacent_position] = adjacent_absolute_water_high
+                        sum_absolute_water_high += adjacent_absolute_water_high
+
+                # 如果四面都更高则水不流
+                if len(adjacent_absolute_water_highs) == 0:
+                    continue
+
+                # 进行一个均值的求
+                avg_absolute_water_high = sum_absolute_water_high / (len(adjacent_absolute_water_highs) + 1)
+
+                # 若不可流平
+                if avg_absolute_water_high < self.landform_map[row_index][col_index]:
+                    # 当前剩余水量，流干为之
+                    current_water_amount = self.water_map[row_index][col_index]
+                    self.water_map[row_index][col_index] = 0
+                    while len(adjacent_absolute_water_highs) > 0 and current_water_amount > 0:
+                        # 等分水量
+                        equant_water_amount = current_water_amount / len(adjacent_absolute_water_highs)
+                        kill_positions = []
+                        for position in adjacent_absolute_water_highs:
+                            # 两边流平的情况
+                            if adjacent_absolute_water_highs[position] + equant_water_amount > \
+                                    self.landform_map[row_index][col_index]:
+                                # 流一个水差
+                                water_head = \
+                                    self.landform_map[row_index][col_index] - adjacent_absolute_water_highs[position]
+                                # if water_head < 0:
+                                #     water_head = 0
+                                current_water_amount -= water_head
+                                self.water_map[position[0]][position[1]] += water_head
+                                kill_positions.append(position)
+                            # 全给的情况
+                            else:
+                                current_water_amount -= equant_water_amount
+                                self.water_map[position[0]][position[1]] += equant_water_amount
+
+                        for position in kill_positions:
+                            adjacent_absolute_water_highs.pop(position)
+
+                        if current_water_amount < 0.01:
+                            current_water_amount = 0
+
+                # 若可流平
+                else:
+                    # 进行一个水的流
+                    # 流自己
+                    self.water_map[row_index][col_index] += \
+                        round(max(avg_absolute_water_high - absolute_water_high,
+                                  - self.water_map[row_index][col_index]), 3)
+
+                    self.water_map[row_index][col_index] = \
+                        round(self.water_map[row_index][col_index], 3)
+
+                    # 流相邻部分
+                    for position in adjacent_absolute_water_highs:
+                        self.water_map[position[0]][position[1]] += \
+                            max(avg_absolute_water_high -
+                                self.water_map[position[0]][position[1]] -
+                                self.landform_map[position[0]][position[1]],
+                                -self.water_map[position[0]][position[1]])
+                        self.water_map[position[0]][position[1]] = round(self.water_map[position[0]][position[1]], 3)
+
+    # 这里定义了相邻的概念
+    '''
+        输入的旧坐标不能在半格上
+    '''
+
+    def position_and_direction_get_adjacent(self, old_position, direction):
+        if direction == 'down':
+            if old_position[1] < self.terrain_size[1] - 1:
+                return old_position[0], old_position[1] + 1
+        elif direction == 'up':
+            if old_position[1] > 0:
+                return old_position[0], old_position[1] - 1
+        elif direction == 'right':
+            if old_position[0] < self.terrain_size[0] - 1:
+                return old_position[0] + 1, old_position[1]
+        elif direction == 'left':
+            if old_position[0] > 0:
+                return old_position[0] - 1, old_position[1]
+
     # 返回地图的方法
-    def get_terrain(self):
-        return self.terrain[:]
+    def get_landform_map(self):
+        return self.landform_map[:]
 
     # 返回地图大小
     def get_terrain_size(self):
         return self.terrain_size
+
+    # 返回水地图
+    def get_water_map(self):
+        return self.water_map[:]
+
+    # 返回地貌图
+    def get_terrain_map(self):
+        return self.terrain_map[:]
 
     # 返回生物表
     def get_creatures(self):
@@ -296,3 +427,27 @@ class Mesh_state(State):
             else:
                 things_position[tuple(creature.get_position())] = [creature]
         return things_position
+
+
+if __name__ == "__main__":
+    landform_map = [
+        [5, 5, 5, 5, 5],
+        [5, 1, 1, 1, 5],
+        [5, 1, 5, 1, 5],
+        [5, 1, 1, 1, 1],
+        [5, 5, 5, 5, 5],
+    ]
+    water_map = [
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1]
+    ]
+    terrain_size = (5, 5)
+    creatures = []
+    objects = []
+    state = Mesh_state(landform_map, water_map, terrain_size, creatures, objects)
+    while True:
+        state.water_flow()
+        input()

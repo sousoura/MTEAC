@@ -29,9 +29,9 @@ class Wolf(Animal, Big_obj):
     #     return self.brain.devise_an_act(perception, self)
 
     # 得到感知
-    def get_perception(self, terrain, things_position):
+    def get_perception(self, landform_map, things_position):
 
-        return tuple(terrain), things_position
+        return tuple(landform_map), things_position
 
     def die(self):
         self.life = 0

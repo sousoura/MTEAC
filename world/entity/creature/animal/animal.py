@@ -21,7 +21,7 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_perception(self, terrain, things_position):
+    def get_perception(self, landform_map, things_position):
         pass
 
     # 想出一个行为

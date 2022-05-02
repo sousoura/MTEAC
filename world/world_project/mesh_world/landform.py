@@ -6,7 +6,7 @@ from abc import ABCMeta, abstractmethod
 """
 
 
-class Topograph(metaclass=ABCMeta):
+class Landform(metaclass=ABCMeta):
     map_size = (0, 0)
 
     def __init__(self, position, degree_value, slope, scope):
@@ -16,7 +16,7 @@ class Topograph(metaclass=ABCMeta):
         self.scope = scope
 
     @classmethod
-    def init_new_topograph(cls):
+    def init_new_landform(cls):
         pass
 
     @classmethod
@@ -32,7 +32,7 @@ class Topograph(metaclass=ABCMeta):
         pass
 
 
-class Peak(Topograph):
+class Peak(Landform):
     peaks = []
     peaks_position = []
     peak_high_range = (2, 6)
@@ -47,7 +47,7 @@ class Peak(Topograph):
         self.peak_surface_size = peak_surface_size
 
     @classmethod
-    def init_new_topograph(cls):
+    def init_new_landform(cls):
         position = True
         while position in cls.peaks_position or position is True:
             position = (cls.random.randrange(cls.map_size[0]), cls.random.randrange(cls.map_size[1]))
@@ -55,8 +55,8 @@ class Peak(Topograph):
         peak_value = cls.random.randrange(cls.peak_high_range[0], cls.peak_high_range[1])
         peak_surface_size = cls.random.randrange(2, 5)
         # 上下左右的坡度
-        slope = cls.random.random() * 0.3
-        slope = cls.random.random() * 0.7
+        slope = cls.random.random() * 0.05
+        # slope = cls.random.random() * 0.7
         # 当影响小于这一值时 峰值失效
         scope = 1
 
@@ -77,7 +77,7 @@ class Peak(Topograph):
         cls.peak_high_range = high_range
 
 
-class Pit(Topograph):
+class Pit(Landform):
     pits = []
     pits_position = []
     pit_low_range = (-3, -1)
@@ -97,7 +97,7 @@ class Pit(Topograph):
             如果流向是向右下方的 就不会想左或上方走
     """
     @classmethod
-    def init_new_topograph(cls):
+    def init_new_landform(cls):
         class Pit_point():
             pass
 

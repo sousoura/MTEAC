@@ -1,4 +1,9 @@
-from world.world import World
+if __name__ == "main":
+    import sys
+    sys.path.append('../..')
+    from world import World
+else:
+    from world.world import World
 
 
 """
@@ -18,6 +23,7 @@ class Mesh_world(World):
     # 地图推进一次
     def evolution(self, player_cmd=None):
         self.state.animal_action(player_cmd)
+        self.state.water_flow()
         # self.state.landform_evolution()
 
     def get_state(self):
