@@ -1,4 +1,5 @@
 from world.state import State
+from world.entity.entity_import import *
 
 
 """
@@ -28,17 +29,17 @@ from world.state import State
 
 
 class Mesh_state(State):
-    def __init__(self, terrain, terrain_size, creatures, objs):
+    def __init__(self, terrain, terrain_size, creatures, objects):
         """
         :param terrain:         类型：二维数组 值为int      意义表示：每个值都是整形 表示高低地形 数字越高地形越高
         :param terrain_size:    类型：二元元组             意义表示：地图大小 第0个值是行数 第1个值是列数
         :param creatures:       类型：列表 值为生物对象      意义表示：世界中的所有生物
-        :param objs:            类型：列表 值为物品对象      意义表示：世界中的所有物品
+        :param objects:         类型：列表 值为物品对象      意义表示：世界中的所有物品
         """
         self.terrain = terrain
         self.terrain_size = terrain_size
         self.creatures = creatures
-        self.objects = objs
+        self.objects = objects
 
         # 得到位置字典 方便根据位置找到生物 而不必总是遍历生物表 以空间换时间
         self.things_position = self.init_things_position()
@@ -69,7 +70,7 @@ class Mesh_state(State):
                 '''
                     待引入id系统改进
                 '''
-                if type(creature).__name__ == "Wolf":
+                if creature.is_id(1):
                     # 判断是否输入指令
                     if not player_cmd:
                         return
@@ -97,7 +98,39 @@ class Mesh_state(State):
         效果  会分析移动是否合法 如果合法 则移动之 改变生物的位置状态并更新位置表 反之 不移动之
     """
     # 生物移动 外部和内部执行
-    def moving_position(self, creature, direction):
+    def moving_position(self, animal, direction):
+        # 判断动作合法性方法
+        def judge_action_validity(animal, old_position, new_position):
+            # 判断落差是否大于生物的爬行能力
+            if abs(self.terrain[old_position[1]][old_position[0]] - self.terrain[new_position[1]][new_position[0]]) > \
+                    animal.get_crawl_ability():
+                return False
+
+            # 判断目的地属性和自身是否相斥
+            # if animal.judge_geomorphic_compatibility(self.terrain[new_position[1]][new_position[0]]):
+            #     pass
+
+            # 如果该生物是大物体
+            if isinstance(animal, Big_obj):
+                # 大物体互斥规则
+                # 如果有大动物挡在前面
+                if new_position in self.things_position:
+                    for other_animal in self.things_position[new_position]:
+                        if isinstance(other_animal, Big_obj):
+                            return False
+
+                # if new_position in self.big_objs:
+                #     return False
+
+                # 禁止大物体进入的地貌 （已改为在相斥判断中的大物体类中进行判断）
+
+            # 该生物是小物体的情况
+            else:
+                pass
+                # 禁止一切物体进入的地貌（已改为在相斥判断中进行判断）
+
+            return True
+
         # 得到新位置后移动到新位置
         def normally_move_to_new_position(state, creature, old_position, new_position):
             if new_position in state.things_position:
@@ -109,13 +142,17 @@ class Mesh_state(State):
                 del state.things_position[old_position]
             creature.move(new_position)
 
-        old_position = tuple(creature.get_position())
+        old_position = tuple(animal.get_position())
         new_position = self.position_and_direction_get_new_position(old_position, direction)
-        # 判断移动的条件
+        """
+            条件判断不全在条件判断函数中 职能不够集中 待优化
+        """
         # 判断是否出界
         if new_position:
-            # 判断移动合法性
-            normally_move_to_new_position(self, creature, old_position, new_position)
+            # 判断移动的条件是否满足
+            if judge_action_validity(animal, old_position, new_position):
+                # 判断移动合法性
+                normally_move_to_new_position(self, animal, old_position, new_position)
 
     # old_position + direction = new_position
     def position_and_direction_get_new_position(self, old_position, direction):
