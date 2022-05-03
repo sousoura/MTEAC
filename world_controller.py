@@ -66,7 +66,11 @@ class World_controller:
         # 通过世界类型名得到相应的世界生成器
         def get_generator(generator_file):
             generator_file = 'world.world_project.' + generator_file + '.' + 'world_generator'
-            generator_module = importlib.import_module(generator_file)
+            try:
+                generator_module = importlib.import_module(generator_file)
+            except ModuleNotFoundError:
+                # can not find this type of world
+                return None
             # from world.mesh_world.mesh_world_generator import Concrete_world_generator as Generator
             return generator_module.Concrete_world_generator()
 
@@ -84,26 +88,32 @@ class World_controller:
                                               landform_para=landform_para, terrain_para=terrain_para)
 
         # 读取命令 这个也可以用前端干
-        # entry_mode = input("Please choose world mode(generate or load): ")
-        entry_mode = "generate"
+        entry_mode = input("Please choose world mode(generate or load): ")
+        while entry_mode not in ["generate", "load"]:
+            entry_mode = input("Input is illegal, please try again(generate or load): ")
+
+        # entry_mode = "generate"
         # entry_mode = "load"
+
+        world_type_name = input("Please input world type name: ")
+        # world_type_name = "mesh_world"
+        # 根据世界类型获取世界生成器
+        self.generator = get_generator(world_type_name)
+        while self.generator == None:
+            world_type_name = input("can not find this type of world, please input other world type name: ")
+            self.generator = get_generator(world_type_name)
+
         world = None
         # 如果生成一个世界
         if entry_mode == "generate":
             """
                 待改进： 可以进一步询问生成参数
             """
-            # world_type_name = input("Please input world type name: ")
-            world_type_name = "mesh_world"
-            # 根据世界类型生成世界
-            self.generator = get_generator(world_type_name)
             # 通过世界生成器生成世界
             world = get_world(self.generator)
         elif entry_mode == "load":
-            world_type_name = input("Please input world type name: ")
-            # world_type_name = "mesh_world"
             world_name = input("Please input world name: ")
-            self.generator = get_generator(world_type_name)
+            # 通过读档器读取世界
             world = self.load(world_type_name, world_name)
 
         return world
