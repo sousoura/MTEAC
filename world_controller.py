@@ -91,7 +91,6 @@ class World_controller:
         entry_mode = input("Please choose world mode(generate or load): ")
         while entry_mode not in ["generate", "load"]:
             entry_mode = input("Input is illegal, please try again(generate or load): ")
-
         # entry_mode = "generate"
         # entry_mode = "load"
 
