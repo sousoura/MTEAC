@@ -62,16 +62,16 @@ class Concrete_world_generator(World_generator):
             找到山峰 山脉 谷地 和 坑地的位置 然后生成地图
         """
         def generate_landform_map(landform_para, maximum_height, columns, rows,
-                                       peaks=None, mountains=None, valleys=None, pits=None):
+                                       peaks_para=None, mountains_para=None, valleys_para=None, pits_para=None):
             """
-                :param landform_para:
-                :param maximum_height:
-                :param columns:
-                :param rows:
-                :param peaks:
-                :param mountains:
-                :param valleys:
-                :param pits:
+                :param landform_para: 生成模式的参数 可以为字符串或元组 为字符串的话可以为"default_landform"之类的 为元组时为生成参数
+                :param maximum_height: 地图的最高高度
+                :param columns: 地图有几列
+                :param rows: 地图有几行
+                :param peaks_para:
+                :param mountains_para:
+                :param valleys_para:
+                :param pits_para:
                 :return:
 
                 eve在这里码代码 修改generate_landform_map函数 以及 landform类
@@ -88,7 +88,7 @@ class Concrete_world_generator(World_generator):
 
             import random
             from world.world_project.mesh_world.landform import Peak
-            # from landform import Pit
+            # from world.world_project.mesh_world.landform import Pit
 
             # 普通陆地高度
             normal_land_height = 3
@@ -98,7 +98,7 @@ class Concrete_world_generator(World_generator):
 
             if landform_para == "default_landform":
                 # 生成山峰们
-                if not peaks:
+                if not peaks_para:
                     peaks = []
                     # 决定山峰的数量 数量越多越接近山地 否则越接近平原
                     peaks_num = max(columns * rows // 1000, 1)
@@ -113,12 +113,16 @@ class Concrete_world_generator(World_generator):
                         peaks.append(Peak.init_new_landform())
 
                 # 生成坑地们
-                if not pits:
+                if not pits_para:
                     pits = []
 
+                """
+                    地形对地图的影响
+                    开始改3们
+                """
                 # 地形影响
-                for row_index in range(len(height_map)):
-                    for point_index in range(len(height_map[row_index])):
+                for row_index in range(columns):
+                    for point_index in range(rows):
                         affect_sum = 0
                         # 每个山峰对该点的影响
                         for peak in peaks:

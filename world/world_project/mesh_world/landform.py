@@ -68,11 +68,16 @@ class Peak(Landform):
         return cls.peaks[-1]
 
     def affect(self, point_position):
+        # 计算改点离山顶的距离
         distance = (point_position[0] - self.position[0]) ** 2 + (point_position[1] - self.position[1]) ** 2
+        # 计算山对改点的高度的影响
+        # 山顶的高度 减去距离乘以陡峭度
         affect = self.degree_value - distance * self.slope
+        # 如果影响为负 或太小 则取消该影响
         # self.degree_value = 6
         if affect < self.scope:
             affect = 0
+        # 返回影响的值
         return affect
 
     @classmethod
