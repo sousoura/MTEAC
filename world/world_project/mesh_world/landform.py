@@ -2,7 +2,10 @@ from abc import ABCMeta, abstractmethod
 
 
 """
-    使用 山峰 山脉 坑地 谷地的方法定义高低地形
+    使用 山峰Peak 山脉Ridge 坑地Pit 谷地Valley的方法定义高低地形
+    eve在这里码代码
+    山峰已经完成了 现在打算做另外三个
+        注意所有地形类型都继承Landform
 """
 
 

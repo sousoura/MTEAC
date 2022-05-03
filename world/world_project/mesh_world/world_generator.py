@@ -17,11 +17,37 @@ class Concrete_world_generator(World_generator):
         输入构建参数 生成状态 根据状态生成一个世界
         返回一个世界
     """
-    def generate_a_world(self, maximum_height, map_size, landform_para, water_para, terrain_para, creature_para, obj_para):
-        state = self.generate_a_state(maximum_height, map_size, landform_para, water_para, terrain_para, creature_para, obj_para)
+    def generate_a_world(self, maximum_height, map_size, landform_para, water_para, terrain_para,
+                         animals_para, plants_para, obj_para):
+        state = self.generate_a_state(maximum_height, map_size, landform_para, water_para, terrain_para,
+                                      animals_para, plants_para, obj_para)
         return World(state)
 
-    def generate_a_state(self, maximum_height, terrain_size, landform_para, water_para, terrain_para, creature_para, obj_para):
+    def generate_a_state(self, maximum_height, terrain_size, landform_para, water_para, terrain_para,
+                         animals_para, plants_para, obj_para):
+
+        """
+            定义相邻以及防止越界
+        """
+        def define_adjacent(row_index, col_index):
+            left = row_index - 1
+            if left < 0:
+                left = 0
+
+            right = row_index + 1
+            if right >= terrain_size[0]:
+                right = terrain_size[0] - 1
+
+            up = col_index - 1
+            if up < 0:
+                up = 0
+
+            down = col_index + 1
+            if down >= terrain_size[1]:
+                down = terrain_size[1] - 1
+
+            return left, right, up, down
+
         """ 随机生成特定大小的网格世界 """
         def randomMatrix(maximum_height, columns, rows):
             import random
@@ -35,48 +61,74 @@ class Concrete_world_generator(World_generator):
         """
             找到山峰 山脉 谷地 和 坑地的位置 然后生成地图
         """
-        def generate_landform_map(maximum_height, columns, rows,
+        def generate_landform_map(landform_para, maximum_height, columns, rows,
                                        peaks=None, mountains=None, valleys=None, pits=None):
+            """
+                :param landform_para:
+                :param maximum_height:
+                :param columns:
+                :param rows:
+                :param peaks:
+                :param mountains:
+                :param valleys:
+                :param pits:
+                :return:
+
+                eve在这里码代码 修改generate_landform_map函数 以及 landform类
+                函数要创建一个height_map二维数组 结构是[[1, 4, 6, ...], [12, 5, 6, ...], ...]
+                其中每个位置上的数字代表位置上的高度
+
+                当landform_para == "default_landform"时采取默认的生成方式
+                现在还没有定义别的生成方式
+
+                现在想要加的是在landform里面加其它地形类型
+                    现在已经有的是peak山峰
+                    想用同样的原理生成山脉 山谷和坑
+            """
+
             import random
             from world.world_project.mesh_world.landform import Peak
             # from landform import Pit
 
             # 普通陆地高度
             normal_land_height = 3
+
             # 生成完全平面世界
             height_map = [[normal_land_height for i in range(rows)][:] for m in range(columns)]
 
-            # 生成山峰们
-            if not peaks:
-                peaks = []
-                # 决定山峰的数量 数量越多越接近山地 否则越接近平原
-                peaks_num = max(columns * rows // 1000, 1)
-                # peaks_num = 1
+            if landform_para == "default_landform":
+                # 生成山峰们
+                if not peaks:
+                    peaks = []
+                    # 决定山峰的数量 数量越多越接近山地 否则越接近平原
+                    peaks_num = max(columns * rows // 1000, 1)
+                    # peaks_num = 1
 
-                # 随机生成数个山峰
-                # 山峰具有属性： 峰值 峰面大小 坡度 范围
-                Peak.init_random_seed(122213)
-                Peak.init_map_size((rows, columns))
-                Peak.init_high_range((2, maximum_height - normal_land_height - 2))
-                for peak_id in range(peaks_num):
-                    peaks.append(Peak.init_new_landform())
+                    # 随机生成数个山峰
+                    # 山峰具有属性： 峰值 峰面大小 坡度 范围
+                    Peak.init_random_seed(122213)
+                    Peak.init_map_size((rows, columns))
+                    Peak.init_high_range((2, maximum_height - normal_land_height - 2))
+                    for peak_id in range(peaks_num):
+                        peaks.append(Peak.init_new_landform())
 
-            # 生成坑地们
-            if not pits:
-                pits = []
+                # 生成坑地们
+                if not pits:
+                    pits = []
 
-            # 地形影响
-            for row_index in range(len(height_map)):
-                for point_index in range(len(height_map[row_index])):
-                    affect_sum = 0
-                    # 每个山峰对该点的影响
-                    for peak in peaks:
-                        affect_sum += peak.affect((point_index, row_index))
-                    height_map[row_index][point_index] += int(affect_sum)
-                    height_map[row_index][point_index] = min(height_map[row_index][point_index], maximum_height)
+                # 地形影响
+                for row_index in range(len(height_map)):
+                    for point_index in range(len(height_map[row_index])):
+                        affect_sum = 0
+                        # 每个山峰对该点的影响
+                        for peak in peaks:
+                            affect_sum += peak.affect((point_index, row_index))
+                        height_map[row_index][point_index] += int(affect_sum)
+                        height_map[row_index][point_index] = min(height_map[row_index][point_index], maximum_height)
 
             return height_map
 
+        # 生成水地圖
         def generate_water_map(water_para, landform_map):
             water_map = [[0 for a in range(terrain_size[1])] for i in range(terrain_size[0])]
             if water_para == "default_water":
@@ -88,13 +140,14 @@ class Concrete_world_generator(World_generator):
             builder_state = \
                 self.building_a_state(landform_map, water_map,
                                       [[0 for a in range(terrain_size[0])] for b in range(terrain_size[1])],
-                                      terrain_size, [], [])
+                                      terrain_size, [], [], [])
 
             for time in range(100):
                 builder_state.water_flow()
 
             return builder_state.get_water_map()
 
+        # 生成地貌地圖
         def generate_terrain_map(terrain_para, landform_map, water_map):
             terrain_map = [[3 for a in range(terrain_size[1])] for i in range(terrain_size[0])]
             if terrain_para == "default_terrain":
@@ -112,23 +165,7 @@ class Concrete_world_generator(World_generator):
                         """
                             定义相邻以及防止越界
                         """
-
-                        left = row_index - 1
-                        if left < 0:
-                            left = 0
-
-                        right = row_index + 1
-                        if right >= terrain_size[0]:
-                            right = terrain_size[0] - 1
-
-                        up = col_index - 1
-                        if up < 0:
-                            up = 0
-
-                        down = col_index + 1
-                        if down >= terrain_size[1]:
-                            down = terrain_size[1] - 1
-
+                        left, right, up, down = define_adjacent(col_index=col_index, row_index=row_index)
 
                         if random.randrange(0, maximum_height * 700) > landform_map[row_index][col_index]:
                             if water_map[row_index][col_index] >= 2:
@@ -181,26 +218,95 @@ class Concrete_world_generator(World_generator):
 
             return terrain_map
 
-        def random_creature(creature_list):
-            creature_list.append(Wolf([1, 2], 5, brain=Wolf_brain()))
-            creature_list.append(Wolf([4, 4], 5, brain=Wolf_brain()))
-            creature_list.append(Human_being([3, 3], 5, brain=Human_brain()))
-            creature_list.append(Human_being([3, 4], 5, brain=Human_brain()))
-            creature_list.append(Human_being([3, 5], 5, brain=Human_brain()))
-            creature_list.append(Human_being([2, 4], 5, brain=Human_brain()))
+        # 生成動物
+        def random_animals(animal_list):
+            animal_list.append(Wolf([1, 2], 5, brain=Wolf_brain()))
+            animal_list.append(Wolf([4, 4], 5, brain=Wolf_brain()))
+            animal_list.append(Human_being([3, 3], 5, brain=Human_brain()))
+            animal_list.append(Human_being([3, 4], 5, brain=Human_brain()))
+            animal_list.append(Human_being([3, 5], 5, brain=Human_brain()))
+            animal_list.append(Human_being([2, 4], 5, brain=Human_brain()))
 
-        def generate_creatures(creature_list):
+        def generate_animals(animals_para):
+            animals_list = []
+
             ''' 如果不给定具体参数 就用默认的生成方法 '''
-            if creature_para == "random_creature":
+            if animals_para == "random_animals":
                 ''' 这里生成生物表 '''
                 """
                     由于自动引入系统 会有红线 但是其实不是错误
                 """
-                random_creature(creature_list)
+                random_animals(animals_list)
 
             else:
                 ''' 参数生成 '''
                 pass
+
+            return animals_list
+
+        # 生成植物
+        def generate_plants(plants_para, landform_map, water_map, terrain_map):
+            plants_list = []
+
+            if plants_para == "random_plants":
+                for row_index in range(terrain_size[1]):
+                    for col_index in range(terrain_size[0]):
+                        """
+                            定义相邻以及防止越界
+                        """
+                        left, right, up, down = define_adjacent(col_index=col_index, row_index=row_index)
+                        """
+                            列数 col_index 就是横坐标
+                            行数 row_index 就是纵坐标
+                        """
+                        # 水深的地方长水草
+                        if terrain_map[row_index][col_index] > 4:
+                            if random.randrange(1, 10000) >= 9000:
+                                plants_list.append(Algae((col_index, row_index)))
+                        # 水浅的地方既可能长水草也可能长普通草
+                        elif terrain_map[row_index][col_index] == 4:
+                            if random.randrange(1, 10000) >= 9890:
+                                plants_list.append(Algae((col_index, row_index)))
+                            elif random.randrange(1, 10000) >= 9890:
+                                plants_list.append(Grass((col_index, row_index)))
+                        # 普通土地长草和树
+                        elif terrain_map[row_index][col_index] == 3:
+                            # 长草
+                            if random.randrange(1, 10000) >= 9890:
+                                plants_list.append(Grass((col_index, row_index)))
+                            # 长草地
+                            elif random.randrange(1, 10000) >= 9900:
+                                plants_list.append(Grassland((col_index, row_index)))
+                                # 草地旁边的单个草
+                                plants_list.append(Grass((col_index, left)))
+                                plants_list.append(Grass((up, row_index)))
+                                plants_list.append(Grass((col_index, right)))
+                                plants_list.append(Grass((down, row_index)))
+                                plants_list.append(Grass((up, left)))
+                                plants_list.append(Grass((up, right)))
+                                plants_list.append(Grass((down, right)))
+                                plants_list.append(Grass((down, left)))
+                            # 长树
+                            elif random.randrange(1, 10000) >= 9990:
+                                plants_list.append(Birch((col_index, row_index)))
+                            # 长树林
+                            elif random.randrange(1, 10000) >= 9990:
+                                plants_list.append(Birch_wood((col_index, row_index)))
+                                # 林子旁边的单个树
+                                plants_list.append(Birch((col_index, left)))
+                                plants_list.append(Birch((up, row_index)))
+                                plants_list.append(Birch((col_index, right)))
+                                plants_list.append(Birch((down, row_index)))
+                                plants_list.append(Birch((up, left)))
+                                plants_list.append(Birch((up, right)))
+                                plants_list.append(Birch((down, right)))
+                                plants_list.append(Birch((down, left)))
+
+            return plants_list
+
+        # 生成物品
+        def generate_objs(obj_para):
+            obj_list = []
             if obj_para == "random_obj":
                 ''' 这里生成物体表 '''
                 pass
@@ -208,22 +314,28 @@ class Concrete_world_generator(World_generator):
                 ''' 参数生成 '''
                 pass
 
-        landform_map = generate_landform_map(maximum_height, terrain_size[0], terrain_size[1])
+            return obj_list
+
+        # 生成地图
+        landform_map = generate_landform_map(landform_para, maximum_height, terrain_size[0], terrain_size[1])
         water_map = generate_water_map(water_para, landform_map)
         terrain_map = generate_terrain_map(terrain_para, landform_map, water_map)
-        creature_list = []
-        obj_list = []
-        generate_creatures(creature_list)
 
-        return self.building_a_state(landform_map, water_map, terrain_map, terrain_size, creature_list, obj_list)
+        # 生成实体
+        animals_list = generate_animals(animals_para)
+        plants_list = generate_plants(plants_para, landform_map, water_map, terrain_map)
+        obj_list = generate_objs(obj_para)
+
+        return self.building_a_state(landform_map, water_map, terrain_map, terrain_size,
+                                     animals_list, plants_list, obj_list)
 
     """
         输入属性值作为参数 生成状态
         返回一个状态
     """
     # 读档时用既有信息建造一个世界
-    def building_a_state(self, landform_map, water_map, terrain_map, terrain_size, creature_list, obj_list):
-        return State(landform_map, water_map, terrain_map, terrain_size, creature_list, obj_list)
+    def building_a_state(self, landform_map, water_map, terrain_map, terrain_size, animals_list, plants_list, obj_list):
+        return State(landform_map, water_map, terrain_map, terrain_size, animals_list, plants_list, obj_list)
 
     # 以state构造世界
     def generate_a_world_by_state(self, state):

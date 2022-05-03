@@ -36,8 +36,8 @@ class World_controller:
         """
             Exhibitor负责窗口的可视化呈现
         """
-        # 创建可视化窗口
-        self.exhibitor = Exhibitor(self.world, (1000, 1000))
+        # 创建可视化窗口 后面那个元组是世界的框的大小而不是窗口大小 窗口还会更高一点因为要有状态栏
+        self.exhibitor = Exhibitor(self.world, (800, 800))
 
         # 如果世界生成成功 则进入该世界 否则退出程序
         if self.world:
@@ -72,13 +72,14 @@ class World_controller:
 
         # 使用世界生成器参数化生成世界
         def get_world(generator, maximum_height=30, map_size=(50, 50),
-                      creature_para="random_creature", obj_para="random_obj",
+                      animals_para="random_animals", plants_para="random_plants",
+                      obj_para="random_obj",
                       water_para="default_water",
                       landform_para="default_landform",
                       terrain_para="default_terrain"):
             # 输入参数为 地形类型的数量 地图大小 生物生成参数 物品生成参数
-            return generator.generate_a_world(maximum_height=maximum_height
-                                              , map_size=map_size, creature_para=creature_para,
+            return generator.generate_a_world(maximum_height=maximum_height, map_size=map_size,
+                                              animals_para=animals_para, plants_para=plants_para,
                                               obj_para=obj_para, water_para=water_para,
                                               landform_para=landform_para, terrain_para=terrain_para)
 
@@ -200,7 +201,7 @@ class World_controller:
     # 统计数据
     def statistics(self, cmd):
         # 这里默认了所有世界都有生物
-        creatures = self.world.state.creatures
+        creatures = self.world.state.animals + self.world.state.plants
         num = 0
         sum_life = 0
         for creature in creatures:

@@ -25,9 +25,10 @@ class Exhibitor:
         初始化在__init__和__init_exhibitor中
     """
 
-    def __init__(self, world, win_size):
+    def __init__(self, world, world_win_size):
         self.terrain_size = world.state.terrain_size
-        self.win_size = win_size
+        self.world_win_size = world_win_size
+        self.win_size = (self.world_win_size[0], self.world_win_size[1] + self.world_win_size[1] / 5)
         self.__init_exhibitor()
 
     # 初始化展示器
@@ -56,8 +57,8 @@ class Exhibitor:
                 self.col = col
                 self.mid_interspace = interspace
                 self.exhibitor = exhibitor
-                self.cell_width = exhibitor.win_size[0] / exhibitor.terrain_size[0]
-                self.cell_height = exhibitor.win_size[1] / exhibitor.terrain_size[1]
+                self.cell_width = exhibitor.world_win_size[0] / exhibitor.terrain_size[0]
+                self.cell_height = exhibitor.world_win_size[1] / exhibitor.terrain_size[1]
                 self.left = self.col * self.cell_width
                 self.top = self.row * self.cell_height
 
@@ -84,11 +85,13 @@ class Exhibitor:
         landform_map = world.get_state().get_landform_map()
         water_map = world.get_state().get_water_map()
         terrain_map = world.get_state().get_terrain_map()
-        things_position = world.get_state().get_things_position()
+        animals_position = world.get_state().get_animals_position()
+        plants_position = world.get_state().get_plants_position()
 
         # win_event = True
 
-        self.draw(landform_map, water_map, terrain_map, things_position)
+        self.draw_world(landform_map, water_map, terrain_map, animals_position, plants_position)
+        self.draw_status_bar()
 
         # 让渡控制权
         self.pygame.display.flip()
@@ -102,7 +105,7 @@ class Exhibitor:
         画图
     """
 
-    def draw(self, landform_map, water_map, terrain_map, things_position):
+    def draw_world(self, landform_map, water_map, terrain_map, animals_position, plants_position):
         # 找到全地图的最高点
         def get_maximum_height(landform_map):
             return max(map(max, landform_map))
@@ -125,9 +128,21 @@ class Exhibitor:
                                  # (max_height / terrain_num, max_height / terrain_num, max_height / terrain_num)
                                  ]
 
-                r = min(terrain_num / max_height * 225 * terrain_color[terrain][0], 255)
-                g = min(terrain_num / max_height * 225 * terrain_color[terrain][1], 255)
-                b = min(terrain_num / max_height * 225 * terrain_color[terrain][2], 255)
+                """
+                    这里采用了我自己研究得出的亮度守恒公式
+                    luminance = 0.3r + 0.6g + 0.1b
+                """
+                color_alpha = terrain_color[terrain][0] / max(terrain_color[terrain][1], 0.001)
+                color_beta = terrain_color[terrain][1] / max(terrain_color[terrain][2], 0.001)
+                color_gama = terrain_color[terrain][0] / max(terrain_color[terrain][2], 0.001)
+
+                r_ratio = 1 / (0.3 + 0.6 * (1 / color_alpha) + 0.1 * (1 / color_gama))
+                g_ratio = 1 / (0.3 * color_alpha + 0.6 + 0.1 * (1 / color_beta))
+                b_ratio = 1 / (0.3 * color_gama + 0.6 * color_beta + 0.1)
+
+                r = min(terrain_num / max_height * 225 * r_ratio, 255)
+                g = min(terrain_num / max_height * 225 * g_ratio, 255)
+                b = min(terrain_num / max_height * 225 * b_ratio, 255)
                 return r, g, b
 
             self.Point\
@@ -159,30 +174,53 @@ class Exhibitor:
                 #      )
                 self.exhibitor.window.blit(water_surface, (self.left, self.top))
 
+        # 画水地图
         def draw_water_map(position, water_high):
             # 可视化半透明水层
             # water_surface = self.window.convert_alpha()
             water_surface = \
                 self.pygame.Surface(
-                    (self.win_size[0] / self.terrain_size[0],
-                     self.win_size[1] / self.terrain_size[1])
+                    (self.world_win_size[0] / self.terrain_size[0],
+                     self.world_win_size[1] / self.terrain_size[1])
                     , self.pygame.SRCALPHA, 32)
             Water_point(self, row=position[1], col=position[0], water_surface=water_surface).\
                 draw_bar(water_high, water_surface)
 
         # 画生物
-        def draw_creatures(position, creatures):
-            def get_creature_color(creature):
+        # 画动物
+        def draw_animals(position, animals):
+            def get_animal_color(animal):
                 import random
                 # 强行将类名字符串转化为ord数字 作为种子
-                random.seed(''.join(map(str, map(ord, type(creature).__name__))))
+                random.seed(''.join(map(str, map(ord, type(animal).__name__))))
                 r = random.randrange(0, 255)
                 g = random.randrange(0, 255)
                 b = random.randrange(0, 255)
                 return r, g, b
 
-            for creature in creatures:
-                self.Point(self, row=position[1], col=position[0]).mid_rect(get_creature_color(creature))
+            for animal in animals:
+                self.Point(self, row=position[1], col=position[0]).mid_rect(get_animal_color(animal))
+
+        # 画植物
+        def draw_plants(position, plants):
+            class Plant_point(self.Point):
+                def __init__(self, exhibitor, row, col, interspace=5):
+                    super(Plant_point, self).__init__(exhibitor, row, col, interspace)
+
+                def draw_plant_point(self, plant_species, color):
+                    self.exhibitor.pygame.draw.rect(self.exhibitor.window, color,
+                                                          (self.left + self.mid_interspace, self.top + self.mid_interspace,
+                                      5,
+                                      self.cell_height - 2 * self.mid_interspace))
+
+            def get_plant_color(plant_species):
+                return ((169, 208, 107), (205, 133, 63), (165, 42, 42), (0, 125, 0), (0, 255, 0))[plant_species]
+
+            for plant in plants:
+                plant_species = ["Algae", "Birch", "Birch_wood", "Grass", "Grassland"].index(type(plant).__name__)
+                Plant_point\
+                    (self, row=position[1], col=position[0]).\
+                    draw_plant_point(plant_species, get_plant_color(plant_species))
 
         # 渲染
         # 画方块
@@ -201,8 +239,16 @@ class Exhibitor:
                         ((block_index, block_line_index), water_map[block_line_index][block_index])
 
         # 画生物
-        for position in things_position:
-            draw_creatures(position, things_position[position])
+        # 画动物
+        for position in animals_position:
+            draw_animals(position, animals_position[position])
+
+        # 画植物
+        for position in plants_position:
+            draw_plants(position, plants_position[position])
+
+    def draw_status_bar(self):
+        pass
 
     """
         检测玩家输入 玩家输入之前不会跳出循环 可能递归

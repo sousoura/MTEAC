@@ -22,10 +22,10 @@ class Human_brain(Brain):
             elif self_information.position[0] == len(perception[0][0]) - 1 and self_information.position[1] != 0:
                 direction = "down"
             for position in perception[1]:
-                for creature in perception[1][position]:
-                    if type(creature).__name__ == "Wolf":
-                        delta_x = self_information.position[0] - creature.position[0]
-                        delta_y = self_information.position[1] - creature.position[1]
+                for animal in perception[1][position]:
+                    if type(animal).__name__ == "Wolf":
+                        delta_x = self_information.position[0] - animal.position[0]
+                        delta_y = self_information.position[1] - animal.position[1]
 
                         if abs(delta_x) <= abs(delta_y):
                             if delta_x > 0:

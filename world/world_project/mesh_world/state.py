@@ -17,23 +17,24 @@ else:
                 高低地形        某个格子的高度 目前用整数表示 以后会变成小数
                 水地图          某个地方的水高 水每回合会流动
                 地貌地形        某个格子是泥地 沙地还是石头地
+            生物列表            生物对象的列表
+                动物表
                 植被表          某个各自的有没有树木 是不是草地
                     地形大小     网格世界的大小
-            生物列表            生物对象的列表
-                位置-生物字典   由位置找到位置上的生物的字典
+                位置-动物、植物字典   由位置找到位置上的生物的字典
             物品列表            存物品对象的列表
         网格世界的方法全都有关于状态的修改或状态
             一回合内各个属性的变化的方法
-                动物行为 animal_action和creature_act
+                动物行为 animal_action和animal_act
                     动物移动        moving_position
-                    动物吃          creature_eating
+                    动物吃          animal_eating
                 地形变化            (去掉了)
                 ...
             更新属性的方法
                 renew_map
             规定空间属性的方法
                 规定「相邻」的方法   position_and_direction_get_adjacent
-            得到某生物的类型的方法    print_show_creature（注释掉了）
+            得到某生物的类型的方法    print_show_animal（注释掉了）
             得到状态属性的方法
                 得到各个属性的方法   
                 初始化位置词典的方法  init_things_position
@@ -41,23 +42,31 @@ else:
 
 
 class Mesh_state(State):
-    def __init__(self, landform_map, water_map, terrain_map, terrain_size, creatures, objects):
+    def __init__(self, landform_map, water_map, terrain_map, terrain_size, animals, plants, objects):
         """
         :param landform_map:   类型：二维数组 值为int      意义表示：每个值都是整形 表示高低地形 数字越高地形越高
         :param terrain_size:    类型：二元元组             意义表示：地图大小 第0个值是行数 第1个值是列数
-        :param creatures:       类型：列表 值为生物对象      意义表示：世界中的所有生物
+        :param animals:       类型：列表 值为动物对象      意义表示：世界中的所有生物
         :param objects:         类型：列表 值为物品对象      意义表示：世界中的所有物品
         """
+        # 地图
         self.landform_map = landform_map
         self.water_map = water_map
         self.terrain_map = terrain_map
+
+        # 地图属性
         self.terrain_size = terrain_size
-        self.creatures = creatures
-        self.objects = objects
         self.legal_direction = ["up", "down", "left", "right"]
 
+        # 实体表
+        self.animals = animals
+        self.plants = plants
+        self.objects = objects
+
         # 得到位置字典 方便根据位置找到生物 而不必总是遍历生物表 以空间换时间
-        self.things_position = self.init_things_position()
+        self.animals_position = self.init_position_list(self.animals)
+        self.plants_position = self.init_position_list(self.plants)
+        self.objs_position = self.init_position_list(self.objects)
 
     # 更新新地图
     def renew_map(self, new_map):
@@ -80,16 +89,16 @@ class Mesh_state(State):
     # 一回合内的动物运动
     def animal_action(self, player_cmd):
         # 遍历生物表
-        for creature in self.creatures:
+        for animal in self.animals:
             # 判断生物是否死亡
-            if not creature.is_die():
-                cmd = creature.devise_an_act(creature.get_perception(self.landform_map, self.things_position))
+            if not animal.is_die():
+                cmd = animal.devise_an_act(animal.get_perception(self.landform_map, self.animals_position))
                 # 玩家输入的键盘值控制的对象是谁
                 # 这里是有缺陷的 因为所有人类都会受影响 而不是某一个人类
                 '''
                     待引入id系统改进
                 '''
-                if creature.is_id(1):
+                if animal.is_id(1):
                     # 判断是否输入指令
                     if not player_cmd:
                         return
@@ -100,17 +109,17 @@ class Mesh_state(State):
                     elif player_cmd.split("_")[0] == "eat":
                         cmd = player_cmd.split("_")
                 # 根据指令进行操作
-                self.creature_act(creature, cmd)
+                self.animal_act(animal, cmd)
             else:
-                del creature
+                del animal
 
     # 分析生物行动命令的基本类型 并调用相应的执行函数
-    def creature_act(self, creature, command):
+    def animal_act(self, animal, command):
         if command[0] == 'go':
-            self.moving_position(creature, command[1])
+            self.moving_position(animal, command[1])
         elif command[0] == 'eat':
             # 动物吃生物
-            self.creature_eating(creature, command[1])
+            self.animal_eating(animal, command[1])
 
     """
         输入  某个生物实例 移动的方向
@@ -135,8 +144,8 @@ class Mesh_state(State):
             if isinstance(animal, Big_obj):
                 # 大物体互斥规则
                 # 如果有大动物挡在前面
-                if new_position in self.things_position:
-                    for other_animal in self.things_position[new_position]:
+                if new_position in self.animals_position:
+                    for other_animal in self.animals_position[new_position]:
                         if isinstance(other_animal, Big_obj):
                             return False
 
@@ -153,15 +162,15 @@ class Mesh_state(State):
             return True
 
         # 得到新位置后移动到新位置
-        def normally_move_to_new_position(state, creature, old_position, new_position):
-            if new_position in state.things_position:
-                state.things_position[new_position].append(creature)
+        def normally_move_to_new_position(state, animal, old_position, new_position):
+            if new_position in state.animals_position:
+                state.animals_position[new_position].append(animal)
             else:
-                state.things_position[new_position] = [creature]
-            state.things_position[old_position].remove(creature)
-            if len(state.things_position[old_position]) == 0:
-                del state.things_position[old_position]
-            creature.move(new_position)
+                state.animals_position[new_position] = [animal]
+            state.animals_position[old_position].remove(animal)
+            if len(state.animals_position[old_position]) == 0:
+                del state.animals_position[old_position]
+            animal.move(new_position)
 
         old_position = tuple(animal.get_position())
         new_position = self.position_and_direction_get_new_position(old_position, direction)
@@ -242,23 +251,23 @@ class Mesh_state(State):
         输入      吃的主体 方向 客体
     '''
 
-    def creature_eating(self, eator, eat_direction, be_eator=0):
+    def animal_eating(self, eator, eat_direction, be_eator=0):
         eat_position = self.position_and_direction_get_new_position(eator.get_position(), eat_direction)
         '''
             目前只能吃在位置上的大生物 待修改
             如果吃的地方什么也不发生 则结束
         '''
         if be_eator == 0:
-            if eat_position in self.things_position:
-                be_eator = self.things_position[eat_position][0]
+            if eat_position in self.animals_position:
+                be_eator = self.animals_position[eat_position][0]
             else:
                 return
         # 若成功 吃者状态变化 被吃者消失(死亡)
         if eat_position == be_eator.get_position():
-            self.things_position[be_eator.get_position()].remove(be_eator)
-            self.creatures.remove(be_eator)
-            if len(self.things_position[be_eator.get_position()]) == 0:
-                del self.things_position[be_eator.get_position()]
+            self.animals_position[be_eator.get_position()].remove(be_eator)
+            self.animals.remove(be_eator)
+            if len(self.animals_position[be_eator.get_position()]) == 0:
+                del self.animals_position[be_eator.get_position()]
             eator.eat(be_eator)
             be_eator.die()
             del be_eator
@@ -267,9 +276,9 @@ class Mesh_state(State):
             pass
 
     # # print生成生物位置
-    # def print_show_creature(self):
-    #     for creature in self.creatures:
-    #         print(type(creature).__name__, creature.get_position())
+    # def print_show_animal(self):
+    #     for animal in self.animals:
+    #         print(type(animal).__name__, animal.get_position())
 
     """
         ***
@@ -407,25 +416,29 @@ class Mesh_state(State):
         return self.terrain_map[:]
 
     # 返回生物表
-    def get_creatures(self):
-        return self.creatures
+    def get_animals(self):
+        return self.animals
 
     # 返回物品表
     def get_objects(self):
         return self.objects
 
-    # 获取位置字典
-    def get_things_position(self):
-        return self.things_position
+    # 获取动物位置字典
+    def get_animals_position(self):
+        return self.animals_position
+
+    # 获取植物位置字典
+    def get_plants_position(self):
+        return self.plants_position
 
     # 初始化位置字典
-    def init_things_position(self):
+    def init_position_list(self, entity_list):
         things_position = {}
-        for creature in self.creatures:
-            if tuple(creature.get_position()) in things_position:
-                things_position[tuple(creature.get_position())].append(creature)
+        for animal in entity_list:
+            if tuple(animal.get_position()) in things_position:
+                things_position[tuple(animal.get_position())].append(animal)
             else:
-                things_position[tuple(creature.get_position())] = [creature]
+                things_position[tuple(animal.get_position())] = [animal]
         return things_position
 
 
@@ -445,9 +458,9 @@ if __name__ == "__main__":
         [1, 1, 1, 1, 1]
     ]
     terrain_size = (5, 5)
-    creatures = []
+    animals = []
     objects = []
-    state = Mesh_state(landform_map, water_map, terrain_size, creatures, objects)
+    state = Mesh_state(landform_map, water_map, terrain_size, animals, objects)
     while True:
         state.water_flow()
         input()
