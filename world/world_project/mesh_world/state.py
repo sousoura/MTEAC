@@ -76,7 +76,8 @@ class Mesh_state(State):
         ***
             以下是动物的运动
         ***
-        输入  player_cmd：玩家指令 为字符串 格式是"第一段_第二段_第三段_..."
+        输入  player_cmd：玩家指令 为数组 格式是[第一段, 第二段, 第三段_...]
+                一般默认第一段为动作类型 第二段为动作对象 第三段为动作参数
             中间的if 如果该生物被判断为是玩家控制的 就会使用玩家指令 否则就使用大脑返回的指令
             指令分段 不同段用_隔开
                 第一段是类型 目前只有eat和go
@@ -103,11 +104,11 @@ class Mesh_state(State):
                     if not player_cmd:
                         return
                     # 判断指令是否是移动
-                    elif player_cmd.split("_")[0] in ['left', 'right', 'up', 'down']:
-                        cmd = ["go", player_cmd]
+                    elif player_cmd[0] == "go":
+                        cmd = player_cmd
                     # 判断指令类型是否是吃
-                    elif player_cmd.split("_")[0] == "eat":
-                        cmd = player_cmd.split("_")
+                    elif player_cmd[0] == "eat":
+                        cmd = player_cmd
                 # 根据指令进行操作
                 self.animal_act(animal, cmd)
             else:
@@ -115,19 +116,26 @@ class Mesh_state(State):
 
     # 分析生物行动命令的基本类型 并调用相应的执行函数
     def animal_act(self, animal, command):
+        """
+           ["go", 方向]
+        """
         if command[0] == 'go':
             self.moving_position(animal, command[1])
         elif command[0] == 'eat':
             # 动物吃生物
-            self.animal_eating(animal, command[1])
+            self.animal_eating(animal, command[1], command[2])
 
     """
         输入  某个生物实例 移动的方向
         效果  会分析移动是否合法 如果合法 则移动之 改变生物的位置状态并更新位置表 反之 不移动之
     """
 
-    # 生物移动 外部和内部执行
     def moving_position(self, animal, direction):
+        for a_pace in range(animal.get_pace()):
+            self.moving_a_pace(animal, direction)
+
+    # 生物移动 外部和内部执行
+    def moving_a_pace(self, animal, direction):
         # 判断动作合法性方法
         def judge_action_validity(animal, old_position, new_position):
             # 判断落差是否大于生物的爬行能力
@@ -252,6 +260,9 @@ class Mesh_state(State):
     '''
 
     def animal_eating(self, eator, eat_direction, be_eator=0):
+        if be_eator == -1:
+            return
+
         eat_position = self.position_and_direction_get_new_position(eator.get_position(), eat_direction)
         '''
             目前只能吃在位置上的大生物 待修改
@@ -261,16 +272,32 @@ class Mesh_state(State):
             if eat_position in self.animals_position:
                 be_eator = self.animals_position[eat_position][0]
             else:
-                return
+                pass
         # 若成功 吃者状态变化 被吃者消失(死亡)
         if eat_position == be_eator.get_position():
-            self.animals_position[be_eator.get_position()].remove(be_eator)
-            self.animals.remove(be_eator)
-            if len(self.animals_position[be_eator.get_position()]) == 0:
-                del self.animals_position[be_eator.get_position()]
-            eator.eat(be_eator)
-            be_eator.die()
-            del be_eator
+            if isinstance(be_eator, Plant):
+                self.plants_position[be_eator.get_position()].remove(be_eator)
+                self.plants.remove(be_eator)
+                if len(self.plants_position[be_eator.get_position()]) == 0:
+                    del self.plants_position[be_eator.get_position()]
+                eator.eat(be_eator)
+                be_eator.die()
+                del be_eator
+            elif isinstance(be_eator, Animal):
+                self.animals_position[be_eator.get_position()].remove(be_eator)
+                self.animals.remove(be_eator)
+                if len(self.animals_position[be_eator.get_position()]) == 0:
+                    del self.animals_position[be_eator.get_position()]
+                eator.eat(be_eator)
+                be_eator.die()
+                del be_eator
+            elif isinstance(be_eator, Obj):
+                self.objs_position[be_eator.get_position()].remove(be_eator)
+                self.objects.remove(be_eator)
+                if len(self.objs_position[be_eator.get_position()]) == 0:
+                    del self.objs_position[be_eator.get_position()]
+                eator.eat(be_eator)
+                del be_eator
         # 确认吃的方向有没有该对象 若没有 动作失败
         else:
             pass
@@ -430,6 +457,34 @@ class Mesh_state(State):
     # 获取植物位置字典
     def get_plants_position(self):
         return self.plants_position
+
+    # 得到整个生物表
+    def get_creatures_position(self):
+        creatures_position = {}
+
+        # 动物表里的都挑出来和植物表里的有相同的合起来
+        for position in self.animals_position:
+            if position in self.plants_position:
+                creatures_position[position] = self.animals_position[position] + self.plants_position[position]
+            else:
+                creatures_position[position] = self.animals_position[position]
+
+        # 弄植物表的 不过避免增加过已经有的
+        for position in self.plants_position:
+            if position not in self.animals_position:
+                creatures_position[position] = self.plants_position[position]
+        return creatures_position
+
+    # 得到具体某个位置的实体
+    def get_entities_in_position(self, position):
+        entities = []
+        if position in self.animals_position:
+            entities += self.animals_position[position]
+        if position in self.plants_position:
+            entities += self.plants_position[position]
+        if position in self.objs_position:
+            entities += self.objs_position[position]
+        return entities
 
     # 初始化位置字典
     def init_position_list(self, entity_list):

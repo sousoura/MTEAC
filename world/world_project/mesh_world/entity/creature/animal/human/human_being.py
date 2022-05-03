@@ -8,8 +8,15 @@ from world.entity.entity_import import *
 
 
 class Human_being(Human, Big_obj):
-    def __init__(self, position, life, brain):
-        super(Human, self).__init__(position, life, brain)
+    # 物种属性
+    feeding_habits = []
+    swimming_ability = 4
+    life_area = 0
+
+    def __init__(self, position, life, brain, health_point, full_value, drinking_value, body_state, gender,
+                 crawl_ability, speed, aggressivity):
+        super(Human, self).__init__(position, life, brain, health_point, full_value, drinking_value, body_state, gender,
+                 crawl_ability, speed, aggressivity)
 
     def move(self, new_position):
         self.position = new_position

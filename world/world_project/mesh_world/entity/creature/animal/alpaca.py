@@ -7,8 +7,16 @@ from world.entity.entity_import import *
 
 
 class Alpaca(Animal, Big_obj):
-    def __init__(self, position, life, brain):
-        super(Alpaca, self).__init__(position, life, brain)
+    # 物种属性
+    feeding_habits = ["Grass", "Grassland"]
+    swimming_ability = 4
+    life_area = 0
+
+    def __init__(self, position, life, brain, health_point, full_value, drinking_value, body_state, gender,
+                 crawl_ability, speed, aggressivity):
+        super(Alpaca, self).__init__(position, life, brain, health_point, full_value, drinking_value, body_state,
+                                     gender, crawl_ability, speed, aggressivity, feeding_habits, swimming_ability,
+                                     life_area)
 
     def move(self, new_position):
         self.position = new_position

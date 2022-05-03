@@ -1,6 +1,5 @@
 from world.entity.entity_import import *
 
-
 """
     狼类 物种类
     方法用于物种的内部影响
@@ -8,8 +7,15 @@ from world.entity.entity_import import *
 
 
 class Wolf(Animal, Big_obj):
-    def __init__(self, position, life, brain):
-        super(Wolf, self).__init__(position, life, brain)
+    # 物种属性
+    feeding_habits = ["Human_being", "Human", "Alpaca"]
+    swimming_ability = 1
+    life_area = 0
+
+    def __init__(self, position, life, brain, health_point, full_value, drinking_value, body_state, gender,
+                 crawl_ability, speed, aggressivity):
+        super(Wolf, self).__init__(position, life, brain, health_point, full_value, drinking_value, body_state, gender,
+                                   crawl_ability, speed, aggressivity)
 
     def move(self, new_position):
         self.position = new_position
@@ -30,7 +36,6 @@ class Wolf(Animal, Big_obj):
 
     # 得到感知
     def get_perception(self, landform_map, things_position):
-
         return tuple(landform_map), things_position
 
     def die(self):

@@ -224,12 +224,33 @@ class Concrete_world_generator(World_generator):
 
         # 生成動物
         def random_animals(animal_list):
-            animal_list.append(Wolf([1, 2], 5, brain=Wolf_brain()))
-            animal_list.append(Wolf([4, 4], 5, brain=Wolf_brain()))
-            animal_list.append(Human_being([3, 3], 5, brain=Human_brain()))
-            animal_list.append(Human_being([3, 4], 5, brain=Human_brain()))
-            animal_list.append(Human_being([3, 5], 5, brain=Human_brain()))
-            animal_list.append(Human_being([2, 4], 5, brain=Human_brain()))
+            animal_list.append(Wolf(position=[1, 2], life=5, brain=Wolf_brain(),
+                                    health_point=100, full_value=70, drinking_value=70, body_state=0, gender=True,
+                                    crawl_ability=1, speed=2, aggressivity=50
+                                    ))
+            animal_list.append(Wolf(position=[1, 3], life=5, brain=Wolf_brain(),
+                                    health_point=100, full_value=70, drinking_value=70, body_state=0, gender=True,
+                                    crawl_ability=1, speed=2, aggressivity=50
+                                    ))
+            animal_list.append(Human_being(position=[3, 3], life=5, brain=Human_brain(),
+                                    health_point=100, full_value=70, drinking_value=70, body_state=0, gender=True,
+                                    crawl_ability=1, speed=2, aggressivity=50
+                                    ))
+            animal_list.append(Human_being(position=[3, 4], life=5, brain=Human_brain(),
+                                           health_point=100, full_value=70, drinking_value=70, body_state=0,
+                                           gender=True,
+                                           crawl_ability=1, speed=2, aggressivity=50
+                                           ))
+            animal_list.append(Human_being(position=[3, 5], life=5, brain=Human_brain(),
+                                           health_point=100, full_value=70, drinking_value=70, body_state=0,
+                                           gender=True,
+                                           crawl_ability=1, speed=2, aggressivity=50
+                                           ))
+            animal_list.append(Human_being(position=[2, 4], life=5, brain=Human_brain(),
+                                           health_point=100, full_value=70, drinking_value=70, body_state=0,
+                                           gender=True,
+                                           crawl_ability=1, speed=2, aggressivity=50
+                                           ))
 
         def generate_animals(animals_para):
             animals_list = []

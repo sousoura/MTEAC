@@ -99,7 +99,10 @@ class Exhibitor:
         # 设置帧率
         self.clock.tick(60)
 
-        return self.detect_player_input("")
+        # 读取玩家操作
+        player_cmd = self.detect_player_input([], world)
+
+        return player_cmd
 
     """
         画图
@@ -254,7 +257,105 @@ class Exhibitor:
         检测玩家输入 玩家输入之前不会跳出循环 可能递归
     """
 
-    def detect_player_input(self, last_code):
+    def detect_player_input(self, last_code, world):
+        player_animal = world.get_state().get_animals()[0]
+
+        # 等待输入数字参数
+        def waiting_for_para(last_code):
+            # 等待按键 否则一直在循环里
+            while True:
+                # 处理事件
+                for event_para_wait in self.pygame.event.get():
+                    if event.type == self.pygame.QUIT:
+                        return False
+
+                    if event_para_wait.type == self.pygame.KEYDOWN:
+                        if event_para_wait.key == self.pygame.K_1:
+                            last_code.append(1)
+                            return True
+                        elif event_para_wait.key == self.pygame.K_2:
+                            last_code.append(2)
+                            return True
+                        elif event_para_wait.key == self.pygame.K_3:
+                            last_code.append(3)
+                            return True
+                        elif event_para_wait.key == self.pygame.K_4:
+                            last_code.append(4)
+                            return True
+                        elif event_para_wait.key == self.pygame.K_5:
+                            last_code.append(5)
+                            return True
+                        elif event_para_wait.key == self.pygame.K_6:
+                            last_code.append(6)
+                            return True
+                        elif event_para_wait.key == self.pygame.K_7:
+                            last_code.append(7)
+                            return True
+                        elif event_para_wait.key == self.pygame.K_8:
+                            last_code.append(8)
+                            return True
+                        elif event_para_wait.key == self.pygame.K_DELETE:
+                            last_code.append(-1)
+                            return True
+
+        # 请求选择作用对象
+        """
+            从世界取得该位置的实例
+            然后玩家输入下标选择对象是那个
+        """
+        def choose_object(last_code):
+            if player_animal.get_id() == 1:
+                old_position = tuple(player_animal.get_position())
+                position = world.get_state().position_and_direction_get_adjacent(old_position, last_code[1])
+                entities = world.get_state().get_entities_in_position(position)
+                objects_num = len(entities)
+                # 如果只有一个生物 且改生物符合主体的食性 则马上返回0
+                if objects_num == 1:
+                    if player_animal.feeding_habits_judge(type(entities[0]).__name__):
+                        last_code.append(entities[0])
+                        return True
+                    else:
+                        last_code.append(-1)
+                        return True
+                if objects_num == 0:
+                    last_code.append(-1)
+                    return True
+
+                """
+                    目前只能通过终端给玩家呈现对象们以选择
+                    到时候可以直接在下面的呈现栏里给玩家呈现
+                """
+                print()
+                for entity in entities:
+                    print(type(entity).__name__, "ID:", entity.get_id())
+                print()
+
+                # 判断对象选择是否合法
+                temp_list = []
+                while waiting_for_para(temp_list):
+                    input_num = temp_list.pop()
+                    if 0 < input_num <= objects_num:
+                        be_eator = entities[input_num - 1]
+                        if player_animal.feeding_habits_judge(type(be_eator).__name__):
+                            last_code.append(be_eator)
+                        else:
+                            last_code.append(-1)
+                        return True
+                    # 反悔操作
+                    elif input_num == -1:
+                        last_code.append(-1)
+                        return True
+                    else:
+                        last_code.append(-1)
+                        return True
+
+                else:
+                    return False
+            else:
+                print("Waining: the id of the entity player controlling is not 1.")
+                last_code.append(-1)
+                return True
+
         # 等待按键 否则一直在循环里
         door = True
         while door:
@@ -267,20 +368,76 @@ class Exhibitor:
 
                 if event.type == self.pygame.KEYDOWN:
                     if event.key == self.pygame.K_UP:
-                        last_code += "up"
+                        if len(last_code) == 0:
+                            last_code.append("go")
+                            last_code.append("up")
+                            # if not waiting_for_para(last_code):
+                            #     return False
+                        elif last_code[0] == "eat":
+                            last_code.append("up")
+                            if not choose_object(last_code):
+                                return False
+                        else:
+                            last_code.append("up")
                         door = False
                     elif event.key == self.pygame.K_DOWN:
-                        last_code += "down"
+                        if len(last_code) == 0:
+                            last_code.append("go")
+                            last_code.append("down")
+                            # if not waiting_for_para(last_code):
+                            #     return False
+                        elif last_code[0] == "eat":
+                            last_code.append("down")
+                            if not choose_object(last_code):
+                                return False
+                        else:
+                            last_code.append("down")
                         door = False
                     elif event.key == self.pygame.K_LEFT:
-                        last_code += "left"
+                        if len(last_code) == 0:
+                            last_code.append("go")
+                            last_code.append("left")
+                            # if not waiting_for_para(last_code):
+                            #     return False
+                        elif last_code[0] == "eat":
+                            last_code.append("left")
+                            if not choose_object(last_code):
+                                return False
+                        else:
+                            last_code.append("left")
                         door = False
                     elif event.key == self.pygame.K_RIGHT:
-                        last_code += "right"
+                        if len(last_code) == 0:
+                            last_code.append("go")
+                            last_code.append("right")
+                            # if not waiting_for_para(last_code):
+                            #     return False
+                        elif last_code[0] == "eat":
+                            last_code.append("right")
+                            if not choose_object(last_code):
+                                return False
+                        else:
+                            last_code.append("right")
                         door = False
                     elif event.key == self.pygame.K_SPACE:
-                        last_code += "eat_"
-                        last_code = self.detect_player_input(last_code)
+                        last_code.append("eat")
+                        self.detect_player_input(last_code, world)
                         door = False
+                    elif event.key == self.pygame.K_1:
+                        player_animal.change_pace(1)
+                    elif event.key == self.pygame.K_2:
+                        player_animal.change_pace(2)
+                    elif event.key == self.pygame.K_3:
+                        player_animal.change_pace(3)
+                    elif event.key == self.pygame.K_4:
+                        player_animal.change_pace(4)
+                    elif event.key == self.pygame.K_5:
+                        player_animal.change_pace(5)
+                    elif event.key == self.pygame.K_6:
+                        player_animal.change_pace(6)
+                    elif event.key == self.pygame.K_7:
+                        player_animal.change_pace(7)
+                    elif event.key == self.pygame.K_8:
+                        player_animal.change_pace(8)
 
         return last_code
