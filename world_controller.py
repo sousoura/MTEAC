@@ -85,8 +85,8 @@ class World_controller:
 
         # 读取命令 这个也可以用前端干
         # entry_mode = input("Please choose world mode(generate or load): ")
-        entry_mode = "generate"
-        # entry_mode = "load"
+        # entry_mode = "generate"
+        entry_mode = "load"
         world = None
         # 如果生成一个世界
         if entry_mode == "generate":
