@@ -15,6 +15,9 @@ class Creature(Entity, metaclass=ABCMeta):
     def die(self):
         pass
 
+    def is_die(self):
+        return self.life <= 0
+
     def get_life(self):
         return self.life
 

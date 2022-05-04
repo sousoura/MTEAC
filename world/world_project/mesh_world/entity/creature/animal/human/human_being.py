@@ -32,6 +32,3 @@ class Human_being(Human, Big_obj):
 
     def die(self):
         self.life = 0
-
-    def is_die(self):
-        return self.life <= 0

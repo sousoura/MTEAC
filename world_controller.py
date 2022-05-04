@@ -98,7 +98,7 @@ class World_controller:
         # world_type_name = "mesh_world"
         # 根据世界类型获取世界生成器
         self.generator = get_generator(world_type_name)
-        while self.generator == None:
+        while self.generator is None:
             world_type_name = input("can not find this type of world, please input other world type name: ")
             self.generator = get_generator(world_type_name)
 
@@ -112,8 +112,13 @@ class World_controller:
             world = get_world(self.generator)
         elif entry_mode == "load":
             world_name = input("Please input world name: ")
-            # 通过读档器读取世界
-            world = self.load(world_type_name, world_name)
+            while world is None:
+                try:
+                    # 通过读档器读取世界
+                    world = self.load(world_type_name, world_name)
+                except FileNotFoundError:
+                    world = None
+                    world_name = input("Can't find this file, Please correct input and input world name again: ")
 
         return world
 
@@ -149,9 +154,16 @@ class World_controller:
                 self.gate = False
                 break
             elif cmd[0] == "save":
+                if len(cmd) == 1:
+                    cmd.append('save')
                 self.save(cmd[1])
             elif cmd[0] == "stat":
-                print(self.statistics(cmd))
+                try:
+                    print(self.statistics(cmd))
+                except ValueError:
+                    print("The parameter format is incorrect, please check the parameters and input again")
+            else:
+                print("wrong command,please check and input again")
 
     """
         世界每运行一轮都会调用一次该方法 统计和可视化在这里进行
@@ -209,15 +221,24 @@ class World_controller:
     """
     # 统计数据
     def statistics(self, cmd):
+        str_to_print = None
+
         # 这里默认了所有世界都有生物
         creatures = self.world.state.animals + self.world.state.plants
         num = 0
         sum_life = 0
         for creature in creatures:
             pos = len(cmd) - 1
+            if pos <= 0:
+                str_to_print = "need more parameters, please try again"
+                return str_to_print
+
             # 对于未死亡的生物，进行大量的筛选
             if not creature.is_die():
-                cmd_num = int(cmd[2])
+                if pos != 1:
+                    cmd_num = int(cmd[2])
+                else:
+                    cmd_num = 0
                 if cmd_num >= 8:
                     cmd_num -= 8
                     # 进行位置的相关筛选
@@ -244,9 +265,14 @@ class World_controller:
                 sum_life += creature.life
 
         # 完成了遍历
-        if cmd[1] == "avg_life":
-            return sum_life/num
-        return num
+        if cmd[1] == "num":
+            str_to_print = num
+        elif cmd[1] == "avg_life":
+            str_to_print = sum_life / num
+        else:
+            str_to_print = "wrong command,please input again"
+
+        return str_to_print
 
 
 
