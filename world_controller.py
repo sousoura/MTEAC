@@ -142,7 +142,7 @@ class World_controller:
                 quit: 退出程序
                         目前有瑕疵 需要玩家移动一格才会真的退出
                         另一个瑕疵 玩家叉掉程序以后 input会滞留
-                save 存档名: 保存当前世界到【存档名.json】文件中 
+                save 存档名: 保存当前世界到【存档名.save】文件中 
     """
     # 后台
     def background(self):

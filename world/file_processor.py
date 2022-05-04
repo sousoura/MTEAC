@@ -99,7 +99,7 @@ class File_processor:
 
         path = os.getcwd()  # 获取当前路径
         with open(path + "\\" + "world\\world_project" + "\\" + world_type_name +
-                  "\\save\\" + file_name + ".json", "w+") as save_file:
+                  "\\save\\" + file_name + ".save", "w+") as save_file:
             # json.dump(state, save_file, default=state_obj_to_json, sort_keys=True, indent=4)
             state_dic = state_obj_to_json(state)
             # print(state_dic)
@@ -231,7 +231,7 @@ class File_processor:
         # 读取json存档文件内容
         path = os.getcwd()  # 获取当前路径
         with open(path + "\\" + "world\\world_project" + "\\" + world_type_name +
-                  "\\save\\" + file_name + ".json", "r") as save_file:
+                  "\\save\\" + file_name + ".save", "r") as save_file:
             json_str = save_file.read()
 
         # json字符串转为字典

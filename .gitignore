@@ -105,3 +105,4 @@ venv.bak/
 
 # 存档
  world/world_project/mesh_world/save/
+ *.save
