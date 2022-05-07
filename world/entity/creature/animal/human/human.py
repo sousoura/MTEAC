@@ -13,5 +13,5 @@ class Human(Animal):
                                     crawl_ability, speed, aggressivity)
 
     @abstractmethod
-    def move(self, new_position):
+    def die(self):
         pass

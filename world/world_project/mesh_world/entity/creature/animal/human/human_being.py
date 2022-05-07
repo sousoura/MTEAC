@@ -1,5 +1,5 @@
 from world.entity.entity_import import *
-
+from world.world_project.mesh_world.entity.obj.human_corpse import Human_corpse
 
 """
     人类类 物种类
@@ -15,11 +15,9 @@ class Human_being(Human, Big_obj):
 
     def __init__(self, position, life, brain, health_point, full_value, drinking_value, body_state, gender,
                  crawl_ability, speed, aggressivity):
-        super(Human, self).__init__(position, life, brain, health_point, full_value, drinking_value, body_state, gender,
-                 crawl_ability, speed, aggressivity)
-
-    def move(self, new_position):
-        self.position = new_position
+        super(Human_being, self).__init__(position, life, brain, health_point, full_value, drinking_value, body_state,
+                                          gender,
+                                          crawl_ability, speed, aggressivity)
 
     # 行为造成的内部影响
     def performing_an_act(self, command):
@@ -33,12 +31,13 @@ class Human_being(Human, Big_obj):
     '''
         感知的结构： 整个是一个元组 其中：一个元组表示地形 另一个字典表示生物表
     '''
+
     def get_perception(self, landform_map, things_position):
 
         return tuple(landform_map), things_position
 
     def die(self):
-        self.life = 0
+        return Human_corpse(self.get_position(), 20)
 
     def is_die(self):
         return self.life <= 0

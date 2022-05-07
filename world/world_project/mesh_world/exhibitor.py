@@ -71,6 +71,11 @@ class Exhibitor:
                                   self.cell_width - 2 * self.mid_interspace,
                                   self.cell_height - 2 * self.mid_interspace))
 
+            def small_circle(self, color):
+                pygame.draw.circle(self.exhibitor.window, color,
+                                   (self.left + self.cell_width / 2, self.top + self.cell_height / 2),
+                                    self.mid_interspace)
+
         self.Point = Point
 
         # 定义颜色
@@ -87,11 +92,14 @@ class Exhibitor:
         terrain_map = world.get_state().get_terrain_map()
         animals_position = world.get_state().get_animals_position()
         plants_position = world.get_state().get_plants_position()
+        objs_position = world.get_state().get_objs_position()
+
+        player_controlling_unit = world.get_state().get_entity_by_id(1)
 
         # win_event = True
 
-        self.draw_world(landform_map, water_map, terrain_map, animals_position, plants_position)
-        self.draw_status_bar()
+        self.draw_world(landform_map, water_map, terrain_map, animals_position, plants_position, objs_position)
+        self.draw_status_bar(player_controlling_unit)
 
         # 让渡控制权
         self.pygame.display.flip()
@@ -108,7 +116,7 @@ class Exhibitor:
         画图
     """
 
-    def draw_world(self, landform_map, water_map, terrain_map, animals_position, plants_position):
+    def draw_world(self, landform_map, water_map, terrain_map, animals_position, plants_position, objs_position):
         # 找到全地图的最高点
         def get_maximum_height(landform_map):
             return max(map(max, landform_map))
@@ -148,10 +156,10 @@ class Exhibitor:
                 b = min(terrain_num / max_height * 225 * b_ratio, 255)
                 return r, g, b
 
-            self.Point\
+            self.Point \
                 (self, row=position[1], col=position[0]).rect(get_terrain_color(terrain_type, max_height, terrain))
 
-        # 画水地图
+        # 水地图的水点类
         class Water_point(self.Point):
             color = (0, 0, 225)
 
@@ -186,7 +194,7 @@ class Exhibitor:
                     (self.world_win_size[0] / self.terrain_size[0],
                      self.world_win_size[1] / self.terrain_size[1])
                     , self.pygame.SRCALPHA, 32)
-            Water_point(self, row=position[1], col=position[0], water_surface=water_surface).\
+            Water_point(self, row=position[1], col=position[0], water_surface=water_surface). \
                 draw_bar(water_high, water_surface)
 
         # 画生物
@@ -212,18 +220,31 @@ class Exhibitor:
 
                 def draw_plant_point(self, plant_species, color):
                     self.exhibitor.pygame.draw.rect(self.exhibitor.window, color,
-                                                          (self.left + self.mid_interspace, self.top + self.mid_interspace,
-                                      5,
-                                      self.cell_height - 2 * self.mid_interspace))
+                                                    (self.left + self.mid_interspace, self.top + self.mid_interspace,
+                                                     5,
+                                                     self.cell_height - 2 * self.mid_interspace))
 
             def get_plant_color(plant_species):
                 return ((169, 208, 107), (205, 133, 63), (165, 42, 42), (0, 125, 0), (0, 255, 0))[plant_species]
 
             for plant in plants:
                 plant_species = ["Algae", "Birch", "Birch_wood", "Grass", "Grassland"].index(type(plant).__name__)
-                Plant_point\
-                    (self, row=position[1], col=position[0]).\
+                Plant_point \
+                    (self, row=position[1], col=position[0]). \
                     draw_plant_point(plant_species, get_plant_color(plant_species))
+
+        def draw_objs(position, objs):
+            def get_obj_color(obj):
+                import random
+                # 强行将类名字符串转化为ord数字 作为种子
+                random.seed(''.join(map(str, map(ord, type(obj).__name__))))
+                r = random.randrange(0, 255)
+                g = random.randrange(0, 255)
+                b = random.randrange(0, 255)
+                return r, g, b
+
+            for obj in objs:
+                self.Point(self, row=position[1], col=position[0]).small_circle(get_obj_color(obj))
 
         # 渲染
         # 画方块
@@ -241,6 +262,10 @@ class Exhibitor:
                     draw_water_map \
                         ((block_index, block_line_index), water_map[block_line_index][block_index])
 
+        # 画物品
+        for position in objs_position:
+            draw_objs(position, objs_position[position])
+
         # 画生物
         # 画动物
         for position in animals_position:
@@ -250,8 +275,82 @@ class Exhibitor:
         for position in plants_position:
             draw_plants(position, plants_position[position])
 
-    def draw_status_bar(self):
-        pass
+    def draw_status_bar(self, player_controlling_unit):
+
+        """
+            三个标题
+        """
+
+        # # 创建字体对象
+        # title_font_size = 20
+        # title_font = self.pygame.font.Font(None, title_font_size)
+        #
+        # # 文本与颜色
+        # state_title_text = title_font.render("Creature state", True, (0, 0, 0))
+        # attribute_title_text = title_font.render("Attribute state", True, (0, 0, 0))
+        # species_characteristics_text = title_font.render("Species characteristics", True, (0, 0, 0))
+        #
+        # # 文本坐标
+        # state_title_position = (self.world_win_size[0] / 9, self.world_win_size[1] * 102 / 100)
+        # attribute_title_position = (self.world_win_size[0] / 8 * 2, self.world_win_size[1] * 102 / 100)
+        # species_characteristics_position = (self.world_win_size[0] / 8 * 3, self.world_win_size[1] * 102 / 100)
+        # # 获取设置后新的坐标区域
+        # state_title_rect = state_title_text.get_rect(center=state_title_position)
+        # attribute_title_rect = state_title_text.get_rect(center=attribute_title_position)
+        # species_characteristics_rect = state_title_text.get_rect(center=species_characteristics_position)
+        #
+        # self.window.blit(state_title_text, state_title_rect)
+        # self.window.blit(attribute_title_text, attribute_title_rect)
+        # self.window.blit(species_characteristics_text, species_characteristics_rect)
+
+        """
+            属性
+        """
+
+        state_attribute = ["health_point", "full_value", "drinking_value", "body_state"]
+        ability_attribute = ["crawl_ability", "speed", "aggressivity"]
+        ability_correct_attribute = ["crawl_ability_change_value", "speed_change_value", "aggressivity_change_value"]
+        individual_attribute = ["gender"]
+        action_mode_attribute = ["pace"]
+        situation_attribute = ["situation"]
+        species_characteristics_attribute = ["feeding_habits", "swimming_ability"]
+
+        attribute_lists_list = [state_attribute, ability_attribute, ability_correct_attribute,
+                                individual_attribute, action_mode_attribute, situation_attribute,
+                                species_characteristics_attribute]
+
+        if player_controlling_unit:
+            row = 0
+            col = 0
+            init_position = (self.world_win_size[0] / 7, self.world_win_size[1] * 102 / 100)
+
+            font_size = 15
+            text_font = self.pygame.font.Font(None, font_size)
+
+            line_width = self.world_win_size[0] / 2
+            line_high = font_size * 1.2
+
+            # 遍历属性名
+            for attribute_name in player_controlling_unit.__dir__():
+                # 排除内置方法和属性
+                if attribute_name[0] != "_":
+                    # 排除方法对象
+                    if not hasattr(getattr(player_controlling_unit, attribute_name), '__call__'):
+                        for attribute_list in attribute_lists_list:
+                            if attribute_name in attribute_list:
+                                text_position = \
+                                    (init_position[0] + row * line_width, init_position[1] + col * line_high)
+                                text = \
+                                    text_font.render(attribute_name + ": " +
+                                                     str(getattr(player_controlling_unit, attribute_name)),
+                                                     True, (0, 0, 0))
+                                text_rect = text.get_rect(center=text_position)
+                                self.window.blit(text, text_rect)
+
+                                col += 1
+                                if col // 8 >= 1:
+                                    col = 0
+                                    row += 1
 
     """
         检测玩家输入 玩家输入之前不会跳出循环 可能递归
@@ -303,6 +402,7 @@ class Exhibitor:
             从世界取得该位置的实例
             然后玩家输入下标选择对象是那个
         """
+
         def choose_object(last_code):
             if player_animal.get_id() == 1:
                 old_position = tuple(player_animal.get_position())
@@ -311,12 +411,8 @@ class Exhibitor:
                 objects_num = len(entities)
                 # 如果只有一个生物 且改生物符合主体的食性 则马上返回0
                 if objects_num == 1:
-                    if player_animal.feeding_habits_judge(type(entities[0]).__name__):
-                        last_code.append(entities[0])
-                        return True
-                    else:
-                        last_code.append(-1)
-                        return True
+                    last_code.append(entities[0])
+                    return True
                 if objects_num == 0:
                     last_code.append(-1)
                     return True
@@ -336,10 +432,7 @@ class Exhibitor:
                     input_num = temp_list.pop()
                     if 0 < input_num <= objects_num:
                         be_eator = entities[input_num - 1]
-                        if player_animal.feeding_habits_judge(type(be_eator).__name__):
-                            last_code.append(be_eator)
-                        else:
-                            last_code.append(-1)
+                        last_code.append(be_eator)
                         return True
                     # 反悔操作
                     elif input_num == -1:
@@ -373,7 +466,7 @@ class Exhibitor:
                             last_code.append("up")
                             # if not waiting_for_para(last_code):
                             #     return False
-                        elif last_code[0] == "eat":
+                        elif last_code[0] == "eat" or last_code[0] == "attack":
                             last_code.append("up")
                             if not choose_object(last_code):
                                 return False
@@ -386,7 +479,7 @@ class Exhibitor:
                             last_code.append("down")
                             # if not waiting_for_para(last_code):
                             #     return False
-                        elif last_code[0] == "eat":
+                        elif last_code[0] == "eat" or last_code[0] == "attack":
                             last_code.append("down")
                             if not choose_object(last_code):
                                 return False
@@ -399,7 +492,7 @@ class Exhibitor:
                             last_code.append("left")
                             # if not waiting_for_para(last_code):
                             #     return False
-                        elif last_code[0] == "eat":
+                        elif last_code[0] == "eat" or last_code[0] == "attack":
                             last_code.append("left")
                             if not choose_object(last_code):
                                 return False
@@ -412,17 +505,29 @@ class Exhibitor:
                             last_code.append("right")
                             # if not waiting_for_para(last_code):
                             #     return False
-                        elif last_code[0] == "eat":
+                        elif last_code[0] == "eat" or last_code[0] == "attack":
                             last_code.append("right")
                             if not choose_object(last_code):
                                 return False
                         else:
                             last_code.append("right")
                         door = False
-                    elif event.key == self.pygame.K_SPACE:
+                    elif event.key == self.pygame.K_z:
                         last_code.append("eat")
                         self.detect_player_input(last_code, world)
                         door = False
+                    elif event.key == self.pygame.K_x:
+                        last_code.append("attack")
+                        self.detect_player_input(last_code, world)
+                        door = False
+                    elif event.key == self.pygame.K_c:
+                        last_code.append("drink")
+                        self.detect_player_input(last_code, world)
+                        door = False
+                    elif event.key == self.pygame.K_v:
+                        if len(last_code) == 0:
+                            last_code.append("rest")
+                            door = False
                     elif event.key == self.pygame.K_1:
                         player_animal.change_pace(1)
                     elif event.key == self.pygame.K_2:

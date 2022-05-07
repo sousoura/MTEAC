@@ -1,4 +1,5 @@
 from world.entity.entity_import import *
+from world.world_project.mesh_world.entity.obj.alpaca_corpse import Alpaca_corpse
 
 """
     草泥马 物种类
@@ -15,14 +16,7 @@ class Alpaca(Animal, Big_obj):
     def __init__(self, position, life, brain, health_point, full_value, drinking_value, body_state, gender,
                  crawl_ability, speed, aggressivity):
         super(Alpaca, self).__init__(position, life, brain, health_point, full_value, drinking_value, body_state,
-                                     gender, crawl_ability, speed, aggressivity, feeding_habits, swimming_ability,
-                                     life_area)
-
-    def move(self, new_position):
-        self.position = new_position
-
-    def eat(self, be_eator):
-        pass
+                                     gender, crawl_ability, speed, aggressivity)
 
     # 行为造成的内部影响
     def performing_an_act(self, cmd):
@@ -37,7 +31,16 @@ class Alpaca(Animal, Big_obj):
         return tuple(landform_map), things_position
 
     def die(self):
-        self.life = 0
+        return Alpaca_corpse(self.get_position(), 20)
 
     def is_die(self):
         return self.life <= 0
+
+    # 执行一类动作的成本 能量消耗
+    def action_cost(self, action_type):
+        action_type_num = self.action_list.index(action_type)
+        self.action_cost_method_list[action_type_num](self)
+
+    # 动作成功的影响
+    def action_interior_outcome(self, action_type, parameter=None, obj=None, degree=None):
+        pass

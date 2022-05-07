@@ -18,7 +18,7 @@ class Entity(metaclass=ABCMeta):
         self.id = self.id_maker.make_id()
 
     def get_position(self):
-        return self.position
+        return self.position[:]
 
     def get_id(self):
         return self.id
