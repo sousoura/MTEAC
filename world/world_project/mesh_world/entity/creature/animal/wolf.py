@@ -14,9 +14,9 @@ class Wolf(Animal, Big_obj):
     swimming_ability = 1
     life_area = 0
 
-    def __init__(self, position, life, brain, health_point, full_value, drinking_value, body_state, gender,
+    def __init__(self, position, life, brain, full_value, drinking_value, body_state, gender,
                  crawl_ability, speed, aggressivity):
-        super(Wolf, self).__init__(position, life, brain, health_point, full_value, drinking_value, body_state, gender,
+        super(Wolf, self).__init__(position, life, brain, full_value, drinking_value, body_state, gender,
                                    crawl_ability, speed, aggressivity)
 
     # 行为造成的内部影响
@@ -36,6 +36,3 @@ class Wolf(Animal, Big_obj):
 
     def die(self):
         return Wolf_corpse(self.get_position(), 20)
-
-    def is_die(self):
-        return self.life <= 0

@@ -7,9 +7,9 @@ from abc import ABCMeta, abstractmethod
 
 
 class Human(Animal):
-    def __init__(self, position, life, brain, health_point, full_value, drinking_value, body_state, gender,
+    def __init__(self, position, life, brain, full_value, drinking_value, body_state, gender,
                  crawl_ability, speed, aggressivity):
-        super(Human, self).__init__(position, life, brain, health_point, full_value, drinking_value, body_state, gender,
+        super(Human, self).__init__(position, life, brain, full_value, drinking_value, body_state, gender,
                                     crawl_ability, speed, aggressivity)
 
     @abstractmethod

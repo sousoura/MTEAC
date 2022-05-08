@@ -17,6 +17,7 @@ class Concrete_world_generator(World_generator):
         输入构建参数 生成状态 根据状态生成一个世界
         返回一个世界
     """
+
     def generate_a_world(self, maximum_height, map_size, landform_para, water_para, terrain_para,
                          animals_para, plants_para, obj_para):
         state = self.generate_a_state(maximum_height, map_size, landform_para, water_para, terrain_para,
@@ -29,6 +30,7 @@ class Concrete_world_generator(World_generator):
         """
             定义相邻以及防止越界
         """
+
         def define_adjacent(row_index, col_index):
             left = row_index - 1
             if left < 0:
@@ -49,6 +51,7 @@ class Concrete_world_generator(World_generator):
             return left, right, up, down
 
         """ 随机生成特定大小的网格世界 """
+
         def randomMatrix(maximum_height, columns, rows):
             import random
             matrix = []
@@ -61,8 +64,9 @@ class Concrete_world_generator(World_generator):
         """
             找到山峰 山脉 谷地 和 坑地的位置 然后生成地图
         """
+
         def generate_landform_map(landform_para, maximum_height, columns, rows,
-                                       peaks_para=None, mountains_para=None, valleys_para=None, pits_para=None):
+                                  peaks_para=None, mountains_para=None, valleys_para=None, pits_para=None):
             """
                 :param landform_para: 生成模式的参数 可以为字符串或元组 为字符串的话可以为"default_landform"之类的 为元组时为生成参数
                 :param maximum_height: 地图的最高高度
@@ -224,30 +228,30 @@ class Concrete_world_generator(World_generator):
 
         # 生成動物
         def random_animals(animal_list):
-            animal_list.append(Wolf(position=[1, 2], life=5, brain=Wolf_brain(),
-                                    health_point=100, full_value=70, drinking_value=70, body_state=0, gender=True,
+            animal_list.append(Wolf(position=[1, 2], life=100, brain=Wolf_brain(),
+                                    full_value=70, drinking_value=70, body_state=0, gender=True,
                                     crawl_ability=1, speed=2, aggressivity=50
                                     ))
-            animal_list.append(Wolf(position=[1, 3], life=5, brain=Wolf_brain(),
-                                    health_point=100, full_value=70, drinking_value=70, body_state=0, gender=True,
+            animal_list.append(Wolf(position=[1, 3], life=100, brain=Wolf_brain(),
+                                    full_value=70, drinking_value=70, body_state=0, gender=True,
                                     crawl_ability=1, speed=2, aggressivity=50
                                     ))
-            animal_list.append(Human_being(position=[3, 3], life=5, brain=Human_brain(),
-                                    health_point=100, full_value=70, drinking_value=70, body_state=0, gender=True,
-                                    crawl_ability=1, speed=2, aggressivity=50
-                                    ))
-            animal_list.append(Human_being(position=[3, 4], life=5, brain=Human_brain(),
-                                           health_point=100, full_value=70, drinking_value=70, body_state=0,
+            animal_list.append(Human_being(position=[3, 3], life=100, brain=Human_brain(),
+                                           full_value=70, drinking_value=70, body_state=0, gender=True,
+                                           crawl_ability=1, speed=2, aggressivity=50
+                                           ))
+            animal_list.append(Human_being(position=[3, 4], life=100, brain=Human_brain(),
+                                           full_value=70, drinking_value=70, body_state=0,
                                            gender=True,
                                            crawl_ability=1, speed=2, aggressivity=50
                                            ))
-            animal_list.append(Human_being(position=[3, 5], life=5, brain=Human_brain(),
-                                           health_point=100, full_value=70, drinking_value=70, body_state=0,
+            animal_list.append(Human_being(position=[3, 5], life=100, brain=Human_brain(),
+                                           full_value=70, drinking_value=70, body_state=0,
                                            gender=True,
                                            crawl_ability=1, speed=2, aggressivity=50
                                            ))
-            animal_list.append(Human_being(position=[2, 4], life=5, brain=Human_brain(),
-                                           health_point=100, full_value=70, drinking_value=70, body_state=0,
+            animal_list.append(Human_being(position=[2, 4], life=100, brain=Human_brain(),
+                                           full_value=70, drinking_value=70, body_state=0,
                                            gender=True,
                                            crawl_ability=1, speed=2, aggressivity=50
                                            ))
@@ -358,6 +362,7 @@ class Concrete_world_generator(World_generator):
         输入属性值作为参数 生成状态
         返回一个状态
     """
+
     # 读档时用既有信息建造一个世界
     def building_a_state(self, landform_map, water_map, terrain_map, terrain_size, animals_list, plants_list, obj_list):
         return State(landform_map, water_map, terrain_map, terrain_size, animals_list, plants_list, obj_list)

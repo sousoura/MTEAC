@@ -137,7 +137,6 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
 
     def drink_outcome(self, parameter=None, obj=None, degree=None):
         self.drinking_value += 10
-        print("drinking value:", self.drinking_value)
 
     def attack_outcome(self, parameter=None, obj=None, degree=None):
         pass
@@ -168,7 +167,7 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
 
     action_cost_method_list = [go_cost, eat_cost, drink_cost, attack_cost, rest_cost]
 
-    def __init__(self, position, life, brain, health_point, full_value, drinking_value, body_state, gender,
+    def __init__(self, position, life, brain, full_value, drinking_value, body_state, gender,
                  crawl_ability, speed, aggressivity, carapace=0):
         super(Animal, self).__init__(position, life, carapace)
 
@@ -211,7 +210,6 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
         self.brain = brain
 
         # 状态属性
-        self.health_point = health_point
         self.full_value = full_value
         self.drinking_value = drinking_value
         self.body_state = body_state
@@ -302,10 +300,16 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
         改变身体状态的工具函数
     """
     def body_change(self, full_value_change=0.0, drinking_value_change=0.0,
-                    health_point_change=0.0, body_state_change=False):
-        self.full_value += full_value_change
-        self.drinking_value += drinking_value_change
-        self.health_point += health_point_change
+                    life_change_value=0.0, body_state_change=False):
+        if self.full_value > 0:
+            self.full_value += full_value_change
+            self.full_value = max(0, self.full_value)
+        if self.drinking_value > 0:
+            self.drinking_value += drinking_value_change
+            self.drinking_value = max(0, self.drinking_value)
+        if self.life > 0:
+            self.life += life_change_value
+            self.life = max(0, self.life)
         if body_state_change:
             self.body_state = body_state_change
 
@@ -333,7 +337,7 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
         crawl_ability_change_value = 0
         speed_change_value = 0
         aggressivity_change_value = 0
-        health_point_change_value = 0
+        life_change_value = 0
 
         if self.full_value > 0:
             self.body_change(full_value_change=-0.1)
@@ -345,12 +349,12 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
                 crawl_ability_change_value -= 1
                 speed_change_value -= 1
                 aggressivity_change_value -= 1
-                health_point_change_value -= 1
+                life_change_value -= 1
         else:
             crawl_ability_change_value -= 2
             speed_change_value -= 2
             aggressivity_change_value -= 2
-            health_point_change_value -= 2
+            life_change_value -= 2
 
         if self.drinking_value > 0:
             self.body_change(full_value_change=-0.1)
@@ -362,14 +366,14 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
                 crawl_ability_change_value -= 1
                 speed_change_value -= 1
                 aggressivity_change_value -= 1
-                health_point_change_value -= 1
+                life_change_value -= 1
         else:
             crawl_ability_change_value -= 2
             speed_change_value -= 2
             aggressivity_change_value -= 2
-            health_point_change_value -= 2
+            life_change_value -= 2
 
-        self.body_change(health_point_change=health_point_change_value)
+        self.body_change(life_change_value=life_change_value)
         self.body_attribute_change(crawl_ability_change_value=crawl_ability_change_value,
                                    speed_change_value=speed_change_value,
                                    aggressivity_change_value=aggressivity_change_value)

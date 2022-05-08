@@ -109,6 +109,7 @@ class Mesh_state(State):
                 self.animal_action_command_analysis_and_execute(animal, cmd)
                 animal.post_turn_change()
             else:
+                self.animal_die(animal, self.animals_position, self.animals)
                 del animal
 
     # 分析生物行动命令的基本类型 并调用相应的执行函数
@@ -276,23 +277,6 @@ class Mesh_state(State):
     """
 
     def animal_attack(self, attacker, be_attackeder):
-        # 被杀死完后 被杀者消失
-        def state_attack_change(attacker, be_attackeder, position_list, attack_obj_list):
-            die_position = tuple(be_attackeder.get_position())
-            corpse = be_attackeder.die()
-            if corpse:
-                self.objects.append(corpse)
-                if die_position in self.objs_position:
-                    self.objs_position[die_position].append(corpse)
-                else:
-                    self.objs_position[die_position] = [corpse]
-
-            position_list[be_attackeder.get_position()].remove(be_attackeder)
-            attack_obj_list.remove(be_attackeder)
-            if len(position_list[be_attackeder.get_position()]) == 0:
-                del position_list[be_attackeder.get_position()]
-            del be_attackeder
-
         # 动物内部改变 攻击者和被攻击者状态变化
         attacker.action_interior_outcome("attack", obj=be_attackeder)
         be_attackeder.be_attack(attacker.get_aggressivity())
@@ -301,9 +285,9 @@ class Mesh_state(State):
         if be_attackeder.is_die():
             # 地图改变
             if isinstance(be_attackeder, Plant):
-                state_attack_change(attacker, be_attackeder, self.plants_position, self.plants)
+                self.animal_die(attacker, be_attackeder, self.plants_position, self.plants)
             elif isinstance(be_attackeder, Animal):
-                state_attack_change(attacker, be_attackeder, self.animals_position, self.animals)
+                self.animal_die(attacker, be_attackeder, self.animals_position, self.animals)
             del be_attackeder
 
     # 生物休息
@@ -519,6 +503,24 @@ class Mesh_state(State):
         if len(self.animals_position[old_position]) == 0:
             del self.animals_position[old_position]
         # animal.move(new_position)
+
+    # 动物死亡后消失
+    def animal_die(self, creature, creature_position_list, creature_list):
+        die_position = tuple(creature.get_position())
+        corpse = creature.die()
+        if corpse:
+            self.objects.append(corpse)
+            if die_position in self.objs_position:
+                self.objs_position[die_position].append(corpse)
+            else:
+                self.objs_position[die_position] = [corpse]
+
+        creature_position_list[creature.get_position()].remove(creature)
+        creature_list.remove(creature)
+        if len(creature_position_list[creature.get_position()]) == 0:
+            del creature_position_list[creature.get_position()]
+        del creature
+
 
     # 初始化位置字典
     def init_position_list(self, entity_list):

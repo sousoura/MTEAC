@@ -13,9 +13,9 @@ class Human_being(Human, Big_obj):
     swimming_ability = 4
     life_area = 0
 
-    def __init__(self, position, life, brain, health_point, full_value, drinking_value, body_state, gender,
+    def __init__(self, position, life, brain, full_value, drinking_value, body_state, gender,
                  crawl_ability, speed, aggressivity):
-        super(Human_being, self).__init__(position, life, brain, health_point, full_value, drinking_value, body_state,
+        super(Human_being, self).__init__(position, life, brain, full_value, drinking_value, body_state,
                                           gender,
                                           crawl_ability, speed, aggressivity)
 
@@ -38,6 +38,3 @@ class Human_being(Human, Big_obj):
 
     def die(self):
         return Human_corpse(self.get_position(), 20)
-
-    def is_die(self):
-        return self.life <= 0
