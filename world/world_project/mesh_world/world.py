@@ -23,6 +23,7 @@ class Mesh_world(World):
     # 地图推进一次
     def evolution(self, player_cmd=None):
         self.state.animal_action(player_cmd)
+        self.state.plant_change()
         self.state.water_flow()
         # self.state.landform_evolution()
 

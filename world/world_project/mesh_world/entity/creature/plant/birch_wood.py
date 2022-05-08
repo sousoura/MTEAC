@@ -1,4 +1,7 @@
+import random
+
 from world.entity.entity_import import *
+from world.world_project.mesh_world.entity.obj.fruit import Fruit
 
 
 class Birch_wood(Plant_cluster, Big_obj):
@@ -7,3 +10,7 @@ class Birch_wood(Plant_cluster, Big_obj):
 
     def die(self):
         pass
+
+    def post_turn_change(self):
+        if random.randrange(1, 100) >= 99:
+            return [Fruit(self.position, 1)]

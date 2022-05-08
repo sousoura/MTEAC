@@ -307,7 +307,7 @@ class Exhibitor:
             属性
         """
 
-        state_attribute = ["life", "full_value", "drinking_value", "body_state"]
+        state_attribute = ["position", "life", "full_value", "drinking_value", "body_state"]
         ability_attribute = ["crawl_ability", "speed", "aggressivity"]
         ability_correct_attribute = ["crawl_ability_change_value", "speed_change_value", "aggressivity_change_value"]
         individual_attribute = ["gender"]

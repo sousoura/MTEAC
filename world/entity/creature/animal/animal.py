@@ -14,7 +14,7 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
     # 物种属性
     feeding_habits = []
     swimming_ability = 1
-    life_area = 0
+    life_area = "terrestrial"
 
     """
         行为合法性判断
@@ -46,14 +46,24 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
 
             # 整格模式
             # 攀爬限制 格差
-            # 判断落差是否大于生物的爬行能力
-            if abs(world_state.landform_map[int(old_position[1])][int(old_position[0])] -
-                   world_state.landform_map[int(new_position[1])][int(new_position[0])]) > \
-                    self.get_crawl_ability():
-                return False
+            # 判断落差是否大于生物的爬行能力(水里不用看这个)
+            if not "aquatic" and world_state.get_water_map()[new_position[1]][new_position[0]] < 1:
+                if abs(world_state.landform_map[int(old_position[1])][int(old_position[0])] -
+                       world_state.landform_map[int(new_position[1])][int(new_position[0])]) > \
+                        self.get_crawl_ability():
+                    return False
+
             # 地貌限制 水限制
-            if self.swimming_ability < world_state.get_water_map()[new_position[1]][new_position[0]]:
-                return False
+            # 陆生动物下水限制
+            if self.life_area == "terrestrial":
+                if self.swimming_ability < world_state.get_water_map()[new_position[1]][new_position[0]]:
+                    return False
+
+            # 水生动物上岸限制
+            if self.life_area == "aquatic":
+                if world_state.get_water_map()[new_position[1]][new_position[0]] == 0:
+                    return False
+
             # 实体限制 大物体限制
             if isinstance(self, Big_obj):
                 # 大物体互斥规则
@@ -68,6 +78,7 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
                                                              ):
                     if isinstance(other_entity, Big_obj):
                         return False
+
             # 挣扎状态判断
             if self.situation == "struggle":
                 if random.randrange(100) <= 90:
@@ -328,10 +339,6 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
 
         if aggressivity_change_value:
             self.aggressivity_change_value = aggressivity_change_value
-
-    # @abstractmethod
-    # def die(self):
-    #     pass
 
     def post_turn_change(self):
         crawl_ability_change_value = 0

@@ -9,23 +9,15 @@ from world.world_project.mesh_world.entity.obj.human_corpse import Human_corpse
 
 class Human_being(Human, Big_obj):
     # 物种属性
-    feeding_habits = []
+    feeding_habits = ["Fruit"]
     swimming_ability = 4
-    life_area = 0
+    life_area = "terrestrial"
 
     def __init__(self, position, life, brain, full_value, drinking_value, body_state, gender,
                  crawl_ability, speed, aggressivity):
         super(Human_being, self).__init__(position, life, brain, full_value, drinking_value, body_state,
                                           gender,
                                           crawl_ability, speed, aggressivity)
-
-    # 行为造成的内部影响
-    def performing_an_act(self, command):
-        # if command[0] == 'successful':
-        #     if command[1][0] == 'go':
-        #         if command[1][1] == 'down':
-        #             self.position[1] += 1
-        pass
 
     # 得到感知
     '''
@@ -37,4 +29,4 @@ class Human_being(Human, Big_obj):
         return tuple(landform_map), things_position
 
     def die(self):
-        return Human_corpse(self.get_position(), 20)
+        return [Human_corpse(self.get_position(), 20)]

@@ -68,10 +68,6 @@ class Mesh_state(State):
         self.plants_position = self.init_position_list(self.plants)
         self.objs_position = self.init_position_list(self.objects)
 
-    # 更新新地图
-    def renew_map(self, new_map):
-        self.landform_map = new_map
-
     """
         ***
             以下是动物的运动
@@ -259,6 +255,9 @@ class Mesh_state(State):
                 state_eat_change(eator, be_eator, self.plants_position, self.plants)
             elif isinstance(be_eator, Obj):
                 state_eat_change(eator, be_eator, self.objs_position, self.objects)
+            elif isinstance(be_eator, Animal):
+                be_eator.body_change(life_change_value=-100)
+                state_eat_change(eator, be_eator, self.animals_position, self.animals)
             del be_eator
 
     # 生物喝
@@ -285,9 +284,9 @@ class Mesh_state(State):
         if be_attackeder.is_die():
             # 地图改变
             if isinstance(be_attackeder, Plant):
-                self.animal_die(attacker, be_attackeder, self.plants_position, self.plants)
+                self.animal_die(be_attackeder, self.plants_position, self.plants)
             elif isinstance(be_attackeder, Animal):
-                self.animal_die(attacker, be_attackeder, self.animals_position, self.animals)
+                self.animal_die(be_attackeder, self.animals_position, self.animals)
             del be_attackeder
 
     # 生物休息
@@ -358,8 +357,6 @@ class Mesh_state(State):
                                 # 流一个水差
                                 water_head = \
                                     self.landform_map[row_index][col_index] - adjacent_absolute_water_highs[position]
-                                # if water_head < 0:
-                                #     water_head = 0
                                 current_water_amount -= water_head
                                 self.water_map[position[0]][position[1]] += water_head
                                 kill_positions.append(position)
@@ -493,6 +490,10 @@ class Mesh_state(State):
 
         return False
 
+    # 更新新地图
+    def renew_map(self, new_map):
+        self.landform_map = new_map
+
     # 改变动物位置的工具函数
     def change_animal_position(self, animal, old_position, new_position):
         if new_position in self.animals_position:
@@ -509,18 +510,18 @@ class Mesh_state(State):
         die_position = tuple(creature.get_position())
         corpse = creature.die()
         if corpse:
-            self.objects.append(corpse)
-            if die_position in self.objs_position:
-                self.objs_position[die_position].append(corpse)
-            else:
-                self.objs_position[die_position] = [corpse]
+            for remain in corpse:
+                self.objects.append(remain)
+                if die_position in self.objs_position:
+                    self.objs_position[die_position].append(remain)
+                else:
+                    self.objs_position[die_position] = [remain]
 
-        creature_position_list[creature.get_position()].remove(creature)
+        creature_position_list[tuple(creature.get_position())].remove(creature)
         creature_list.remove(creature)
-        if len(creature_position_list[creature.get_position()]) == 0:
-            del creature_position_list[creature.get_position()]
+        if len(creature_position_list[tuple(creature.get_position())]) == 0:
+            del creature_position_list[tuple(creature.get_position())]
         del creature
-
 
     # 初始化位置字典
     def init_position_list(self, entity_list):
@@ -531,6 +532,18 @@ class Mesh_state(State):
             else:
                 things_position[tuple(animal.get_position())] = [animal]
         return things_position
+
+    # 植物每回合的变化
+    def plant_change(self):
+        for plant in self.plants:
+            products = plant.post_turn_change()
+            if products:
+                for product in products:
+                    self.objects.append(product)
+                    if plant.get_position() in self.objs_position:
+                        self.objs_position[plant.get_position()].append(product)
+                    else:
+                        self.objs_position[plant.get_position()] = [product]
 
 
 if __name__ == "__main__":

@@ -10,3 +10,6 @@ class Plant(Creature, Food, metaclass=ABCMeta):
     @abstractmethod
     def die(self):
         pass
+
+    def post_turn_change(self):
+        pass

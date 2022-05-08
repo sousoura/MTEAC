@@ -228,6 +228,11 @@ class Concrete_world_generator(World_generator):
 
         # 生成動物
         def random_animals(animal_list):
+            animal_list.append(Alpaca(position=[10, 10], life=100, brain=Alpaca_brain(),
+                                      full_value=70, drinking_value=70, body_state=0,
+                                      gender=True,
+                                      crawl_ability=4, speed=1, aggressivity=5
+                                      ))
             animal_list.append(Wolf(position=[1, 2], life=100, brain=Wolf_brain(),
                                     full_value=70, drinking_value=70, body_state=0, gender=True,
                                     crawl_ability=1, speed=2, aggressivity=50
@@ -255,6 +260,26 @@ class Concrete_world_generator(World_generator):
                                            gender=True,
                                            crawl_ability=1, speed=2, aggressivity=50
                                            ))
+            animal_list.append(Mouse(position=[10, 4], life=100, brain=Mouse_brain(),
+                                     full_value=70, drinking_value=70, body_state=0,
+                                     gender=True,
+                                     crawl_ability=4, speed=1, aggressivity=5
+                                     ))
+            animal_list.append(Mouse(position=[2, 10], life=100, brain=Mouse_brain(),
+                                     full_value=70, drinking_value=70, body_state=0,
+                                     gender=True,
+                                     crawl_ability=4, speed=1, aggressivity=5
+                                     ))
+            animal_list.append(Fish(position=[6, 45], life=100, brain=Fish_brain(),
+                                    full_value=70, drinking_value=70, body_state=0,
+                                    gender=True,
+                                    crawl_ability=1, speed=1, aggressivity=5
+                                    ))
+            animal_list.append(Fish(position=[43, 45], life=100, brain=Fish_brain(),
+                                    full_value=70, drinking_value=70, body_state=0,
+                                    gender=True,
+                                    crawl_ability=1, speed=1, aggressivity=5
+                                    ))
 
         def generate_animals(animals_para):
             animals_list = []
