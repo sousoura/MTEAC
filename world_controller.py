@@ -36,8 +36,8 @@ class World_controller:
         """
             Exhibitor负责窗口的可视化呈现
         """
-        # 创建可视化窗口 后面那个元组是世界的框的大小而不是窗口大小 窗口还会更高一点因为要有状态栏
-        self.exhibitor = Exhibitor(self.world, (800, 800))
+        # 创建可视化窗口 后面那个数是世界的格子大小
+        self.exhibitor = Exhibitor(self.world, 15)
 
         # 如果世界生成成功 则进入该世界 否则退出程序
         if self.world:
@@ -51,6 +51,7 @@ class World_controller:
                 两个线程
             """
             # 后台和世界开始不停运作
+            self.background_thread.setDaemon(True)
             self.background_thread.start()
             self.world_evolution()
 
@@ -71,6 +72,7 @@ class World_controller:
             return generator_module.Concrete_world_generator()
 
         # 使用世界生成器参数化生成世界
+        # map_size规定了有 几行（高 纵坐标） 和 几列（宽 横坐标）
         def get_world(generator, maximum_height=30, map_size=(50, 50),
                       animals_para="random_animals", plants_para="random_plants",
                       obj_para="random_obj",
@@ -138,6 +140,7 @@ class World_controller:
             cmd = background_cmd.split(' ')
             if cmd[0] == "quit":
                 self.gate = False
+                self.exhibitor.set_out()
                 break
             elif cmd[0] == "save":
                 self.save(cmd[1])

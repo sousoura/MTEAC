@@ -17,6 +17,9 @@ class Entity(metaclass=ABCMeta):
         self.position = position
         self.id = self.id_maker.make_id()
 
+    def __str__(self):
+        return type(self).__name__ + ": " + str(self.id)
+
     def get_position(self):
         return self.position[:]
 
@@ -25,3 +28,6 @@ class Entity(metaclass=ABCMeta):
 
     def is_id(self, in_id):
         return self.id == in_id
+
+    def new_position(self, new_position):
+        self.position = new_position

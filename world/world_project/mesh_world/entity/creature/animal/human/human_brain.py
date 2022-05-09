@@ -37,6 +37,7 @@ class Human_brain(Brain):
                                 direction = "down"
                             if delta_y <= 0:
                                 direction = "up"
+                    break
 
             return direction
 

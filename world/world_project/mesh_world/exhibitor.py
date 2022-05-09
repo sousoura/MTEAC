@@ -25,14 +25,16 @@ class Exhibitor:
         初始化在__init__和__init_exhibitor中
     """
 
-    def __init__(self, world, world_win_size):
+    def __init__(self, world, block_size):
+        self.block_size = block_size
         # 地图长宽各多少格
         self.terrain_size = world.state.terrain_size
         # 窗口中世界的大小
-        self.world_win_size = world_win_size
+        self.world_win_size = (self.block_size * self.terrain_size[0], self.block_size * self.terrain_size[1])
         # 窗口大小（加上状态栏）
-        self.win_size = (self.world_win_size[0], self.world_win_size[1] + self.world_win_size[1] / 5)
+        self.win_size = (self.world_win_size[1], self.world_win_size[0] + self.world_win_size[0] / 5)
         self.__init_exhibitor()
+        self.gate = True
 
     # 初始化展示器
     def __init_exhibitor(self):
@@ -56,34 +58,51 @@ class Exhibitor:
         # 定义点类
         class Point:
             def __init__(self, exhibitor, row, col, interspace=5):
+                # 在第几行
                 self.row = row
+                # 在第几列
                 self.col = col
                 self.mid_interspace = interspace
                 self.exhibitor = exhibitor
-                self.cell_width = exhibitor.world_win_size[0] / exhibitor.terrain_size[0]
-                self.cell_height = exhibitor.world_win_size[1] / exhibitor.terrain_size[1]
+                # 屏幕宽度除以横向有几个格
+                self.cell_width = exhibitor.world_win_size[1] / exhibitor.terrain_size[1]
+                # 屏幕长度除以纵向有几个格
+                self.cell_height = exhibitor.world_win_size[0] / exhibitor.terrain_size[0]
+                # 求本格的位置
                 self.left = self.col * self.cell_width
                 self.top = self.row * self.cell_height
 
             def rect(self, color):
-                pygame.draw.rect(self.exhibitor.window, color, (self.left, self.top, self.cell_width, self.cell_height))
+                pygame.draw.rect(self.exhibitor.window, color,
+                                 (self.left, self.top, self.cell_width + 1, self.cell_height + 1))
 
             def mid_rect(self, color):
                 pygame.draw.rect(self.exhibitor.window, color,
                                  (self.left + self.mid_interspace, self.top + self.mid_interspace,
-                                  self.cell_width - 1.5 * self.mid_interspace,
-                                  self.cell_height - 1.5 * self.mid_interspace))
+                                  self.cell_width,
+                                  self.cell_height))
 
             def mid_small_rect(self, color):
                 pygame.draw.rect(self.exhibitor.window, color,
                                  (self.left + self.mid_interspace, self.top + self.mid_interspace,
-                                  self.cell_width - 2 * self.mid_interspace,
-                                  self.cell_height - 2 * self.mid_interspace))
+                                  self.cell_width / 3,
+                                  self.cell_height / 3))
 
             def small_circle(self, color):
                 pygame.draw.circle(self.exhibitor.window, color,
-                                   (self.left + self.cell_width / 2, self.top + self.cell_height / 2),
-                                    self.mid_interspace)
+                                   (self.left + self.cell_width / 3, self.top + self.cell_height / 3),
+                                   self.cell_width / 3)
+
+            def draw_plant_point(self, plant_species, color):
+                self.exhibitor.pygame.draw.rect(self.exhibitor.window, color,
+                                                (self.left + self.mid_interspace,
+                                                 self.top + self.mid_interspace,
+                                                 self.cell_height / 2,
+                                                 self.cell_height * 9 / 10))
+
+            def draw_bar(self, water_high, water_surface, max_water_high):
+                water_surface.fill((0, 0, 255, max(0, min(water_high / (max_water_high + 5) * 200, 255))))
+                self.exhibitor.window.blit(water_surface, (self.left, self.top))
 
         self.Point = Point
 
@@ -151,6 +170,7 @@ class Exhibitor:
     """
         画方格世界图
     """
+
     def draw_world(self, landform_map, water_map, terrain_map, animals_position, plants_position, objs_position):
         # 找到全地图的最高点
         def get_maximum_height(landform_map):
@@ -196,33 +216,7 @@ class Exhibitor:
                 return r, g, b
 
             self.Point \
-                (self, row=position[1], col=position[0]).rect(get_terrain_color(terrain_type, max_height, terrain))
-
-        # 水地图的水点类
-        class Water_point(self.Point):
-            color = (0, 0, 225)
-
-            def __init__(self, exhibitor, row, col, water_surface, interspace=5):
-                super(Water_point, self).__init__(exhibitor, row, col, interspace)
-                self.water_surface = water_surface
-
-            @classmethod
-            def set_max_water_high(cls, max_water_high):
-                cls.max_water_high = max_water_high
-
-            def draw_bar(self, water_high, water_surface):
-                water_surface.fill((0, 0, 255, min(water_high / (self.max_water_high + 5) * 200, 255)))
-                # self.exhibitor.window.draw.rect(
-                #     self.water_surface,
-                #     self.exhibitor.pygame.Color(0, 0, 255, int(min(water_high * 10 / max_water_high * 225))),
-                #     # (self.color[0],
-                #     #  self.color[1],
-                #     #  self.color[2],
-                #     #  min(water_high * 10 / max_water_high * 225, 225)
-                #     #  ),
-                #      (self.left, self.top, self.cell_width, self.cell_height)
-                #      )
-                self.exhibitor.window.blit(water_surface, (self.left, self.top))
+                (self, row=position[0], col=position[1]).rect(get_terrain_color(terrain_type, max_height, terrain))
 
         # 画水地图
         def draw_water_map(position, water_high):
@@ -230,11 +224,10 @@ class Exhibitor:
             # water_surface = self.window.convert_alpha()
             water_surface = \
                 self.pygame.Surface(
-                    (self.world_win_size[0] / self.terrain_size[0],
-                     self.world_win_size[1] / self.terrain_size[1])
+                    (self.world_win_size[0] / self.terrain_size[0] + 1,
+                     self.world_win_size[1] / self.terrain_size[1] + 1)
                     , self.pygame.SRCALPHA, 32)
-            Water_point(self, row=position[1], col=position[0], water_surface=water_surface). \
-                draw_bar(water_high, water_surface)
+            self.Point(self, row=position[0], col=position[1]).draw_bar(water_high, water_surface, max_water_high)
 
         # 画生物
         # 画动物
@@ -249,27 +242,17 @@ class Exhibitor:
                 return r, g, b
 
             for animal in animals:
-                self.Point(self, row=position[1], col=position[0]).mid_rect(get_animal_color(animal))
+                self.Point(self, row=position[0], col=position[1]).mid_rect(get_animal_color(animal))
 
         # 画植物
         def draw_plants(position, plants):
-            class Plant_point(self.Point):
-                def __init__(self, exhibitor, row, col, interspace=5):
-                    super(Plant_point, self).__init__(exhibitor, row, col, interspace)
-
-                def draw_plant_point(self, plant_species, color):
-                    self.exhibitor.pygame.draw.rect(self.exhibitor.window, color,
-                                                    (self.left + self.mid_interspace, self.top + self.mid_interspace,
-                                                     5,
-                                                     self.cell_height - 2 * self.mid_interspace))
-
             def get_plant_color(plant_species):
                 return ((169, 208, 107), (205, 133, 63), (165, 42, 42), (0, 125, 0), (0, 255, 0))[plant_species]
 
             for plant in plants:
                 plant_species = ["Algae", "Birch", "Birch_wood", "Grass", "Grassland"].index(type(plant).__name__)
-                Plant_point \
-                    (self, row=position[1], col=position[0]). \
+                self.Point \
+                    (self, row=position[0], col=position[1]). \
                     draw_plant_point(plant_species, get_plant_color(plant_species))
 
         def draw_objs(position, objs):
@@ -283,7 +266,7 @@ class Exhibitor:
                 return r, g, b
 
             for obj in objs:
-                self.Point(self, row=position[1], col=position[0]).small_circle(get_obj_color(obj))
+                self.Point(self, row=position[0], col=position[1]).small_circle(get_obj_color(obj))
 
         """
             画图执行
@@ -293,17 +276,16 @@ class Exhibitor:
         # 画方块
         # 画背景
         self.pygame.draw.rect(self.window, self.bg_color, (0, 0, self.win_size[0], self.win_size[1]))
-        Water_point.set_max_water_high(max_water_high)
 
         # 画地势
-        for block_line_index in range(len(landform_map)):
-            for block_index in range(len(landform_map[block_line_index])):
+        for row_index in range(self.terrain_size[0]):
+            for column_index in range(self.terrain_size[1]):
                 draw_landform_map \
-                    ((block_index, block_line_index), landform_map[block_line_index][block_index], max_height,
-                     terrain_map[block_line_index][block_index])
-                if water_map[block_line_index][block_index] > 0.5:
+                    ((row_index, column_index), landform_map[row_index][column_index], max_height,
+                     terrain_map[row_index][column_index])
+                if water_map[row_index][column_index] > 0.5:
                     draw_water_map \
-                        ((block_index, block_line_index), water_map[block_line_index][block_index])
+                        ((row_index, column_index), water_map[row_index][column_index])
 
         # 画物品
         for position in objs_position:
@@ -350,7 +332,7 @@ class Exhibitor:
             属性
         """
 
-        state_attribute = ["position", "life", "full_value", "drinking_value", "body_state"]
+        state_attribute = ["position", "life", "full_value", "drinking_value", "body_state", "backpack"]
         ability_attribute = ["crawl_ability", "speed", "aggressivity"]
         ability_correct_attribute = ["crawl_ability_change_value", "speed_change_value", "aggressivity_change_value"]
         individual_attribute = ["gender"]
@@ -365,12 +347,12 @@ class Exhibitor:
         if player_controlling_unit:
             row = 0
             col = 0
-            init_position = (self.world_win_size[0] / 7, self.world_win_size[1] * 102 / 100)
+            init_position = (self.world_win_size[1] / 7, self.world_win_size[0] * 102 / 100)
 
-            font_size = 15
+            font_size = self.block_size
             text_font = self.pygame.font.Font(None, font_size)
 
-            line_width = self.world_win_size[0] / 2
+            line_width = self.world_win_size[1] / 4
             line_high = font_size * 1.2
 
             # 遍历属性名
@@ -383,10 +365,21 @@ class Exhibitor:
                             if attribute_name in attribute_list:
                                 text_position = \
                                     (init_position[0] + row * line_width, init_position[1] + col * line_high)
-                                text = \
-                                    text_font.render(attribute_name + ": " +
-                                                     str(getattr(player_controlling_unit, attribute_name)),
-                                                     True, (0, 0, 0))
+                                attribute_value = getattr(player_controlling_unit, attribute_name)
+                                if isinstance(attribute_value, (list, tuple)):
+                                    elements_str = ""
+                                    for element in attribute_value:
+                                        elements_str += str(element) + ' '
+                                    text = \
+                                        text_font.render(attribute_name + ": " +
+                                                         elements_str,
+                                                         True, (0, 0, 0))
+                                else:
+                                    text = \
+                                        text_font.render(attribute_name + ": " +
+                                                         str(attribute_value),
+                                                         True, (0, 0, 0))
+
                                 text_rect = text.get_rect(center=text_position)
                                 self.window.blit(text, text_rect)
 
@@ -401,11 +394,14 @@ class Exhibitor:
 
     def detect_player_input(self, last_code, world):
         player_animal = world.get_state().get_animals()[0]
+        # 作用于方向和对象的动作的名称的数组
+        direction_and_obj_action = ["eat", "attack", "pick_up", "put_down"]
+        direction_action = ["drink"]
 
         # 等待输入数字参数
         def waiting_for_para(last_code):
             # 等待按键 否则一直在循环里
-            while True:
+            while True and self.gate:
                 # 处理事件
                 for event_para_wait in self.pygame.event.get():
                     if event.type == self.pygame.QUIT:
@@ -448,10 +444,18 @@ class Exhibitor:
 
         def choose_object(last_code):
             if player_animal.get_id() == 1:
-                old_position = tuple(player_animal.get_position())
-                position = world.get_state().position_and_direction_get_adjacent(old_position, last_code[1])
-                entities = world.get_state().get_entities_in_position(position)
-                objects_num = len(entities)
+                if last_code[0] == "put_down":
+                    if type(player_animal).__name__ == "Human_being":
+                        entities = player_animal.get_backpack()
+                        objects_num = len(entities)
+                    else:
+                        print("警告 发现非人类调用拾起 程序存在bug")
+                        return False
+                else:
+                    old_position = tuple(player_animal.get_position())
+                    position = world.get_state().position_and_direction_get_adjacent(old_position, last_code[1])
+                    entities = world.get_state().get_entities_in_position(position)
+                    objects_num = len(entities)
                 # 如果只有一个生物 且改生物符合主体的食性 则马上返回0
                 if objects_num == 1:
                     last_code.append(entities[0])
@@ -494,7 +498,7 @@ class Exhibitor:
 
         # 等待按键 否则一直在循环里
         door = True
-        while door:
+        while door and self.gate:
             # 处理事件
             for event in self.pygame.event.get():
                 if event.type == self.pygame.QUIT:
@@ -509,68 +513,97 @@ class Exhibitor:
                             last_code.append("up")
                             # if not waiting_for_para(last_code):
                             #     return False
-                        elif last_code[0] == "eat" or last_code[0] == "attack":
+                        elif last_code[0] in direction_and_obj_action:
                             last_code.append("up")
                             if not choose_object(last_code):
                                 return False
-                        else:
+                        elif last_code[0] in direction_action:
                             last_code.append("up")
                         door = False
+
                     elif event.key == self.pygame.K_DOWN:
                         if len(last_code) == 0:
                             last_code.append("go")
                             last_code.append("down")
                             # if not waiting_for_para(last_code):
                             #     return False
-                        elif last_code[0] == "eat" or last_code[0] == "attack":
+                        elif last_code[0] in direction_and_obj_action:
                             last_code.append("down")
                             if not choose_object(last_code):
                                 return False
-                        else:
+                        elif last_code[0] in direction_action:
                             last_code.append("down")
                         door = False
+
                     elif event.key == self.pygame.K_LEFT:
                         if len(last_code) == 0:
                             last_code.append("go")
                             last_code.append("left")
                             # if not waiting_for_para(last_code):
                             #     return False
-                        elif last_code[0] == "eat" or last_code[0] == "attack":
+                        elif last_code[0] in direction_and_obj_action:
                             last_code.append("left")
                             if not choose_object(last_code):
                                 return False
-                        else:
+                        elif last_code[0] in direction_action:
                             last_code.append("left")
                         door = False
+
                     elif event.key == self.pygame.K_RIGHT:
                         if len(last_code) == 0:
                             last_code.append("go")
                             last_code.append("right")
                             # if not waiting_for_para(last_code):
                             #     return False
-                        elif last_code[0] == "eat" or last_code[0] == "attack":
+                        elif last_code[0] in direction_and_obj_action:
                             last_code.append("right")
                             if not choose_object(last_code):
                                 return False
-                        else:
+                        elif last_code[0] in direction_action:
                             last_code.append("right")
                         door = False
+
                     elif event.key == self.pygame.K_z:
                         last_code.append("eat")
                         self.detect_player_input(last_code, world)
                         door = False
+
                     elif event.key == self.pygame.K_x:
                         last_code.append("attack")
                         self.detect_player_input(last_code, world)
                         door = False
+
                     elif event.key == self.pygame.K_c:
                         last_code.append("drink")
                         self.detect_player_input(last_code, world)
                         door = False
+
                     elif event.key == self.pygame.K_v:
                         if len(last_code) == 0:
                             last_code.append("rest")
                             door = False
+                        elif last_code[0] in direction_and_obj_action:
+                            last_code.append("stay")
+                            if not choose_object(last_code):
+                                return False
+                        elif last_code[0] in direction_action:
+                            last_code.append("stay")
+                        door = False
+
+                    elif event.key == self.pygame.K_a:
+                        if type(player_animal).__name__ == "Human_being":
+                            if len(last_code) == 0:
+                                last_code.append("pick_up")
+                                self.detect_player_input(last_code, world)
+                                door = False
+
+                    elif event.key == self.pygame.K_s:
+                        if type(player_animal).__name__ == "Human_being":
+                            if len(last_code) == 0:
+                                last_code.append("put_down")
+                                self.detect_player_input(last_code, world)
+                                door = False
+
                     elif event.key == self.pygame.K_1:
                         player_animal.change_pace(1)
                     elif event.key == self.pygame.K_2:
@@ -589,3 +622,6 @@ class Exhibitor:
                         player_animal.change_pace(8)
 
         return last_code
+
+    def set_out(self):
+        self.gate = False

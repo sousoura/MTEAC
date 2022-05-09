@@ -36,32 +36,32 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
             # 若在左右半格上
             if old_position[0] % 1 > 0:
                 # 方向限制
-                if direction == 'down' or direction == 'up':
+                if direction == 'left' or direction == 'right':
                     return False
             # 若在上下半格上
             elif old_position[1] % 1 > 0:
                 # 方向限制
-                if direction == 'left' or direction == 'right':
+                if direction == 'down' or direction == 'up':
                     return False
 
             # 整格模式
             # 攀爬限制 格差
             # 判断落差是否大于生物的爬行能力(水里不用看这个)
-            if not "aquatic" and world_state.get_water_map()[new_position[1]][new_position[0]] < 1:
-                if abs(world_state.landform_map[int(old_position[1])][int(old_position[0])] -
-                       world_state.landform_map[int(new_position[1])][int(new_position[0])]) > \
+            if not "aquatic" and world_state.get_water_map()[new_position[0]][new_position[1]] < 1:
+                if abs(world_state.landform_map[int(old_position[0])][int(old_position[1])] -
+                       world_state.landform_map[int(new_position[0])][int(new_position[1])]) > \
                         self.get_crawl_ability():
                     return False
 
             # 地貌限制 水限制
             # 陆生动物下水限制
             if self.life_area == "terrestrial":
-                if self.swimming_ability < world_state.get_water_map()[new_position[1]][new_position[0]]:
+                if self.swimming_ability < world_state.get_water_map()[new_position[0]][new_position[1]]:
                     return False
 
             # 水生动物上岸限制
             if self.life_area == "aquatic":
-                if world_state.get_water_map()[new_position[1]][new_position[0]] == 0:
+                if world_state.get_water_map()[new_position[0]][new_position[1]] == 0:
                     return False
 
             # 实体限制 大物体限制
@@ -110,7 +110,7 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
         direction = command[1]
         direction_position = world_state.position_and_direction_get_adjacent(self.get_position(), direction)
         if direction_position:
-            return world_state.get_water_map()[int(direction_position[1])][int(direction_position[0])] > 0
+            return world_state.get_water_map()[int(direction_position[0])][int(direction_position[1])] > 0
         else:
             return False
 
@@ -269,11 +269,6 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
     def judge_geomorphic_compatibility(self):
         return True
 
-    # 判断行动合法性 属性对行动的影响体现在此
-    # 判断行为是否因为动物内因的困难而无法进行
-    def judge_action_legality(self):
-        return True
-
     def change_pace(self, num):
         if isinstance(num, int):
             if 0 < num <= self.speed + self.speed_change_value:
@@ -293,6 +288,8 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
     def feeding_habits_judge(cls, eat_object):
         return type(eat_object).__name__ in cls.feeding_habits
 
+    # 判断行动合法性 属性对行动的影响体现在此
+    # 判断行为是否因为动物内因的困难而无法进行
     def judge_action_validity(self, world_state, command):
         action_type_num = self.action_list.index(command[0])
         return self.judge_action_method_list[action_type_num](self, world_state, command)
