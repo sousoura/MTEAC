@@ -26,8 +26,11 @@ class Exhibitor:
     """
 
     def __init__(self, world, world_win_size):
+        # 地图长宽各多少格
         self.terrain_size = world.state.terrain_size
+        # 窗口中世界的大小
         self.world_win_size = world_win_size
+        # 窗口大小（加上状态栏）
         self.win_size = (self.world_win_size[0], self.world_win_size[1] + self.world_win_size[1] / 5)
         self.__init_exhibitor()
 
@@ -68,6 +71,12 @@ class Exhibitor:
             def mid_rect(self, color):
                 pygame.draw.rect(self.exhibitor.window, color,
                                  (self.left + self.mid_interspace, self.top + self.mid_interspace,
+                                  self.cell_width - 1.5 * self.mid_interspace,
+                                  self.cell_height - 1.5 * self.mid_interspace))
+
+            def mid_small_rect(self, color):
+                pygame.draw.rect(self.exhibitor.window, color,
+                                 (self.left + self.mid_interspace, self.top + self.mid_interspace,
                                   self.cell_width - 2 * self.mid_interspace,
                                   self.cell_height - 2 * self.mid_interspace))
 
@@ -86,19 +95,46 @@ class Exhibitor:
     """
 
     def display(self, world):
+        """
+        可视化的入口
+            需要可视化的数据：
+                地图
+                    landform_map        [[int, int], [int, int], ...]            地势高低的地形地图                   每个数字代表该地方的高低值 可以为负数或任意正整数
+                    water_map           [[float, float], [float, float], ...]    水地图 某个格的水位的高低             每个数字代表了该地方水位的高低 可以为任意小数值 不可以为负数
+                    terrain_map         [[int, int], [int, int], ...]            地貌地图 描述某个地方的土是什么样的     由不同整数描述有土地 沙地 石地...等 数字从0到大 从湿到干 0为水底 1为沼泽 2为泥地 3为普通土地 4为沙地 5为鹅卵石地 6为大石地
 
+                位置物体表
+                    字典对象 存位置和位置上有的物体
+                    animals_position    {(位置的横纵坐标): [<动物1>, <动物2>， ...], (a, b), [<>, ...], ...}
+                    plants_position     {(位置的横纵坐标): [<植物1>, <植物2>， ...], (a, b), [<>, ...], ...}
+                    objs_position       {(位置的横纵坐标): [<物品1>, <物品2>， ...], (a, b), [<>, ...], ...}
+
+                玩家控制的生物（用于状态栏显示）（这个可以不弄）
+                    player_controlling_unit
+        """
+        # 地图
         landform_map = world.get_state().get_landform_map()
         water_map = world.get_state().get_water_map()
         terrain_map = world.get_state().get_terrain_map()
+
+        # 位置物体表
         animals_position = world.get_state().get_animals_position()
         plants_position = world.get_state().get_plants_position()
         objs_position = world.get_state().get_objs_position()
 
+        # 玩家控制的生物
         player_controlling_unit = world.get_state().get_entity_by_id(1)
 
         # win_event = True
 
+        """
+            画方格世界
+        """
         self.draw_world(landform_map, water_map, terrain_map, animals_position, plants_position, objs_position)
+
+        """
+            画状态栏
+        """
         self.draw_status_bar(player_controlling_unit)
 
         # 让渡控制权
@@ -113,9 +149,8 @@ class Exhibitor:
         return player_cmd
 
     """
-        画图
+        画方格世界图
     """
-
     def draw_world(self, landform_map, water_map, terrain_map, animals_position, plants_position, objs_position):
         # 找到全地图的最高点
         def get_maximum_height(landform_map):
@@ -123,6 +158,10 @@ class Exhibitor:
 
         max_height = get_maximum_height(landform_map)
         max_water_high = get_maximum_height(water_map)
+
+        """
+            定义绘图函数
+        """
 
         # 画地形和地貌
         def draw_landform_map(position, terrain_type, max_height, terrain):
@@ -246,13 +285,17 @@ class Exhibitor:
             for obj in objs:
                 self.Point(self, row=position[1], col=position[0]).small_circle(get_obj_color(obj))
 
+        """
+            画图执行
+        """
+
         # 渲染
         # 画方块
         # 画背景
         self.pygame.draw.rect(self.window, self.bg_color, (0, 0, self.win_size[0], self.win_size[1]))
         Water_point.set_max_water_high(max_water_high)
 
-        # 画地形
+        # 画地势
         for block_line_index in range(len(landform_map)):
             for block_index in range(len(landform_map[block_line_index])):
                 draw_landform_map \
