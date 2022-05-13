@@ -1,5 +1,7 @@
 from world.entity.entity_import import *
+from world.world_project.mesh_world.entity.creature.plant.birch_wood import Birch_wood
 from world.world_project.mesh_world.entity.obj.human_corpse import Human_corpse
+from world.world_project.mesh_world.entity.obj.axe import Axe
 
 """
     人类类 物种类
@@ -13,15 +15,31 @@ class Human_being(Human, Big_obj):
     swimming_ability = 4
     life_area = "terrestrial"
 
-    pickable_objs = ["Fruit"]
+    # 可以放进背包的物品
+    pickable_objs = ["Fruit", "Stone", "Wood", "Axe", "Bucket"]
 
     # 合成表
+    composed_table = {("Stone", "Wood"): ("Axe",),
+                      ("Axe", "Wood", "Wood", "Wood"): ("Crafting_table",),
+                      ("Axe", "Crafting_table", "Wood", "Wood", "Wood"): ("Axe", "Bucket", "Crafting_table"),
+                      ("Axe", "Crafting_table", "Wood", "Wood", "Wood", "Wood", "Wood"):
+                          ("Axe", "Cart", "Crafting_table"),
+                      ("Axe", "Wood", "Wood", "Wood", "Stone", "Stone"): ("Axe", "Door"),
+                      ("Axe", "Soil", "Soil", "Stone", "Stone", "Stone"): ("Axe", "Wall"),
+                      }
+
+    # 可以推拉的物品
+    pushable = ["Cart"]
+
+    # 可以收集的地貌 泥地 沙地 石头地
+    collectable = [1, 2, 4]
 
     """
         行为合法性判断
     """
-    action_list = ["go", "eat", "drink", "attack", "rest", "pick_up", "put_down",
-                   "fabricate", "construct", "interaction"]
+    action_list = ["go", "eat", "drink", "attack", "rest",
+                   "pick_up", "put_down", "handling", "collect", "push_pull",
+                   "fabricate", "construct", "interaction", "use", ]
 
     def judge_go(self, world_state, command):
         direction = command[1]
@@ -111,6 +129,7 @@ class Human_being(Human, Big_obj):
 
         return True
 
+    # 看喝的地方有没有水
     def judge_drink(self, world_state, command):
         direction = command[1]
         direction_position = world_state.position_and_direction_get_adjacent(self.get_position(), direction)
@@ -120,8 +139,6 @@ class Human_being(Human, Big_obj):
             return False
 
     def judge_attack(self, world_state, command):
-        attacker = self
-        attack_direction = command[1]
         be_attackeder = command[2]
 
         # 没有对象
@@ -137,10 +154,6 @@ class Human_being(Human, Big_obj):
         return True
 
     def judge_pick_up(self, world_state, command):
-        # 拾起者
-        picker = self
-        # 拾起的方向
-        pick_direction = command[1]
         # 被拾起之物
         be_pickor = command[2]
 
@@ -166,18 +179,128 @@ class Human_being(Human, Big_obj):
 
         return True
 
-    def judge_fabricate(self, world_state, command):
+    def judge_handling(self, world_state, command):
+        if command[2] == -1:
+            return False
+
+        if not isinstance(command[2], Equipment) and command[2] is not None:
+            print("非装备不能装备")
+            return False
+
         return True
 
-    def judge_construct(self, world_state, command):
+    # command 为 [方法名， 空， 原材料]
+    def judge_fabricate(self, world_state, command):
+        if command[2] == -1:
+            print("无对象")
+            return False
+
+        if not isinstance(command[2], (list, tuple)):
+            print("原材料格式错误")
+            return False
+
+        if len(command[2]) == 0:
+            print("原材料为空")
+            return False
+
+        names_orderly_tuple = names_orderly_tuplize(command[2])
+        if names_orderly_tuple not in self.composed_table:
+            print("原材料不合法")
+            return False
+
+        for outcome in self.composed_table[names_orderly_tuple]:
+            if not outcome in self.pickable_objs:
+                print("成品物品不可放入背包")
+                return False
+
         return True
+
+    # command 为 [方法名， 建造位置， 原材料]
+    def judge_construct(self, world_state, command):
+        if command[2] == -1:
+            print("无对象")
+            return False
+
+        if not isinstance(command[2], (list, tuple)):
+            print("原材料格式错误")
+            return False
+
+        if len(command[2]) == 0:
+            print("原材料为空")
+            return False
+
+        if names_orderly_tuplize(command[2]) not in self.composed_table:
+            print("原材料不合法")
+            return False
+
+        # 判断是否越界
+        direction = command[1]
+        direction_position = world_state.position_and_direction_get_adjacent(self.get_position(), direction)
+        if direction_position:
+            return True
+
+        return False
 
     def judge_interaction(self, world_state, command):
         return False
 
+    def judge_use(self, world_state, command):
+        return False
+
+    # command 结构类似于喝水
+    # 看收集的地方能不能收集
+    def judge_collect(self, world_state, command):
+        # 得到收集处
+        direction = command[1]
+        direction_position = world_state.position_and_direction_get_adjacent(self.get_position(), direction)
+
+        if direction_position:
+            if tuple(direction_position) in world_state.get_plants_position():
+                # 收集处是否有森林
+                for plant in world_state.get_plants_position()[tuple(direction_position)]:
+                    if isinstance(plant, Birch_wood):
+                        return True
+
+            # 收集处是否是可收集地貌
+            return world_state.get_terrain_map()[int(direction_position[0])][int(direction_position[1])] in \
+                   self.collectable
+        else:
+            return False
+
+    """
+        选择一个物体 选择一个方向 推/拉
+        command = ["push", direction, obj]
+        确保物体是可推拉的
+        确保方向是合法的
+            可go
+            只能在直线方向上进行（不能并行）
+        考虑半格的情况
+            设计机制: 如果在半格上拉 则无反应（不在这里考虑）
+    """
+    def judge_push_pull(self, world_state, command):
+        direction = command[1]
+        obj = command[2]
+
+        if obj not in self.pushable:
+            print("推拉对象不合法")
+            return False
+
+        if not self.judge_go(world_state, ["go", direction]):
+            print("推拉方向不合法")
+            return False
+
+        new_position = world_state.position_and_direction_get_adjacent(self.get_position(), direction)
+        if not (new_position[0] == self.get_position()[0] == obj.get_position()[0] or
+                new_position[1] == self.get_position()[1] == obj.get_position()[1]):
+            print("不能并排推拉")
+            return False
+
+        return True
+
     judge_action_method_list = [judge_go, judge_eat, judge_drink, judge_attack, judge_rest,
-                                judge_pick_up, judge_put_down,
-                                judge_fabricate, judge_construct, judge_interaction]
+                                judge_pick_up, judge_put_down, judge_handling, judge_collect, judge_push_pull,
+                                judge_fabricate, judge_construct, judge_interaction, judge_use,
+                                ]
 
     """
         行为内部结果执行
@@ -209,18 +332,63 @@ class Human_being(Human, Big_obj):
         print("put down", obj)
         print(self.backpack)
 
+    # 装备装备
+    def handling_outcome(self, parameter=None, obj=None, degree=None):
+        if self.equipment:
+            self.equipment.cancel_gain(self)
+            self.backpack.append(self.equipment)
+
+        self.equipment = obj
+
+        if obj:
+            self.equipment.properties_gain(self)
+            self.backpack.remove(self.equipment)
+
+    # obj=消耗的材料
     def fabricate_outcome(self, parameter=None, obj=None, degree=None):
-        pass
+        costs = obj
+        gains = self.composed_table[names_orderly_tuplize(costs)]
+
+        # 失去原材料
+        for item in costs:
+            self.backpack.remove(item)
+
+        for item_name in gains:
+            item = globals()[item_name](self.get_position())
+            self.backpack.append(item)
 
     def construct_outcome(self, parameter=None, obj=None, degree=None):
-        pass
+        costs = obj
+
+        # 失去原材料
+        for item in costs:
+            if item in self.backpack:
+                self.backpack.remove(item)
 
     def interaction_outcome(self, parameter=None, obj=None, degree=None):
         pass
 
+    def use_outcome(self, parameter=None, obj=None, degree=None):
+        pass
+
+    # obj=所收集到的东西的数组
+    def collect_outcome(self, parameter=None, obj=None, degree=None):
+        gains = obj
+        for item in gains:
+            self.backpack.append(item)
+
+    # parameter=方向, obj=推拉对象
+    def push_pull_outcome(self, parameter=None, obj=None, degree=None):
+        # 这里parameter指的是移动到的新的位置 其它变量置None
+        self.move(parameter)
+
     action_interior_outcome_method_list = [go_outcome, eat_outcome, drink_outcome, attack_outcome, rest_outcome,
-                                           pick_up_outcome, put_down_outcome,
-                                           fabricate_outcome, construct_outcome, interaction_outcome]
+                                           pick_up_outcome, put_down_outcome, handling_outcome,
+                                           collect_outcome, push_pull_outcome,
+
+                                           fabricate_outcome, construct_outcome, interaction_outcome,
+                                           use_outcome,
+                                           ]
 
     """
         行为成本消耗
@@ -247,6 +415,9 @@ class Human_being(Human, Big_obj):
     def put_down_cost(self):
         pass
 
+    def handling_cost(self):
+        pass
+
     def fabricate_cost(self):
         self.body_change(full_value_change=-0.1, drinking_value_change=-0.1)
 
@@ -256,9 +427,19 @@ class Human_being(Human, Big_obj):
     def interaction_cost(self):
         pass
 
+    def use_cost(self):
+        pass
+
+    def collect_cost(self):
+        self.body_change(full_value_change=-0.1, drinking_value_change=-0.1)
+
+    def push_pull_cost(self):
+        self.body_change(full_value_change=-0.2, drinking_value_change=-0.2)
+
     action_cost_method_list = [go_cost, eat_cost, drink_cost, attack_cost, rest_cost,
-                               pick_up_cost, put_down_cost,
-                               fabricate_cost, construct_cost, interaction_cost]
+                               pick_up_cost, put_down_cost, handling_cost, collect_cost, push_pull_cost,
+                               fabricate_cost, construct_cost, interaction_cost, use_cost,
+                               ]
 
     def __init__(self, position, life, brain, full_value, drinking_value, body_state, gender,
                  crawl_ability, speed, aggressivity, backpack=None):
@@ -268,6 +449,7 @@ class Human_being(Human, Big_obj):
         self.backpack = backpack
         if not backpack:
             self.backpack = []
+        self.equipment = None
 
     # 得到感知
     '''
@@ -282,3 +464,16 @@ class Human_being(Human, Big_obj):
 
     def get_backpack(self):
         return self.backpack[:]
+
+    # 增益改变
+    def post_turn_change(self):
+        super(Human_being, self).post_turn_change()
+
+
+def names_orderly_tuplize(objs_list):
+    def get_onj_name(obj):
+        return type(obj).__name__
+
+    objs_name_list = [get_onj_name(obj) for obj in objs_list]
+    objs_name_list.sort()
+    return tuple(objs_name_list)

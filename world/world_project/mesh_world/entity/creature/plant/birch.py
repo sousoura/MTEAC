@@ -1,5 +1,6 @@
 from world.entity.entity_import import *
 from world.world_project.mesh_world.entity.obj.fruit import Fruit
+from world.world_project.mesh_world.entity.obj.wood import Wood
 
 
 class Birch(Plant):
@@ -7,7 +8,7 @@ class Birch(Plant):
         super(Birch, self).__init__(position, leaf_content)
 
     def die(self):
-        pass
+        return [Wood(self.position[:]), Wood(self.position[:]), Wood(self.position[:])]
 
     def post_turn_change(self):
         import random

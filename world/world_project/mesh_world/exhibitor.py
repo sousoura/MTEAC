@@ -120,7 +120,7 @@ class Exhibitor:
                 地图
                     landform_map        [[int, int], [int, int], ...]            地势高低的地形地图                   每个数字代表该地方的高低值 可以为负数或任意正整数
                     water_map           [[float, float], [float, float], ...]    水地图 某个格的水位的高低             每个数字代表了该地方水位的高低 可以为任意小数值 不可以为负数
-                    terrain_map         [[int, int], [int, int], ...]            地貌地图 描述某个地方的土是什么样的     由不同整数描述有土地 沙地 石地...等 数字从0到大 从湿到干 0为水底 1为沼泽 2为泥地 3为普通土地 4为沙地 5为鹅卵石地 6为大石地
+                    terrain_map         [[int, int], [int, int], ...]            地貌地图 描述某个地方的土是什么样的     由不同整数描述有土地 沙地 石地...等 数字从0到大 从干到湿 6为水底 5为沼泽 4为泥地 3为普通土地 2为沙地 1为鹅卵石地 0为大石地
 
                 位置物体表
                     字典对象 存位置和位置上有的物体
@@ -332,7 +332,7 @@ class Exhibitor:
             属性
         """
 
-        state_attribute = ["position", "life", "full_value", "drinking_value", "body_state", "backpack"]
+        state_attribute = ["position", "life", "full_value", "drinking_value", "body_state", "backpack", "equipment"]
         ability_attribute = ["crawl_ability", "speed", "aggressivity"]
         ability_correct_attribute = ["crawl_ability_change_value", "speed_change_value", "aggressivity_change_value"]
         individual_attribute = ["gender"]
@@ -395,8 +395,11 @@ class Exhibitor:
     def detect_player_input(self, last_code, world):
         player_animal = world.get_state().get_animals()[0]
         # 作用于方向和对象的动作的名称的数组
-        direction_and_obj_action = ["eat", "attack", "pick_up", "put_down"]
-        direction_action = ["drink"]
+        direction_and_obj_action = ["eat", "attack", "pick_up", "put_down", "push_pull"]
+        direction_and_objs_action = ["construct"]
+        direction_action = ["drink", "collect"]
+        backpack_action = ["put_down", "fabricate"]
+        position_obj_action = ["eat", "attack", "pick_up"]
 
         # 等待输入数字参数
         def waiting_for_para(last_code):
@@ -435,6 +438,9 @@ class Exhibitor:
                         elif event_para_wait.key == self.pygame.K_DELETE:
                             last_code.append(-1)
                             return True
+                        elif event_para_wait.key == self.pygame.K_RETURN:
+                            last_code.append("OK")
+                            return True
 
         # 请求选择作用对象
         """
@@ -444,22 +450,23 @@ class Exhibitor:
 
         def choose_object(last_code):
             if player_animal.get_id() == 1:
-                if last_code[0] == "put_down":
+                if last_code[0] in backpack_action:
                     if type(player_animal).__name__ == "Human_being":
                         entities = player_animal.get_backpack()
                         objects_num = len(entities)
                     else:
-                        print("警告 发现非人类调用拾起 程序存在bug")
+                        print("警告 发现非人类调用人类背包动作 程序存在bug")
                         return False
-                else:
+                elif last_code[0] in position_obj_action:
                     old_position = tuple(player_animal.get_position())
                     position = world.get_state().position_and_direction_get_adjacent(old_position, last_code[1])
                     entities = world.get_state().get_entities_in_position(position)
                     objects_num = len(entities)
-                # 如果只有一个生物 且改生物符合主体的食性 则马上返回0
+                # 如果只有一个可选对象 且符合条件 则马上返回之
                 if objects_num == 1:
                     last_code.append(entities[0])
                     return True
+                # 若压根无对象 则返回-1
                 if objects_num == 0:
                     last_code.append(-1)
                     return True
@@ -468,10 +475,7 @@ class Exhibitor:
                     目前只能通过终端给玩家呈现对象们以选择
                     到时候可以直接在下面的呈现栏里给玩家呈现
                 """
-                print()
-                for entity in entities:
-                    print(type(entity).__name__, "ID:", entity.get_id())
-                print()
+                print_list_with_num(entities)
 
                 # 判断对象选择是否合法
                 temp_list = []
@@ -496,6 +500,157 @@ class Exhibitor:
                 last_code.append(-1)
                 return True
 
+        def choose_object_from_backpack():
+            if player_animal.get_id() == 1:
+                if type(player_animal).__name__ == "Human_being":
+                    entities = player_animal.get_backpack()[:]
+                else:
+                    print("警告 发现非人类调用人类背包动作 程序存在bug")
+                    return -1
+
+                """
+                    目前只能通过终端给玩家呈现对象们以选择
+                    到时候可以直接在下面的呈现栏里给玩家呈现
+                """
+                print_list_with_num(entities)
+
+                # 判断对象选择是否合法
+                temp_list = []
+                while waiting_for_para(temp_list):
+                    input_num = temp_list.pop()
+
+                    if input_num == "OK":
+                        return None
+                    elif 0 <= input_num - 1 < len(entities):
+                        be_selector = entities.pop(input_num - 1)
+                        return be_selector
+                    # 反悔操作
+                    elif input_num == -1:
+                        return -1
+                    else:
+                        return -1
+
+                else:
+                    return -2
+            else:
+                print("Waining: the id of the entity player controlling is not 1.")
+                return -1
+
+        def multi_choose_object_from_backpack():
+            objs_list = []
+            if player_animal.get_id() == 1:
+                if type(player_animal).__name__ == "Human_being":
+                    entities = player_animal.get_backpack()[:]
+                    objects_num = len(entities)
+                else:
+                    print("警告 发现非人类调用人类背包动作 程序存在bug")
+                    return -1
+                # 如果只有一个可选对象 且符合条件 则马上返回之
+                if objects_num == 1:
+                    objs_list.append([entities[0]])
+                    return objs_list
+                # 若压根无对象 则返回-1
+                if objects_num == 0:
+                    return -1
+
+                """
+                    目前只能通过终端给玩家呈现对象们以选择
+                    到时候可以直接在下面的呈现栏里给玩家呈现
+                """
+                print_list_with_num(entities)
+
+                # 判断对象选择是否合法
+                temp_list = []
+                while waiting_for_para(temp_list):
+                    input_num = temp_list.pop()
+
+                    if input_num == "OK":
+                        return objs_list
+                    elif 0 <= input_num - 1 < len(entities):
+                        be_selector = entities.pop(input_num - 1)
+                        objs_list.append(be_selector)
+                        print("now selected: ")
+                        print_list_with_num(objs_list)
+                        print_list_with_num(entities)
+                    # 反悔操作
+                    elif input_num == -1:
+                        return -1
+                    else:
+                        return -1
+
+                else:
+                    return -2
+            else:
+                print("Waining: the id of the entity player controlling is not 1.")
+                return -1
+
+        # 建造用的 原材料选择
+        def choose_objs_from_backpack_and_position(last_code):
+            material_list = []
+            if type(player_animal).__name__ == "Human_being":
+                # 取得可选项目 从人类背包和该位置
+                old_position = tuple(player_animal.get_position())
+                position = world.get_state().position_and_direction_get_adjacent(old_position, last_code[1])
+                entities = player_animal.get_backpack()[:] + world.get_state().get_entities_in_position(position)[:]
+                objects_num = len(entities)
+
+                # 如果只有一个可选对象 且符合条件 则马上返回之
+                if objects_num == 1:
+                    material_list.append(entities[0])
+                    last_code.append(material_list)
+                    return True
+
+                # 若压根无对象 则返回-1
+                if objects_num == 0:
+                    last_code.append(-1)
+                    return True
+
+                print_list_with_num(entities)
+
+                # 判断对象选择是否合法
+                temp_list = []
+                while waiting_for_para(temp_list):
+                    input_num = temp_list.pop()
+
+                    if input_num == "OK":
+                        last_code.append(material_list)
+                        return True
+                    elif 0 <= input_num - 1 < len(entities):
+                        be_selector = entities.pop(input_num - 1)
+                        material_list.append(be_selector)
+
+                        print("now selected: ")
+                        print_list_with_num(material_list)
+                        print_list_with_num(entities)
+
+                    # 反悔操作
+                    elif input_num == -1:
+                        last_code.append(-1)
+                        return True
+                    else:
+                        last_code.append(-1)
+                        return True
+
+            else:
+                print("警告 发现非人类调用人类背包动作 程序存在bug")
+                last_code.append(-1)
+                return True
+            last_code.append(material_list)
+
+        def print_list_with_num(lis):
+            num = 1
+            print()
+            for entity in lis:
+                print(str(num) + ': ' + type(entity).__name__, "ID:", entity.get_id())
+                num += 1
+            print()
+
+        """
+            吃 z       攻击 x     喝 c      休息 v
+            合成 f      建造 r     
+            拾起 a      放下 s      装备 e    收集 g   
+        """
+
         # 等待按键 否则一直在循环里
         door = True
         while door and self.gate:
@@ -516,9 +671,13 @@ class Exhibitor:
                         elif last_code[0] in direction_and_obj_action:
                             last_code.append("up")
                             if not choose_object(last_code):
+                                self.pygame.quit()
                                 return False
                         elif last_code[0] in direction_action:
                             last_code.append("up")
+                        elif last_code[0] in direction_and_objs_action:
+                            last_code.append("up")
+                            choose_objs_from_backpack_and_position(last_code)
                         door = False
 
                     elif event.key == self.pygame.K_DOWN:
@@ -530,9 +689,13 @@ class Exhibitor:
                         elif last_code[0] in direction_and_obj_action:
                             last_code.append("down")
                             if not choose_object(last_code):
+                                self.pygame.quit()
                                 return False
                         elif last_code[0] in direction_action:
                             last_code.append("down")
+                        elif last_code[0] in direction_and_objs_action:
+                            last_code.append("down")
+                            choose_objs_from_backpack_and_position(last_code)
                         door = False
 
                     elif event.key == self.pygame.K_LEFT:
@@ -544,9 +707,13 @@ class Exhibitor:
                         elif last_code[0] in direction_and_obj_action:
                             last_code.append("left")
                             if not choose_object(last_code):
+                                self.pygame.quit()
                                 return False
                         elif last_code[0] in direction_action:
                             last_code.append("left")
+                        elif last_code[0] in direction_and_objs_action:
+                            last_code.append("left")
+                            choose_objs_from_backpack_and_position(last_code)
                         door = False
 
                     elif event.key == self.pygame.K_RIGHT:
@@ -558,9 +725,13 @@ class Exhibitor:
                         elif last_code[0] in direction_and_obj_action:
                             last_code.append("right")
                             if not choose_object(last_code):
+                                self.pygame.quit()
                                 return False
                         elif last_code[0] in direction_action:
                             last_code.append("right")
+                        elif last_code[0] in direction_and_objs_action:
+                            last_code.append("right")
+                            choose_objs_from_backpack_and_position(last_code)
                         door = False
 
                     elif event.key == self.pygame.K_z:
@@ -581,13 +752,16 @@ class Exhibitor:
                     elif event.key == self.pygame.K_v:
                         if len(last_code) == 0:
                             last_code.append("rest")
-                            door = False
                         elif last_code[0] in direction_and_obj_action:
                             last_code.append("stay")
                             if not choose_object(last_code):
+                                self.pygame.quit()
                                 return False
                         elif last_code[0] in direction_action:
                             last_code.append("stay")
+                        elif last_code[0] in direction_and_objs_action:
+                            last_code.append("stay")
+                            choose_objs_from_backpack_and_position(last_code)
                         door = False
 
                     elif event.key == self.pygame.K_a:
@@ -601,6 +775,47 @@ class Exhibitor:
                         if type(player_animal).__name__ == "Human_being":
                             if len(last_code) == 0:
                                 last_code.append("put_down")
+                                self.detect_player_input(last_code, world)
+                                door = False
+
+                    elif event.key == self.pygame.K_e:
+                        if type(player_animal).__name__ == "Human_being":
+                            if len(last_code) == 0:
+                                last_code.append("handling")
+                                last_code.append("")
+                                last_code.append(choose_object_from_backpack())
+                                door = False
+
+                    elif event.key == self.pygame.K_f:
+                        if type(player_animal).__name__ == "Human_being":
+                            if len(last_code) == 0:
+                                last_code.append("fabricate")
+                                last_code.append("")
+                                last_code.append(multi_choose_object_from_backpack())
+                                # 若关闭程序
+                                if last_code[-1] == -2:
+                                    self.pygame.quit()
+                                    return False
+                                door = False
+
+                    elif event.key == self.pygame.K_r:
+                        if type(player_animal).__name__ == "Human_being":
+                            if len(last_code) == 0:
+                                last_code.append("construct")
+                                self.detect_player_input(last_code, world)
+                                door = False
+
+                    elif event.key == self.pygame.K_g:
+                        if type(player_animal).__name__ == "Human_being":
+                            if len(last_code) == 0:
+                                last_code.append("collect")
+                                self.detect_player_input(last_code, world)
+                                door = False
+
+                    elif event.key == self.pygame.K_t:
+                        if type(player_animal).__name__ == "Human_being":
+                            if len(last_code) == 0:
+                                last_code.append("push_pull")
                                 self.detect_player_input(last_code, world)
                                 door = False
 

@@ -1,6 +1,6 @@
-from world.entity.food import Food
+from world.entity.obj.food import Food
 from world.entity.obj.obj import Obj
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 
 
 class Corpse(Obj, Food, metaclass=ABCMeta):

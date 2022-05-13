@@ -31,16 +31,21 @@ class World_controller:
         """
             用户选择进入哪个世界 生成还是读取
         """
+        print("开始创建世界")
         self.world = self.entry()
+        print("世界创建结束")
 
         """
             Exhibitor负责窗口的可视化呈现
         """
         # 创建可视化窗口 后面那个数是世界的格子大小
-        self.exhibitor = Exhibitor(self.world, 15)
+        print("开始创建可视化")
+        self.exhibitor = Exhibitor(self.world, 1)
+        print("可视化创建结束")
 
         # 如果世界生成成功 则进入该世界 否则退出程序
         if self.world:
+            print("世界创建成功")
             # 初始化线程和运行门 后台线程和主线程同步进行
             self.background_thread = threading.Thread(target=self.background)
             # 初始化用户操作并规定程序是否允许
@@ -52,8 +57,12 @@ class World_controller:
             """
             # 后台和世界开始不停运作
             self.background_thread.setDaemon(True)
+            print("创建后台")
             self.background_thread.start()
+            print("世界开始运作")
             self.world_evolution()
+        else:
+            print("世界创建失败")
 
     # 程序入口
     """
@@ -73,7 +82,7 @@ class World_controller:
 
         # 使用世界生成器参数化生成世界
         # map_size规定了有 几行（高 纵坐标） 和 几列（宽 横坐标）
-        def get_world(generator, maximum_height=30, map_size=(50, 50),
+        def get_world(generator, maximum_height=30, map_size=(250, 500),
                       animals_para="random_animals", plants_para="random_plants",
                       obj_para="random_obj",
                       water_para="default_water",
@@ -95,9 +104,11 @@ class World_controller:
             """
                 待改进： 可以进一步询问生成参数
             """
+
             # world_type_name = input("Please input world type name: ")
             world_type_name = "mesh_world"
             # 根据世界类型生成世界
+            print("开始生成世界")
             self.generator = get_generator(world_type_name)
             # 通过世界生成器生成世界
             world = get_world(self.generator)
@@ -105,6 +116,7 @@ class World_controller:
             world_type_name = input("Please input world type name: ")
             # world_type_name = "mesh_world"
             world_name = input("Please input world name: ")
+            print("开始读取世界")
             self.generator = get_generator(world_type_name)
             world = self.load(world_type_name, world_name)
 
@@ -116,11 +128,15 @@ class World_controller:
     # 世界不断运作
     def world_evolution(self):
         self.player_cmd = self.expansion()
+        print("玩家指令为: ", self.player_cmd)
         # 用gate判断是否结束
         while self.gate:
+            print("世界开始运作一次")
             self.world.evolution(self.player_cmd)
+            print("世界运作结束")
             # 可视化等操作
             self.player_cmd = self.expansion()
+            print("玩家指令为: ", self.player_cmd)
             if not self.player_cmd:
                 self.gate = False
 
@@ -146,6 +162,8 @@ class World_controller:
                 self.save(cmd[1])
             elif cmd[0] == "stat":
                 print(self.statistics(cmd))
+            else:
+                print("非法命令")
 
     """
         世界每运行一轮都会调用一次该方法 统计和可视化在这里进行
@@ -170,6 +188,7 @@ class World_controller:
     """
     # 存档
     def save(self, file_name):
+        print("正在存档...")
         world_type_name = type(self.world).__name__
         state = self.world.get_state()
         File_processor.archive(state, world_type_name, file_name)
@@ -184,6 +203,7 @@ class World_controller:
     """
     # 读档
     def load(self, world_type_name, file_name):
+        print("正在读档...")
         state = File_processor.load(world_type_name, file_name)
         world = self.generator.generate_a_world_by_state(state)
         return world

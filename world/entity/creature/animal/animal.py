@@ -6,7 +6,7 @@ import random
 from world.entity.creature.creature import Creature
 from world.entity.active_thing import Active_thing
 from world.entity.big_obj import Big_obj
-from world.entity.food import Food
+from world.entity.obj.food import Food
 from abc import ABCMeta, abstractmethod
 
 
@@ -328,19 +328,19 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
                               crawl_ability_change_value=None,
                               speed_change_value=None,
                               aggressivity_change_value=None):
-        if crawl_ability_change_value:
+        if crawl_ability_change_value is not None:
             self.crawl_ability_change_value = crawl_ability_change_value
 
-        if speed_change_value:
+        if speed_change_value is not None:
             self.speed_change_value = speed_change_value
 
-        if aggressivity_change_value:
+        if aggressivity_change_value is not None:
             self.aggressivity_change_value = aggressivity_change_value
 
     def post_turn_change(self):
-        crawl_ability_change_value = 0
-        speed_change_value = 0
-        aggressivity_change_value = 0
+        crawl_ability_change_value = self.crawl_ability_change_value
+        speed_change_value = self.speed_change_value
+        aggressivity_change_value = self.aggressivity_change_value
         life_change_value = 0
 
         if self.full_value > 0:

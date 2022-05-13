@@ -34,6 +34,7 @@ class Concrete_world_generator(World_generator):
                          animals_para, plants_para, obj_para):
         state = self.generate_a_state(maximum_height, map_size, landform_para, water_para, terrain_para,
                                       animals_para, plants_para, obj_para)
+        print("世界参数为:", "最大高度:", maximum_height, "地图大小:", map_size)
         return World(state)
 
     def generate_a_state(self, maximum_height, terrain_size, landform_para, water_para, terrain_para,
@@ -110,6 +111,7 @@ class Concrete_world_generator(World_generator):
 
             # 普通陆地高度
             normal_land_height = 3
+            print("\t默认陆地高度为:", normal_land_height)
 
             # 生成完全平面世界
             height_map = [[normal_land_height for i in range(columns)][:] for m in range(rows)]
@@ -120,13 +122,14 @@ class Concrete_world_generator(World_generator):
                     peaks = []
                     # 决定山峰的数量 数量越多越接近山地 否则越接近平原
                     peaks_num = max(columns * rows // 3000, 1)
+                    print("\t山峰数量为:", peaks_num)
                     # peaks_num = 1
 
                     # 随机生成数个山峰
                     # 山峰具有属性： 峰值 峰面大小 坡度 范围
                     Peak.init_random_seed(122213)
                     Peak.init_map_size((rows, columns))
-                    Peak.init_high_range((2, maximum_height - normal_land_height - 2))
+                    Peak.init_high_range((2, (maximum_height - normal_land_height - 2) ** 0.5))
                     for peak_id in range(peaks_num):
                         peaks.append(Peak.init_new_landform())
 
@@ -163,9 +166,11 @@ class Concrete_world_generator(World_generator):
                 self.building_a_state(landform_map, water_map,
                                       [[0 for a in range(terrain_size[1])] for b in range(terrain_size[0])],
                                       terrain_size, [], [], [])
-
+            print("\t开始进行水流预演")
             for time in range(50):
+                print("\t装在进行第", time, "次水流预演")
                 builder_state.water_flow()
+            print("\t水流预演完毕")
 
             return builder_state.get_water_map()
 
@@ -377,7 +382,13 @@ class Concrete_world_generator(World_generator):
             obj_list = []
             if obj_para == "random_obj":
                 ''' 这里生成物体表 '''
-                pass
+                obj_list.append(Stone([5, 5]))
+                obj_list.append(Wood([5, 5]))
+                obj_list.append(Wood([5, 5]))
+                obj_list.append(Wood([5, 5]))
+                obj_list.append(Wood([5, 5]))
+                obj_list.append(Wood([5, 5]))
+                obj_list.append(Axe([5, 5]))
             else:
                 ''' 参数生成 '''
                 pass
@@ -385,14 +396,21 @@ class Concrete_world_generator(World_generator):
             return obj_list
 
         # 生成地图
+        print("正在生成地势...")
         landform_map = generate_landform_map(landform_para, maximum_height, terrain_size[0], terrain_size[1])
+        print("正在生成水高...")
         water_map = generate_water_map(water_para, landform_map)
+        print("正在生成地貌...")
         terrain_map = generate_terrain_map(terrain_para, landform_map, water_map)
 
         # 生成实体
+        print("正在生成动物...")
         animals_list = generate_animals(animals_para)
+        print("正在生成植物...")
         plants_list = generate_plants(plants_para, landform_map, water_map, terrain_map)
+        print("正在生成物品...")
         obj_list = generate_objs(obj_para)
+        print("状态生成完毕！")
 
         return self.building_a_state(landform_map, water_map, terrain_map, terrain_size,
                                      animals_list, plants_list, obj_list)

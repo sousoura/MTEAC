@@ -1,3 +1,5 @@
+import random
+
 if __name__ == "__main__":
     import sys
     import os
@@ -9,6 +11,7 @@ if __name__ == "__main__":
 else:
     from world.state import State
     from world.entity.entity_import import *
+    from world.world_project.mesh_world.entity.mesh_entities import *
 
 """
     网格状态
@@ -56,7 +59,7 @@ class Mesh_state(State):
 
         # 地图属性
         self.terrain_size = terrain_size
-        self.legal_direction = ["up", "down", "left", "right"]
+        self.legal_direction = ["up", "down", "left", "right", "stay"]
 
         # 实体表
         self.animals = animals
@@ -157,8 +160,8 @@ class Mesh_state(State):
         elif command[0] == 'rest':
             # 动物休息
             self.animal_rest(animal)
-        elif command[0] in ['pick_up', 'put_down', 'fabricate', 'construct', 'interaction']:
-            if isinstance(animal, Human):
+        elif isinstance(animal, Human):
+            if command[0] in animal.action_list:
                 # 人类行为
                 self.human_action(animal, command)
 
@@ -243,7 +246,6 @@ class Mesh_state(State):
 
     def animal_eating(self, eator, be_eator):
 
-
         # 动物内部改变 吃者和被吃者状态变化
         eator.action_interior_outcome("eat", obj=be_eator)
         # 若被吃完 被吃者消失(死亡)
@@ -294,11 +296,90 @@ class Mesh_state(State):
             state.add_exist_to_map(obj, new_position)
             obj.new_position(new_position)
 
+        def human_construct(state, human, direction, objs):
+            # 生成新物品
+            new_position = self.position_and_direction_get_adjacent(human.get_position(), direction)[:]
+            item_names = human.composed_table[names_orderly_tuplize(objs)]
+            for item_name in item_names:
+                self.add_exist_to_map(globals()[item_name](new_position))
+            # 抹去成本物体的存在
+            human.action_interior_outcome("construct", obj=objs)
+            for item in objs:
+                if item in state.objects:
+                    state.eliminate_exist_in_map(item)
+
+        def human_collect_things(state, human, direction):
+            gether_things = []
+
+            # 得到收集处
+            direction = command[1]
+            direction_position = state.position_and_direction_get_adjacent(human.get_position(), direction)
+
+            # 收集处是否有森林
+            if tuple(direction_position) in state.get_plants_position():
+                for plant in state.get_plants_position()[tuple(direction_position)]:
+                    if isinstance(plant, (Birch_wood,)):
+                        gether_things.append(Wood(human.get_position()))
+                        human.action_interior_outcome("collect", obj=gether_things)
+                        return
+
+            # 收集处是否是可收集地貌
+            if direction_position:
+                terrain_type = state.get_terrain_map()[int(direction_position[0])][int(direction_position[1])]
+                thing_type = ["Stone", "Sandpile", "Soil_pile"][human.collectable.index(terrain_type)]
+
+                """
+                    待补充：目前还没有桶 人无法捡起沙子和泥土
+                """
+                if thing_type == "Stone":
+                    gether_things.append(Stone(human.get_position()))
+                    human.action_interior_outcome("collect", obj=gether_things)
+                    return
+                else:
+                    print("暂不能收集沙子和泥土")
+
+        def human_push_pull(state, human, derection, obj):
+            old_position = tuple(human.get_position())
+            new_position = state.position_and_direction_get_new_position(old_position, derection)
+
+            # 执行移动 改变状态（但是不改变生物的属性）
+            state.change_animal_position(human, old_position, new_position)
+            # 行动成功对于动物的内部影响
+            human.action_interior_outcome(action_type="push_pull", parameter=new_position)
+
+            obj_old_position = obj.get_position()
+            obj_new_position = (int(old_position[0]), int(old_position[1]))
+            obj.new_position(obj_new_position)
+
+            if obj_new_position in state.objs_position:
+                state.objs_position[obj_new_position].append(obj)
+            else:
+                state.objs_position[obj_new_position] = [obj]
+
+            state.objs_position[obj_old_position].remove(obj)
+            if len(state.objs_position[obj_old_position]) == 0:
+                del state.objs_position[obj_old_position]
+
         if command[0] == "pick_up":
             human_pick_up(self, human, command[2])
 
         elif command[0] == "put_down":
             human_put_down(self, human, command[1], command[2])
+
+        elif command[0] == "handling":
+            human.action_interior_outcome("handling", obj=command[2])
+
+        elif command[0] == "fabricate":
+            human.action_interior_outcome("fabricate", obj=command[2])
+
+        elif command[0] == "construct":
+            human_construct(self, human, command[1], command[2])
+
+        elif command[0] == "collect":
+            human_collect_things(self, human, command[1])
+
+        elif command[0] == "push_pull":
+            human_push_pull(self, human, command[1], command[2])
 
     """
         ***
@@ -313,8 +394,11 @@ class Mesh_state(State):
                 if self.water_map[row_index][col_index] < 0.1:
                     self.water_map[row_index][col_index] = 0
                     continue
+
                 # 得到自己的绝对水高
                 absolute_water_high = self.water_map[row_index][col_index] + self.landform_map[row_index][col_index]
+                land_high = self.landform_map[row_index][col_index]
+
                 # 得到所有合法方向的位置
                 """
                     得到的位置的数据结构由输入的位置的数据结构决定
@@ -326,12 +410,14 @@ class Mesh_state(State):
                     if adjacent_position:
                         adjacent_positions. \
                             append(adjacent_position)
+
                 # 判断所有合法方向的绝对水高 并只保留可流的位置
                 """
                     此处的数据结构： {位置：绝对水高}
                 """
                 adjacent_absolute_water_highs = {}
                 sum_absolute_water_high = absolute_water_high
+
                 for adjacent_position in adjacent_positions:
                     adjacent_absolute_water_high = \
                         self.water_map[adjacent_position[0]][adjacent_position[1]] + \
@@ -340,6 +426,7 @@ class Mesh_state(State):
                     if adjacent_absolute_water_high < absolute_water_high:
                         adjacent_absolute_water_highs[adjacent_position] = adjacent_absolute_water_high
                         sum_absolute_water_high += adjacent_absolute_water_high
+
 
                 # 如果四面都更高则水不流
                 if len(adjacent_absolute_water_highs) == 0:
@@ -351,32 +438,40 @@ class Mesh_state(State):
                 # 若不可流平
                 if avg_absolute_water_high < self.landform_map[row_index][col_index]:
                     # 当前剩余水量，流干为之
-                    current_water_amount = self.water_map[row_index][col_index]
+                    water_amount = self.water_map[row_index][col_index]
                     self.water_map[row_index][col_index] = 0
-                    while len(adjacent_absolute_water_highs) > 0 and current_water_amount > 0:
-                        # 等分水量
-                        equant_water_amount = current_water_amount / len(adjacent_absolute_water_highs)
-                        kill_positions = []
-                        for position in adjacent_absolute_water_highs:
-                            # 两边流平的情况
-                            if adjacent_absolute_water_highs[position] + equant_water_amount > \
-                                    self.landform_map[row_index][col_index]:
-                                # 流一个水差
-                                water_head = \
-                                    self.landform_map[row_index][col_index] - adjacent_absolute_water_highs[position]
-                                current_water_amount -= water_head
-                                self.water_map[position[0]][position[1]] += water_head
-                                kill_positions.append(position)
-                            # 全给的情况
-                            else:
-                                current_water_amount -= equant_water_amount
-                                self.water_map[position[0]][position[1]] += equant_water_amount
 
-                        for position in kill_positions:
-                            adjacent_absolute_water_highs.pop(position)
+                    adjacent_drop_highs = {}
+                    sum_drop_high = 0
 
-                        if current_water_amount < 0.01:
-                            current_water_amount = 0
+                    for position in adjacent_absolute_water_highs:
+                        drop_high = land_high - adjacent_absolute_water_highs[position]
+                        if drop_high > 0:
+                            sum_drop_high += drop_high
+                            adjacent_drop_highs[position] = drop_high
+
+                    # 将字典变为数组 并排好序
+                    # {'a':21, 'b':5, 'c':3, 'd':54, 'e':74, 'f':0}
+                    # 变为
+                    # [('f', 0), ('c', 3), ('b', 5), ('a', 21), ('d', 54), ('e', 74)]
+                    adjacent_drop_highs = sorted(adjacent_drop_highs.items(), key=lambda d: d[1], reverse=False)
+                    drop_highs = tuple([i[1] for i in adjacent_drop_highs])
+                    drop_num = len(adjacent_drop_highs)
+
+                    # # 计算阿尔法们
+                    # drop_high_each = [adjacent_drop_highs[ind + 1] - adjacent_drop_highs[ind]
+                    #                   for ind in range(len(adjacent_drop_highs) - 1)]
+                    # drop_high_each.append(land_high - adjacent_drop_highs[-1])
+
+                    for step in range(len(adjacent_drop_highs)):
+                        if water_amount < sum(drop_highs[:step + 1]):
+                            for ind in range(step - 1):
+                                position = adjacent_drop_highs[ind][0]
+                                self.water_map[position[0]][position[1]] += drop_highs[ind]
+                                water_amount -= drop_highs[ind]
+                            position = adjacent_drop_highs[step - 1][0]
+                            self.water_map[position[0]][position[1]] += water_amount
+                            break
 
                 # 若可流平
                 else:
@@ -588,12 +683,21 @@ class Mesh_state(State):
                     self.add_exist_to_map(product)
 
 
+def names_orderly_tuplize(objs_list):
+    def get_onj_name(obj):
+        return type(obj).__name__
+
+    objs_name_list = [get_onj_name(obj) for obj in objs_list]
+    objs_name_list.sort()
+    return tuple(objs_name_list)
+
+
 if __name__ == "__main__":
     landform_map = [
         [5, 5, 5, 5, 5],
         [5, 1, 1, 1, 5],
-        [5, 1, 5, 1, 5],
-        [5, 1, 1, 1, 1],
+        [5, 1, 1, 1, 5],
+        [5, 1, 1, 1, 5],
         [5, 5, 5, 5, 5],
     ]
     water_map = [
@@ -603,10 +707,20 @@ if __name__ == "__main__":
         [1, 1, 1, 1, 1],
         [1, 1, 1, 1, 1]
     ]
+    terrain_map = [
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1]
+    ]
     terrain_size = (5, 5)
     animals = []
+    plants = []
     objects = []
-    state = Mesh_state(landform_map, water_map, terrain_size, animals, objects)
+    state = Mesh_state(landform_map, water_map, terrain_map, terrain_size, animals, plants, objects)
     while True:
         state.water_flow()
+        for line in state.get_water_map():
+            print(line)
         input()

@@ -21,7 +21,7 @@ class Entity(metaclass=ABCMeta):
         return type(self).__name__ + ": " + str(self.id)
 
     def get_position(self):
-        return self.position[:]
+        return self.position
 
     def get_id(self):
         return self.id
