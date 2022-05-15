@@ -7,9 +7,11 @@ from abc import ABCMeta, abstractmethod
 
 
 class Human(Animal):
-    def __init__(cls, position, life):
-        super(Human, cls).__init__(position, life)
+    def __init__(self, position, life, brain, full_value, drinking_value, body_state, gender,
+                 crawl_ability, speed, aggressivity):
+        super(Human, self).__init__(position, life, brain, full_value, drinking_value, body_state, gender,
+                                    crawl_ability, speed, aggressivity)
 
     @abstractmethod
-    def move(self, new_position):
+    def die(self):
         pass

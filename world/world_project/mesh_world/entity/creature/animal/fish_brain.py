@@ -1,10 +1,10 @@
 from world.entity.creature.animal.brain import Brain
 
 
-class Alpaca_brain(Brain):
+class Fish_brain(Brain):
     def devise_an_act(self, perception, self_information):
         """
-           草泥马脑
+           鱼脑
        """
         def find_running_direction(perception):
             direction = "down"

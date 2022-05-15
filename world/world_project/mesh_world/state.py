@@ -1,3 +1,5 @@
+import random
+
 if __name__ == "__main__":
     import sys
     import os
@@ -9,6 +11,7 @@ if __name__ == "__main__":
 else:
     from world.state import State
     from world.entity.entity_import import *
+    from world.world_project.mesh_world.entity.mesh_entities import *
 
 """
     网格状态
@@ -26,7 +29,7 @@ else:
         网格世界的方法全都有关于状态的修改或状态
             一回合内各个属性的变化的方法
                 动物行为 animal_action和animal_act
-                    动物移动        moving_position
+                    动物移动        moving_a_pace
                     动物吃          animal_eating
                 地形变化            (去掉了)
                 ...
@@ -56,7 +59,7 @@ class Mesh_state(State):
 
         # 地图属性
         self.terrain_size = terrain_size
-        self.legal_direction = ["up", "down", "left", "right"]
+        self.legal_direction = ["up", "down", "left", "right", "stay"]
 
         # 实体表
         self.animals = animals
@@ -68,15 +71,12 @@ class Mesh_state(State):
         self.plants_position = self.init_position_list(self.plants)
         self.objs_position = self.init_position_list(self.objects)
 
-    # 更新新地图
-    def renew_map(self, new_map):
-        self.landform_map = new_map
-
     """
         ***
             以下是动物的运动
         ***
-        输入  player_cmd：玩家指令 为字符串 格式是"第一段_第二段_第三段_..."
+        输入  player_cmd：玩家指令 为数组 格式是[第一段, 第二段, 第三段_...]
+                一般默认第一段为动作类型 第二段为动作对象 第三段为动作参数
             中间的if 如果该生物被判断为是玩家控制的 就会使用玩家指令 否则就使用大脑返回的指令
             指令分段 不同段用_隔开
                 第一段是类型 目前只有eat和go
@@ -93,96 +93,91 @@ class Mesh_state(State):
             # 判断生物是否死亡
             if not animal.is_die():
                 cmd = animal.devise_an_act(animal.get_perception(self.landform_map, self.animals_position))
-                # 玩家输入的键盘值控制的对象是谁
-                # 这里是有缺陷的 因为所有人类都会受影响 而不是某一个人类
-                '''
-                    待引入id系统改进
-                '''
+                """
+                    判断该对象是不是玩家
+                    判断有没有指令
+                """
                 if animal.is_id(1):
                     # 判断是否输入指令
                     if not player_cmd:
-                        return
+                        continue
                     # 判断指令是否是移动
-                    elif player_cmd.split("_")[0] in ['left', 'right', 'up', 'down']:
-                        cmd = ["go", player_cmd]
-                    # 判断指令类型是否是吃
-                    elif player_cmd.split("_")[0] == "eat":
-                        cmd = player_cmd.split("_")
+                    else:
+                        cmd = player_cmd
                 # 根据指令进行操作
-                self.animal_act(animal, cmd)
+                self.animal_action_command_analysis_and_execute(animal, cmd)
+                animal.post_turn_change()
             else:
+                self.creature_die(animal)
                 del animal
 
     # 分析生物行动命令的基本类型 并调用相应的执行函数
-    def animal_act(self, animal, command):
+    def animal_action_command_analysis_and_execute(self, animal, command):
+        """
+            command指令的数据结构类似: ["go", 方向]
+            首先进行合法性判断 然后进行行为本身
+        """
+
+        """
+           基本行为的行为次数判断
+        """
+        def basic_act_number(animal, command):
+            time = 1
+            if command[0] == "go":
+                time = animal.get_pace()
+            return time
+
+        """
+            行为合法性判断方法
+        """
+        def judge_action_validity(animal, command):
+            return animal.judge_action_validity(self, command)
+
+        # 判断基本行为执行几次
+        # 中间行为不合法则中断后面的行为
+        for time in range(int(basic_act_number(animal, command))):
+            # 产生尝试该行为造成的成本
+            animal.action_cost(command[0])
+            if judge_action_validity(animal, command):
+                self.animal_action_command_execute(animal, command)
+            else:
+                break
+
+    # 执行指令 改变世界和生物的状态
+    def animal_action_command_execute(self, animal, command):
         if command[0] == 'go':
-            self.moving_position(animal, command[1])
+            # 走一步
+            self.moving_a_pace(animal, command[1])
         elif command[0] == 'eat':
             # 动物吃生物
-            self.animal_eating(animal, command[1])
+            self.animal_eating(animal, command[2])
+        elif command[0] == 'drink':
+            # 动物喝水
+            self.animal_drinking(animal, command[1])
+        elif command[0] == 'attack':
+            # 动物攻击
+            self.animal_attack(animal, command[2])
+        elif command[0] == 'rest':
+            # 动物休息
+            self.animal_rest(animal)
+        elif isinstance(animal, Human):
+            if command[0] in animal.action_list:
+                # 人类行为
+                self.human_action(animal, command)
 
     """
         输入  某个生物实例 移动的方向
         效果  会分析移动是否合法 如果合法 则移动之 改变生物的位置状态并更新位置表 反之 不移动之
     """
-
     # 生物移动 外部和内部执行
-    def moving_position(self, animal, direction):
-        # 判断动作合法性方法
-        def judge_action_validity(animal, old_position, new_position):
-            # 判断落差是否大于生物的爬行能力
-            if abs(self.landform_map[round(old_position[1])][round(old_position[0])] -
-                   self.landform_map[round(new_position[1])][round(new_position[0])]) > \
-                    animal.get_crawl_ability():
-                return False
-
-            # 判断目的地属性和自身是否相斥
-            # if animal.judge_geomorphic_compatibility(self.terrain[new_position[1]][new_position[0]]):
-            #     pass
-
-            # 如果该生物是大物体
-            if isinstance(animal, Big_obj):
-                # 大物体互斥规则
-                # 如果有大动物挡在前面
-                if new_position in self.animals_position:
-                    for other_animal in self.animals_position[new_position]:
-                        if isinstance(other_animal, Big_obj):
-                            return False
-
-                # if new_position in self.big_objs:
-                #     return False
-
-                # 禁止大物体进入的地貌 （已改为在相斥判断中的大物体类中进行判断）
-
-            # 该生物是小物体的情况
-            else:
-                pass
-                # 禁止一切物体进入的地貌（已改为在相斥判断中进行判断）
-
-            return True
-
-        # 得到新位置后移动到新位置
-        def normally_move_to_new_position(state, animal, old_position, new_position):
-            if new_position in state.animals_position:
-                state.animals_position[new_position].append(animal)
-            else:
-                state.animals_position[new_position] = [animal]
-            state.animals_position[old_position].remove(animal)
-            if len(state.animals_position[old_position]) == 0:
-                del state.animals_position[old_position]
-            animal.move(new_position)
-
+    def moving_a_pace(self, animal, direction):
         old_position = tuple(animal.get_position())
         new_position = self.position_and_direction_get_new_position(old_position, direction)
-        """
-            条件判断不全在条件判断函数中 职能不够集中 待优化
-        """
-        # 判断是否出界
-        if new_position:
-            # 判断移动的条件是否满足
-            if judge_action_validity(animal, old_position, new_position):
-                # 判断移动合法性
-                normally_move_to_new_position(self, animal, old_position, new_position)
+
+        # 执行移动 改变状态（但是不改变生物的属性）
+        self.change_animal_position(animal, old_position, new_position)
+        # 行动成功对于动物的内部影响
+        animal.action_interior_outcome(action_type="go", parameter=new_position)
 
     # old_position + direction = new_position
     def position_and_direction_get_new_position(self, old_position, direction):
@@ -193,39 +188,36 @@ class Mesh_state(State):
                 之所以返回2和-2是因为1和0对应了True和False
             """
             if new_position:
-                # 移动格差过大 不合法
-                if abs(self.landform_map[new_position[1]][new_position[0]] -
-                       self.landform_map[old_position[1]][old_position[0]]) > 1:
-                    return False
                 # 升一格移动
-                elif self.landform_map[new_position[1]][new_position[0]] - \
-                        self.landform_map[old_position[1]][old_position[0]] == 1:
+                if self.landform_map[new_position[0]][new_position[1]] - \
+                        self.landform_map[old_position[0]][old_position[1]] == 1:
                     return 2
                 # 降一格移动
-                elif self.landform_map[new_position[1]][new_position[0]] - \
-                        self.landform_map[old_position[1]][old_position[0]] == -1:
+                elif self.landform_map[new_position[0]][new_position[1]] - \
+                        self.landform_map[old_position[0]][old_position[1]] == -1:
                     return -2
                 # 同级移动
                 return True
             # 新位置超出地图 为空对象
+            # 冗余判断
             return False
 
         # 若在左右半格上
         if old_position[0] % 1 > 0:
             stride = 0.5
-            if direction == 'right':
+            if direction == 'down':
                 if old_position[0] < self.terrain_size[0] - 1:
                     return old_position[0] + stride, old_position[1]
-            elif direction == 'left':
+            elif direction == 'up':
                 if old_position[0] > 0:
                     return old_position[0] - stride, old_position[1]
         # 若在上下半格上
         elif old_position[1] % 1 > 0:
             stride = 0.5
-            if direction == 'down':
+            if direction == 'right':
                 if old_position[1] < self.terrain_size[1] - 1:
                     return old_position[0], old_position[1] + stride
-            elif direction == 'up':
+            elif direction == 'left':
                 if old_position[1] > 0:
                     return old_position[0], old_position[1] - stride
         # 若不在半格上
@@ -247,38 +239,147 @@ class Mesh_state(State):
         return False
 
     # 生物吃
-    '''
+    """
+        生物的吃行为
         输入      吃的主体 方向 客体
-    '''
+    """
 
-    def animal_eating(self, eator, eat_direction, be_eator=0):
-        eat_position = self.position_and_direction_get_new_position(eator.get_position(), eat_direction)
-        '''
-            目前只能吃在位置上的大生物 待修改
-            如果吃的地方什么也不发生 则结束
-        '''
-        if be_eator == 0:
-            if eat_position in self.animals_position:
-                be_eator = self.animals_position[eat_position][0]
-            else:
-                return
-        # 若成功 吃者状态变化 被吃者消失(死亡)
-        if eat_position == be_eator.get_position():
-            self.animals_position[be_eator.get_position()].remove(be_eator)
-            self.animals.remove(be_eator)
-            if len(self.animals_position[be_eator.get_position()]) == 0:
-                del self.animals_position[be_eator.get_position()]
-            eator.eat(be_eator)
-            be_eator.die()
+    def animal_eating(self, eator, be_eator):
+
+        # 动物内部改变 吃者和被吃者状态变化
+        eator.action_interior_outcome("eat", obj=be_eator)
+        # 若被吃完 被吃者消失(死亡)
+        if be_eator.be_ate(eator):
+            # 地图改变
+            self.eliminate_exist_in_map(be_eator)
             del be_eator
-        # 确认吃的方向有没有该对象 若没有 动作失败
-        else:
-            pass
 
-    # # print生成生物位置
-    # def print_show_animal(self):
-    #     for animal in self.animals:
-    #         print(type(animal).__name__, animal.get_position())
+    # 生物喝
+    """
+        生物的喝水行为
+        输入      吃的主体 方向
+    """
+
+    def animal_drinking(self, drinker, direction):
+        drinker.action_interior_outcome("drink", parameter=direction)
+
+    # 生物攻击
+    """
+        生物的喝水行为
+        输入      吃的主体 攻击的对象
+    """
+
+    def animal_attack(self, attacker, be_attackeder):
+        # 动物内部改变 攻击者和被攻击者状态变化
+        attacker.action_interior_outcome("attack", obj=be_attackeder)
+        be_attackeder.be_attack(attacker.get_aggressivity())
+
+        # 若被杀死 被杀者消失(死亡)
+        if be_attackeder.is_die():
+            # 地图改变
+            self.creature_die(be_attackeder)
+            del be_attackeder
+
+    # 生物休息
+    def animal_rest(self, rester):
+        pass
+
+    # 人类行为
+    def human_action(self, human, command):
+        def human_pick_up(state, human, obj):
+            human.action_interior_outcome("pick_up", obj=obj)
+            state.eliminate_exist_in_map(obj)
+
+        def human_put_down(state, human, direction, obj):
+            human.action_interior_outcome("put_down", obj=obj)
+            new_position = state.position_and_direction_get_adjacent(human.get_position(), direction)
+            state.add_exist_to_map(obj, new_position)
+            obj.new_position(new_position)
+
+        def human_construct(state, human, direction, objs):
+            # 生成新物品
+            new_position = self.position_and_direction_get_adjacent(human.get_position(), direction)[:]
+            item_names = human.composed_table[names_orderly_tuplize(objs)]
+            for item_name in item_names:
+                self.add_exist_to_map(globals()[item_name](new_position))
+            # 抹去成本物体的存在
+            human.action_interior_outcome("construct", obj=objs)
+            for item in objs:
+                if item in state.objects:
+                    state.eliminate_exist_in_map(item)
+
+        def human_collect_things(state, human, direction):
+            gether_things = []
+
+            # 得到收集处
+            direction = command[1]
+            direction_position = state.position_and_direction_get_adjacent(human.get_position(), direction)
+
+            # 收集处是否有森林
+            if tuple(direction_position) in state.get_plants_position():
+                for plant in state.get_plants_position()[tuple(direction_position)]:
+                    if isinstance(plant, (Birch_wood,)):
+                        gether_things.append(Wood(human.get_position()))
+                        human.action_interior_outcome("collect", obj=gether_things)
+                        return
+
+            # 收集处是否是可收集地貌
+            if direction_position:
+                terrain_type = state.get_terrain_map()[int(direction_position[0])][int(direction_position[1])]
+                thing_type = ["Stone", "Sandpile", "Soil_pile"][human.collectable.index(terrain_type)]
+
+                """
+                    待补充：目前还没有桶 人无法捡起沙子和泥土
+                """
+                if thing_type == "Stone":
+                    gether_things.append(Stone(human.get_position()))
+                    human.action_interior_outcome("collect", obj=gether_things)
+                    return
+                else:
+                    print("暂不能收集沙子和泥土")
+
+        def human_push_pull(state, human, derection, obj):
+            old_position = tuple(human.get_position())
+            new_position = state.position_and_direction_get_new_position(old_position, derection)
+
+            # 执行移动 改变状态（但是不改变生物的属性）
+            state.change_animal_position(human, old_position, new_position)
+            # 行动成功对于动物的内部影响
+            human.action_interior_outcome(action_type="push_pull", parameter=new_position)
+
+            obj_old_position = obj.get_position()
+            obj_new_position = (int(old_position[0]), int(old_position[1]))
+            obj.new_position(obj_new_position)
+
+            if obj_new_position in state.objs_position:
+                state.objs_position[obj_new_position].append(obj)
+            else:
+                state.objs_position[obj_new_position] = [obj]
+
+            state.objs_position[obj_old_position].remove(obj)
+            if len(state.objs_position[obj_old_position]) == 0:
+                del state.objs_position[obj_old_position]
+
+        if command[0] == "pick_up":
+            human_pick_up(self, human, command[2])
+
+        elif command[0] == "put_down":
+            human_put_down(self, human, command[1], command[2])
+
+        elif command[0] == "handling":
+            human.action_interior_outcome("handling", obj=command[2])
+
+        elif command[0] == "fabricate":
+            human.action_interior_outcome("fabricate", obj=command[2])
+
+        elif command[0] == "construct":
+            human_construct(self, human, command[1], command[2])
+
+        elif command[0] == "collect":
+            human_collect_things(self, human, command[1])
+
+        elif command[0] == "push_pull":
+            human_push_pull(self, human, command[1], command[2])
 
     """
         ***
@@ -287,14 +388,17 @@ class Mesh_state(State):
     """
     def water_flow(self):
         # 遍历水地图
-        for row_index in range(self.terrain_size[1]):
-            for col_index in range(self.terrain_size[0]):
+        for row_index in range(self.terrain_size[0]):
+            for col_index in range(self.terrain_size[1]):
                 # 若自身相对水高低于0.1 则被土地吸收
                 if self.water_map[row_index][col_index] < 0.1:
                     self.water_map[row_index][col_index] = 0
                     continue
+
                 # 得到自己的绝对水高
                 absolute_water_high = self.water_map[row_index][col_index] + self.landform_map[row_index][col_index]
+                land_high = self.landform_map[row_index][col_index]
+
                 # 得到所有合法方向的位置
                 """
                     得到的位置的数据结构由输入的位置的数据结构决定
@@ -306,12 +410,14 @@ class Mesh_state(State):
                     if adjacent_position:
                         adjacent_positions. \
                             append(adjacent_position)
+
                 # 判断所有合法方向的绝对水高 并只保留可流的位置
                 """
                     此处的数据结构： {位置：绝对水高}
                 """
                 adjacent_absolute_water_highs = {}
                 sum_absolute_water_high = absolute_water_high
+
                 for adjacent_position in adjacent_positions:
                     adjacent_absolute_water_high = \
                         self.water_map[adjacent_position[0]][adjacent_position[1]] + \
@@ -320,6 +426,7 @@ class Mesh_state(State):
                     if adjacent_absolute_water_high < absolute_water_high:
                         adjacent_absolute_water_highs[adjacent_position] = adjacent_absolute_water_high
                         sum_absolute_water_high += adjacent_absolute_water_high
+
 
                 # 如果四面都更高则水不流
                 if len(adjacent_absolute_water_highs) == 0:
@@ -331,34 +438,40 @@ class Mesh_state(State):
                 # 若不可流平
                 if avg_absolute_water_high < self.landform_map[row_index][col_index]:
                     # 当前剩余水量，流干为之
-                    current_water_amount = self.water_map[row_index][col_index]
+                    water_amount = self.water_map[row_index][col_index]
                     self.water_map[row_index][col_index] = 0
-                    while len(adjacent_absolute_water_highs) > 0 and current_water_amount > 0:
-                        # 等分水量
-                        equant_water_amount = current_water_amount / len(adjacent_absolute_water_highs)
-                        kill_positions = []
-                        for position in adjacent_absolute_water_highs:
-                            # 两边流平的情况
-                            if adjacent_absolute_water_highs[position] + equant_water_amount > \
-                                    self.landform_map[row_index][col_index]:
-                                # 流一个水差
-                                water_head = \
-                                    self.landform_map[row_index][col_index] - adjacent_absolute_water_highs[position]
-                                # if water_head < 0:
-                                #     water_head = 0
-                                current_water_amount -= water_head
-                                self.water_map[position[0]][position[1]] += water_head
-                                kill_positions.append(position)
-                            # 全给的情况
-                            else:
-                                current_water_amount -= equant_water_amount
-                                self.water_map[position[0]][position[1]] += equant_water_amount
 
-                        for position in kill_positions:
-                            adjacent_absolute_water_highs.pop(position)
+                    adjacent_drop_highs = {}
+                    sum_drop_high = 0
 
-                        if current_water_amount < 0.01:
-                            current_water_amount = 0
+                    for position in adjacent_absolute_water_highs:
+                        drop_high = land_high - adjacent_absolute_water_highs[position]
+                        if drop_high > 0:
+                            sum_drop_high += drop_high
+                            adjacent_drop_highs[position] = drop_high
+
+                    # 将字典变为数组 并排好序
+                    # {'a':21, 'b':5, 'c':3, 'd':54, 'e':74, 'f':0}
+                    # 变为
+                    # [('f', 0), ('c', 3), ('b', 5), ('a', 21), ('d', 54), ('e', 74)]
+                    adjacent_drop_highs = sorted(adjacent_drop_highs.items(), key=lambda d: d[1], reverse=False)
+                    drop_highs = tuple([i[1] for i in adjacent_drop_highs])
+                    drop_num = len(adjacent_drop_highs)
+
+                    # # 计算阿尔法们
+                    # drop_high_each = [adjacent_drop_highs[ind + 1] - adjacent_drop_highs[ind]
+                    #                   for ind in range(len(adjacent_drop_highs) - 1)]
+                    # drop_high_each.append(land_high - adjacent_drop_highs[-1])
+
+                    for step in range(len(adjacent_drop_highs)):
+                        if water_amount < sum(drop_highs[:step + 1]):
+                            for ind in range(step - 1):
+                                position = adjacent_drop_highs[ind][0]
+                                self.water_map[position[0]][position[1]] += drop_highs[ind]
+                                water_amount -= drop_highs[ind]
+                            position = adjacent_drop_highs[step - 1][0]
+                            self.water_map[position[0]][position[1]] += water_amount
+                            break
 
                 # 若可流平
                 else:
@@ -386,18 +499,21 @@ class Mesh_state(State):
     '''
 
     def position_and_direction_get_adjacent(self, old_position, direction):
-        if direction == 'down':
+        if direction == "stay":
+            return old_position
+        if direction == 'right':
             if old_position[1] < self.terrain_size[1] - 1:
                 return old_position[0], old_position[1] + 1
-        elif direction == 'up':
+        elif direction == 'left':
             if old_position[1] > 0:
                 return old_position[0], old_position[1] - 1
-        elif direction == 'right':
+        elif direction == 'down':
             if old_position[0] < self.terrain_size[0] - 1:
                 return old_position[0] + 1, old_position[1]
-        elif direction == 'left':
+        elif direction == 'up':
             if old_position[0] > 0:
                 return old_position[0] - 1, old_position[1]
+        return False
 
     # 返回地图的方法
     def get_landform_map(self):
@@ -431,23 +547,157 @@ class Mesh_state(State):
     def get_plants_position(self):
         return self.plants_position
 
+    # 得到整个生物表
+    def get_creatures_position(self):
+        creatures_position = {}
+        # 动物表里的都挑出来和植物表里的有相同的合起来
+        for position in self.animals_position:
+            if position in self.plants_position:
+                creatures_position[position] = self.animals_position[position] + self.plants_position[position]
+            else:
+                creatures_position[position] = self.animals_position[position]
+
+        # 弄植物表的 不过避免增加过已经有的
+        for position in self.plants_position:
+            if position not in self.animals_position:
+                creatures_position[position] = self.plants_position[position]
+        return creatures_position
+
+    # 得到物体字典
+    def get_objs_position(self):
+        return self.objs_position
+
+    # 得到具体某个位置的实体
+    def get_entities_in_position(self, position):
+        entities = []
+        if position in self.animals_position:
+            entities += self.animals_position[position]
+        if position in self.plants_position:
+            entities += self.plants_position[position]
+        if position in self.objs_position:
+            entities += self.objs_position[position]
+        return entities
+
+    # 根据id得到实体
+    def get_entity_by_id(self, id):
+        for animal in self.animals:
+            if animal.get_id() == id:
+                return animal
+
+        for plant in self.plants:
+            if plant.get_id() == id:
+                return plant
+
+        for obj in self.objects:
+            if obj.get_id() == id:
+                return obj
+
+        return False
+
+    # 更新新地图
+    def renew_map(self, new_map):
+        self.landform_map = new_map
+
+    # 削除一个东西的存在
+    def eliminate_exist_in_map(self, entity):
+        entity_position_list, entity_list = self.determine_entities_category(entity)
+
+        if entity_position_list != -1:
+            entity_position_list[tuple(entity.get_position())].remove(entity)
+            entity_list.remove(entity)
+            if len(entity_position_list[tuple(entity.get_position())]) == 0:
+                del entity_position_list[tuple(entity.get_position())]
+            del entity
+
+    # 增加一个新东西到地图
+    def add_exist_to_map(self, entity, position=None):
+        entity_position_list, entity_list = self.determine_entities_category(entity)
+        if not position:
+            die_position = entity.get_position()
+        else:
+            die_position = position
+
+        if entity_position_list != -1:
+            entity_list.append(entity)
+            if die_position in entity_position_list:
+                entity_position_list[die_position].append(entity)
+            else:
+                entity_position_list[die_position] = [entity]
+
+    # 判断实体类别
+    # 如果实体没有被登记为实体 则返回负一
+    def determine_entities_category(self, entity):
+        entity_position_list = -1
+        entity_list = -1
+
+        if isinstance(entity, Animal):
+            entity_position_list = self.animals_position
+            entity_list = self.animals
+        elif isinstance(entity, Plant):
+            entity_position_list = self.plants_position
+            entity_list = self.plants
+        elif isinstance(entity, Obj):
+            entity_position_list = self.objs_position
+            entity_list = self.objects
+
+        return entity_position_list, entity_list
+
+    # 改变动物位置的工具函数
+    def change_animal_position(self, animal, old_position, new_position):
+        if new_position in self.animals_position:
+            self.animals_position[new_position].append(animal)
+        else:
+            self.animals_position[new_position] = [animal]
+
+        self.animals_position[old_position].remove(animal)
+        if len(self.animals_position[old_position]) == 0:
+            del self.animals_position[old_position]
+        # animal.move(new_position)
+
+    # 动物死亡后消失
+    def creature_die(self, creature):
+        die_position = tuple(creature.get_position())
+        corpse = creature.die()
+        if corpse:
+            for remain in corpse:
+                self.add_exist_to_map(remain)
+
+        self.eliminate_exist_in_map(creature)
+
     # 初始化位置字典
     def init_position_list(self, entity_list):
         things_position = {}
-        for animal in entity_list:
-            if tuple(animal.get_position()) in things_position:
-                things_position[tuple(animal.get_position())].append(animal)
+        for entity in entity_list:
+            if tuple(entity.get_position()) in things_position:
+                things_position[tuple(entity.get_position())].append(entity)
             else:
-                things_position[tuple(animal.get_position())] = [animal]
+                things_position[tuple(entity.get_position())] = [entity]
         return things_position
+
+    # 植物每回合的变化
+    def plant_change(self):
+        for plant in self.plants:
+            products = plant.post_turn_change()
+            if products:
+                for product in products:
+                    self.add_exist_to_map(product)
+
+
+def names_orderly_tuplize(objs_list):
+    def get_onj_name(obj):
+        return type(obj).__name__
+
+    objs_name_list = [get_onj_name(obj) for obj in objs_list]
+    objs_name_list.sort()
+    return tuple(objs_name_list)
 
 
 if __name__ == "__main__":
     landform_map = [
         [5, 5, 5, 5, 5],
         [5, 1, 1, 1, 5],
-        [5, 1, 5, 1, 5],
-        [5, 1, 1, 1, 1],
+        [5, 1, 1, 1, 5],
+        [5, 1, 1, 1, 5],
         [5, 5, 5, 5, 5],
     ]
     water_map = [
@@ -457,10 +707,20 @@ if __name__ == "__main__":
         [1, 1, 1, 1, 1],
         [1, 1, 1, 1, 1]
     ]
+    terrain_map = [
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1]
+    ]
     terrain_size = (5, 5)
     animals = []
+    plants = []
     objects = []
-    state = Mesh_state(landform_map, water_map, terrain_size, animals, objects)
+    state = Mesh_state(landform_map, water_map, terrain_map, terrain_size, animals, plants, objects)
     while True:
         state.water_flow()
+        for line in state.get_water_map():
+            print(line)
         input()
