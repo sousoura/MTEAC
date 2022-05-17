@@ -166,11 +166,16 @@ class Concrete_world_generator(World_generator):
                 self.building_a_state(landform_map, water_map,
                                       [[0 for a in range(terrain_size[1])] for b in range(terrain_size[0])],
                                       terrain_size, [], [], [])
+            import time as Time
+            start = Time.time()
             print("\t开始进行水流预演")
             for time in range(50):
                 print("\t装在进行第", time, "次水流预演")
                 builder_state.water_flow()
+                # builder_state.water_flow_old()
             print("\t水流预演完毕")
+            end = Time.time()
+            print(end - start)
 
             return builder_state.get_water_map()
 

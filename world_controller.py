@@ -99,14 +99,15 @@ class World_controller:
                                               landform_para=landform_para, terrain_para=terrain_para)
 
         # 读取命令 这个也可以用前端干
-        entry_mode = input("Please choose world mode(generate or load): ")
+        # entry_mode = input("Please choose world mode(generate or load): ")
+        entry_mode = "generate"
+        # entry_mode = "load"
         while entry_mode not in ["generate", "load"]:
             entry_mode = input("Input is illegal, please try again(generate or load): ")
-        # entry_mode = "generate"
-        # entry_mode = "load"
 
-        world_type_name = input("Please input world type name: ")
-        # world_type_name = "mesh_world"
+
+        # world_type_name = input("Please input world type name: ")
+        world_type_name = "mesh_world"
         # 根据世界类型获取世界生成器
         self.generator = get_generator(world_type_name)
         while self.generator is None:

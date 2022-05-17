@@ -1,0 +1,17 @@
+# depslib dependency file v1.0
+1652780271 source:e:\program\c++-work\mteac-c++\main.cpp
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<iostream>
+	<vector>
+	<map>
+	<algorithm>
+	"main.hpp"
+
+1652508964 e:\program\c++-work\mteac-c++\main.h
+	<windows.h>
+
+1652780283 e:\program\c++-work\mteac-c++\main.hpp
+	<windows.h>
+
