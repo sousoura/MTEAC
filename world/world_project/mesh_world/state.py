@@ -1,4 +1,8 @@
 import random
+# ctypes，用于python和c++的交互
+import ctypes
+# 用于将多维数组转为一维数组
+from itertools import chain
 
 if __name__ == "__main__":
     import sys
@@ -70,6 +74,12 @@ class Mesh_state(State):
         self.animals_position = self.init_position_list(self.animals)
         self.plants_position = self.init_position_list(self.plants)
         self.objs_position = self.init_position_list(self.objects)
+
+        # c++代码模块
+        self.pDll = ctypes.CDLL("c++/MTEAC-C++.dll")
+        self.Double_Len = ctypes.c_double*(self.terrain_size[0]*self.terrain_size[1])
+        self.in_water_map = self.Double_Len()
+        self.in_landform_map = self.Double_Len()
 
     """
         ***
@@ -387,7 +397,43 @@ class Mesh_state(State):
             以下是水地图的更新
         ***
     """
+
+    # double * c_water_flow(int terrain_row, int terrain_col, double * in_water_map, double * in_landform_map, char * in_legal_direction)
+
     def water_flow(self):
+        # 数据初始化
+
+        legal_direction = ctypes.c_char_p()
+        for y in range(0, self.terrain_size[0]):
+            for x in range(0, self.terrain_size[1]):
+                self.in_water_map[y * self.terrain_size[1] + x] = self.water_map[y][x]
+                self.in_landform_map[y * self.terrain_size[1] + x] = self.landform_map[y][x]
+
+
+        legal_str = "\n".join(self.legal_direction)
+        legal_str += "\0"
+        legal_direction.value = legal_str.encode("utf-8")
+
+        # for char in legal_direction.value:
+        #     print(char)
+
+
+        self.pDll.c_water_flow.restype = ctypes.POINTER(ctypes.c_double)
+        # c++代码返回的会是一维数组形式的水地图
+        # s = input("input 312312312s1")
+        map_array = self.pDll.c_water_flow(self.terrain_size[0], self.terrain_size[1],
+                                      self.in_water_map, self.in_landform_map, legal_direction)
+        # for num in map_array:
+        #     print(num,end=" ")
+        # print(" ")
+        # print(map_array)
+
+        # self.water_map = []
+        for y in range(0, self.terrain_size[0]):
+            for x in range(0, self.terrain_size[1]):
+                self.water_map[y][x] = (map_array[x + y * self.terrain_size[1]])
+
+    def water_flow_old(self):
         # 遍历水地图
         for row_index in range(self.terrain_size[0]):
             for col_index in range(self.terrain_size[1]):
@@ -720,8 +766,13 @@ if __name__ == "__main__":
     plants = []
     objects = []
     state = Mesh_state(landform_map, water_map, terrain_map, terrain_size, animals, plants, objects)
+    print(1)
+    for line in state.get_water_map():
+        print(line)
+    input()
     while True:
         state.water_flow()
+        # state.water_flow_old()
         for line in state.get_water_map():
             print(line)
         input()

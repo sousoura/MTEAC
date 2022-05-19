@@ -99,6 +99,7 @@ class World_controller:
                                               landform_para=landform_para, terrain_para=terrain_para)
 
         # 读取命令 这个也可以用前端干
+        # 选择世界进入模式
         # entry_mode = input("Please choose world mode(generate or load): ")
         # while entry_mode not in ["generate", "load"]:
         #     entry_mode = input("Input is illegal, please try again(generate or load): ")
