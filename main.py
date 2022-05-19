@@ -1,8 +1,31 @@
-from world_controller import World_controller
+from world_env_interface import WorldEnv
 
 # 程序入口
-"""
-    World_controller是程序本体的实例
-    World_controller的初始化就是程序本身
-"""
-World_controller()
+
+if __name__ == "__main__":
+    ai_mode = True
+    if ai_mode:
+        """
+            openAI模式
+        """
+        env = WorldEnv()
+
+        while True:
+            # Take a random action
+            action = env.action_space.sample()
+            obs, reward, done, info = env.step(action)
+            env.reset()
+
+            # Render the game
+            env.render()
+
+            if done is True:
+                break
+
+        env.close()
+    else:
+        """
+            普通模式
+        """
+        a = WorldEnv()
+        a.test()

@@ -9,4 +9,9 @@ from abc import ABCMeta, abstractmethod
 
 # 抽象的状态类
 class State(metaclass=ABCMeta):
-    pass
+    def __init__(self, terrain_size):
+        self.terrain_size = terrain_size
+
+    # 返回地图大小
+    def get_terrain_size(self):
+        return self.terrain_size

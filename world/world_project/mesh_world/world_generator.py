@@ -164,7 +164,7 @@ class Concrete_world_generator(World_generator):
                             water_map[row_index][column_index] = 2
 
             builder_state = \
-                self.building_a_state(landform_map, water_map,
+                self.building_a_state(maximum_height, landform_map, water_map,
                                       [[0 for a in range(terrain_size[1])] for b in range(terrain_size[0])],
                                       terrain_size, [], [], [])
             import time as Time
@@ -419,7 +419,7 @@ class Concrete_world_generator(World_generator):
         obj_list = generate_objs(obj_para)
         print("状态生成完毕！")
 
-        return self.building_a_state(landform_map, water_map, terrain_map, terrain_size,
+        return self.building_a_state(maximum_height, landform_map, water_map, terrain_map, terrain_size,
                                      animals_list, plants_list, obj_list)
 
     """
@@ -428,8 +428,8 @@ class Concrete_world_generator(World_generator):
     """
 
     # 读档时用既有信息建造一个世界
-    def building_a_state(self, landform_map, water_map, terrain_map, terrain_size, animals_list, plants_list, obj_list):
-        return State(landform_map, water_map, terrain_map, terrain_size, animals_list, plants_list, obj_list)
+    def building_a_state(self, maximum_height, landform_map, water_map, terrain_map, terrain_size, animals_list, plants_list, obj_list):
+        return State(maximum_height, landform_map, water_map, terrain_map, terrain_size, animals_list, plants_list, obj_list)
 
     # 以state构造世界
     def generate_a_world_by_state(self, state):

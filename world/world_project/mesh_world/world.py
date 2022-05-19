@@ -17,12 +17,15 @@ class Mesh_world(World):
     def __init__(self, state):
         super(Mesh_world, self).__init__(state)
 
+    def take_action(self, player_cmd=None):
+        self.state.player_action(player_cmd)
+
     """
         规定世界调用哪些state方法来推进
     """
     # 地图推进一次
-    def evolution(self, player_cmd=None):
-        self.state.animal_action(player_cmd)
+    def evolution(self):
+        self.state.animal_action()
         self.state.plant_change()
         self.state.water_flow()
         # self.state.landform_evolution()

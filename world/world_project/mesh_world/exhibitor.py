@@ -113,7 +113,7 @@ class Exhibitor:
         展示的框架
     """
 
-    def display(self, world):
+    def display(self, world, mode="normal"):
         """
         可视化的入口
             需要可视化的数据：
@@ -162,8 +162,12 @@ class Exhibitor:
         # 设置帧率
         self.clock.tick(60)
 
+        player_cmd = None
         # 读取玩家操作
-        player_cmd = self.detect_player_input([], world)
+        if mode == "normal":
+            player_cmd = self.detect_player_input([], world)
+        elif mode == "ai":
+            player_cmd = None
 
         return player_cmd
 

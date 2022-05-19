@@ -49,7 +49,12 @@ else:
 
 
 class Mesh_state(State):
-    def __init__(self, landform_map, water_map, terrain_map, terrain_size, animals, plants, objects):
+    # 有 terrain_range + 1 种地形
+    terrain_range = 6
+    # 有 entity_type_num 种实体
+    entity_type_num = 22
+
+    def __init__(self, maximum_height, landform_map, water_map, terrain_map, terrain_size, animals, plants, objects):
         """
         :param landform_map:   类型：二维数组 值为int      意义表示：每个值都是整形 表示高低地形 数字越高地形越高
         :param terrain_size:    类型：二元元组             意义表示：地图大小 第0个值是行数 第1个值是列数
@@ -57,12 +62,13 @@ class Mesh_state(State):
         :param objects:         类型：列表 值为物品对象      意义表示：世界中的所有物品
         """
         # 地图
+        self.maximum_height = maximum_height
         self.landform_map = landform_map
         self.water_map = water_map
         self.terrain_map = terrain_map
 
         # 地图属性
-        self.terrain_size = terrain_size
+        super(Mesh_state, self).__init__(terrain_size)
         self.legal_direction = ["up", "down", "left", "right", "stay"]
 
         # 实体表
@@ -95,9 +101,28 @@ class Mesh_state(State):
         效果  某个动作被执行的效果
     """
 
+    def player_action(self, player_cmd):
+        # 判断是否输入指令
+        if not player_cmd:
+            return
+
+        if len(self.animals) == 0:
+            print("死光光咯")
+            return
+
+        player = self.animals[0]
+        if not player.is_id(1):
+            print("警告：玩家不在第一位")
+            return
+        if not player.is_die():
+            cmd = player_cmd
+            # 根据指令进行操作
+            self.animal_action_command_analysis_and_execute(player, cmd)
+            player.post_turn_change()
+
     # 更新动物行为
     # 一回合内的动物运动
-    def animal_action(self, player_cmd):
+    def animal_action(self):
         # 遍历生物表
         for animal in self.animals:
             # 判断生物是否死亡
@@ -108,12 +133,7 @@ class Mesh_state(State):
                     判断有没有指令
                 """
                 if animal.is_id(1):
-                    # 判断是否输入指令
-                    if not player_cmd:
-                        continue
-                    # 判断指令是否是移动
-                    else:
-                        cmd = player_cmd
+                    continue
                 # 根据指令进行操作
                 self.animal_action_command_analysis_and_execute(animal, cmd)
                 animal.post_turn_change()
@@ -211,6 +231,9 @@ class Mesh_state(State):
             # 新位置超出地图 为空对象
             # 冗余判断
             return False
+
+        if direction == 'stay':
+            return tuple(old_position)
 
         # 若在左右半格上
         if old_position[0] % 1 > 0:

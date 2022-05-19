@@ -177,6 +177,9 @@ class Human_being(Human, Big_obj):
         if not direction_position:
             return False
 
+        if command[2] == -1:
+            return False
+
         return True
 
     def judge_handling(self, world_state, command):
