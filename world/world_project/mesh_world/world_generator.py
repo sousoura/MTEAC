@@ -1,4 +1,5 @@
 import random
+import math
 
 from world.world_generator import World_generator
 from world.world_project.mesh_world.mods import *
@@ -121,13 +122,13 @@ class Concrete_world_generator(World_generator):
                 if not peaks_para:
                     peaks = []
                     # 决定山峰的数量 数量越多越接近山地 否则越接近平原
-                    peaks_num = max(columns * rows // 3000, 1)
+                    peaks_num = max(int(math.log(columns * rows, 2)), 1)
                     print("\t山峰数量为:", peaks_num)
                     # peaks_num = 1
 
                     # 随机生成数个山峰
                     # 山峰具有属性： 峰值 峰面大小 坡度 范围
-                    Peak.init_random_seed(122213)
+                    Peak.init_random_seed(12456)
                     Peak.init_map_size((rows, columns))
                     Peak.init_high_range((2, (maximum_height - normal_land_height - 2) ** 0.5))
                     for peak_id in range(peaks_num):
@@ -160,7 +161,7 @@ class Concrete_world_generator(World_generator):
                 for row_index in range(terrain_size[0]):
                     for column_index in range(terrain_size[1]):
                         if landform_map[row_index][column_index] <= maximum_height / 1.2:
-                            water_map[row_index][column_index] = 1
+                            water_map[row_index][column_index] = 2
 
             builder_state = \
                 self.building_a_state(landform_map, water_map,
@@ -394,6 +395,7 @@ class Concrete_world_generator(World_generator):
                 obj_list.append(Wood([5, 5]))
                 obj_list.append(Wood([5, 5]))
                 obj_list.append(Axe([5, 5]))
+                obj_list.append(Cart([8, 8]))
             else:
                 ''' 参数生成 '''
                 pass

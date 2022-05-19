@@ -28,7 +28,7 @@ class Landform(metaclass=ABCMeta):
 
     @classmethod
     def init_random_seed(cls, random_seed):
-        cls.random_seed = random_seed
+        cls.random.seed(random_seed)
 
     @abstractmethod
     def affect(self, point_position):
@@ -38,10 +38,10 @@ class Landform(metaclass=ABCMeta):
 class Peak(Landform):
     peaks = []
     peaks_position = []
-    peak_high_range = (2, 6)
+    peak_high_range = (2, 20)
     import random
     random = random
-    random_seed = 114514
+    random_seed = 1234
     random.seed(random_seed)
 
     def __init__(self, position, peak_value=None, peak_surface_size=None, slope=None, scope=None):

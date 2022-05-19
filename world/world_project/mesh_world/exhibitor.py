@@ -393,13 +393,16 @@ class Exhibitor:
     """
 
     def detect_player_input(self, last_code, world):
-        player_animal = world.get_state().get_animals()[0]
+        if len(world.get_state().get_animals()) > 0:
+            player_animal = world.get_state().get_animals()[0]
+        else:
+            print("动物死光光")
+            return False
         # 作用于方向和对象的动作的名称的数组
-        direction_and_obj_action = ["eat", "attack", "pick_up", "put_down", "push_pull"]
+        direction_and_obj_action = ["eat", "attack", "pick_up", "put_down", "push"]
         direction_and_objs_action = ["construct"]
         direction_action = ["drink", "collect"]
         backpack_action = ["put_down", "fabricate"]
-        position_obj_action = ["eat", "attack", "pick_up"]
 
         # 等待输入数字参数
         def waiting_for_para(last_code):
@@ -450,6 +453,7 @@ class Exhibitor:
 
         def choose_object(last_code):
             if player_animal.get_id() == 1:
+                objects_num = 0
                 if last_code[0] in backpack_action:
                     if type(player_animal).__name__ == "Human_being":
                         entities = player_animal.get_backpack()
@@ -457,7 +461,7 @@ class Exhibitor:
                     else:
                         print("警告 发现非人类调用人类背包动作 程序存在bug")
                         return False
-                elif last_code[0] in position_obj_action:
+                elif last_code[0] in direction_and_obj_action:
                     old_position = tuple(player_animal.get_position())
                     position = world.get_state().position_and_direction_get_adjacent(old_position, last_code[1])
                     entities = world.get_state().get_entities_in_position(position)
@@ -649,6 +653,7 @@ class Exhibitor:
             吃 z       攻击 x     喝 c      休息 v
             合成 f      建造 r     
             拾起 a      放下 s      装备 e    收集 g   
+            推拉 t
         """
 
         # 等待按键 否则一直在循环里
@@ -815,7 +820,7 @@ class Exhibitor:
                     elif event.key == self.pygame.K_t:
                         if type(player_animal).__name__ == "Human_being":
                             if len(last_code) == 0:
-                                last_code.append("push_pull")
+                                last_code.append("push")
                                 self.detect_player_input(last_code, world)
                                 door = False
 

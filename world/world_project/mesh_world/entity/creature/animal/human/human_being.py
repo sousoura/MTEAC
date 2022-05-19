@@ -38,7 +38,7 @@ class Human_being(Human, Big_obj):
         行为合法性判断
     """
     action_list = ["go", "eat", "drink", "attack", "rest",
-                   "pick_up", "put_down", "handling", "collect", "push_pull",
+                   "pick_up", "put_down", "handling", "collect", "push",
                    "fabricate", "construct", "interaction", "use", ]
 
     def judge_go(self, world_state, command):
@@ -277,13 +277,13 @@ class Human_being(Human, Big_obj):
         考虑半格的情况
             设计机制: 如果在半格上拉 则无反应（不在这里考虑）
     """
-    def judge_push_pull(self, world_state, command):
+    def judge_push(self, world_state, command):
         # 得到方向和对象
         direction = command[1]
         obj = command[2]
 
         # 对象是否是可推的
-        if obj not in self.pushable:
+        if type(obj).__name__ not in self.pushable:
             print("推拉对象不合法")
             return False
 
@@ -301,8 +301,8 @@ class Human_being(Human, Big_obj):
         """
 
         # 判断移动是否是合法的
-        if not self.judge_go(world_state, direction):
-            print("人的推拉移动不合法")
+        if not self.judge_go(world_state, (0, direction)):
+            print("人不能往这走")
             return False
 
         human_new_position = world_state.position_and_direction_get_new_position(self.get_position(), direction)
@@ -319,10 +319,12 @@ class Human_being(Human, Big_obj):
         if human_new_position == tuple(obj.get_position()) or obj_new_position == tuple(self.get_position()):
             return True
 
+        # 推拉条件不对
+        print("推拉条件不对")
         return False
 
     judge_action_method_list = [judge_go, judge_eat, judge_drink, judge_attack, judge_rest,
-                                judge_pick_up, judge_put_down, judge_handling, judge_collect, judge_push_pull,
+                                judge_pick_up, judge_put_down, judge_handling, judge_collect, judge_push,
                                 judge_fabricate, judge_construct, judge_interaction, judge_use,
                                 ]
 
@@ -402,13 +404,13 @@ class Human_being(Human, Big_obj):
             self.backpack.append(item)
 
     # parameter=方向, obj=推拉对象
-    def push_pull_outcome(self, parameter=None, obj=None, degree=None):
+    def push_outcome(self, parameter=None, obj=None, degree=None):
         # 这里parameter指的是移动到的新的位置 其它变量置None
         self.move(parameter)
 
     action_interior_outcome_method_list = [go_outcome, eat_outcome, drink_outcome, attack_outcome, rest_outcome,
                                            pick_up_outcome, put_down_outcome, handling_outcome,
-                                           collect_outcome, push_pull_outcome,
+                                           collect_outcome, push_outcome,
 
                                            fabricate_outcome, construct_outcome, interaction_outcome,
                                            use_outcome,
@@ -457,11 +459,11 @@ class Human_being(Human, Big_obj):
     def collect_cost(self):
         self.body_change(full_value_change=-0.1, drinking_value_change=-0.1)
 
-    def push_pull_cost(self):
+    def push_cost(self):
         self.body_change(full_value_change=-0.2, drinking_value_change=-0.2)
 
     action_cost_method_list = [go_cost, eat_cost, drink_cost, attack_cost, rest_cost,
-                               pick_up_cost, put_down_cost, handling_cost, collect_cost, push_pull_cost,
+                               pick_up_cost, put_down_cost, handling_cost, collect_cost, push_cost,
                                fabricate_cost, construct_cost, interaction_cost, use_cost,
                                ]
 
