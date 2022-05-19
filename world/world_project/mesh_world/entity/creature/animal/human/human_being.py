@@ -278,24 +278,48 @@ class Human_being(Human, Big_obj):
             设计机制: 如果在半格上拉 则无反应（不在这里考虑）
     """
     def judge_push_pull(self, world_state, command):
+        # 得到方向和对象
         direction = command[1]
         obj = command[2]
 
+        # 对象是否是可推的
         if obj not in self.pushable:
             print("推拉对象不合法")
             return False
 
-        if not self.judge_go(world_state, ["go", direction]):
-            print("推拉方向不合法")
+        # #
+        # if not self.judge_go(world_state, ["go", direction]):
+        #     print("推拉方向不合法")
+        #     return False
+
+        """
+            通过判断运动后人和物的重合性判断是否物需要动
+            如果人动 物不动 人物重合 说明是推 物需要动
+            如果物动 人不动 人物重合 说明是拉 物需要动
+            否则 物不需要动
+            连判断方向都省了
+        """
+
+        # 判断移动是否是合法的
+        if not self.judge_go(world_state, direction):
+            print("人的推拉移动不合法")
             return False
 
-        new_position = world_state.position_and_direction_get_adjacent(self.get_position(), direction)
-        if not (new_position[0] == self.get_position()[0] == obj.get_position()[0] or
-                new_position[1] == self.get_position()[1] == obj.get_position()[1]):
-            print("不能并排推拉")
+        human_new_position = world_state.position_and_direction_get_new_position(self.get_position(), direction)
+        if not human_new_position:
+            print("人的推拉移动不合法")
             return False
 
-        return True
+        obj_new_position = world_state.position_and_direction_get_adjacent(obj.get_position(), direction)
+        # 车不能被推到地图外
+        if not obj_new_position:
+            print("物不能推到地图外")
+            return False
+
+        if human_new_position == tuple(obj.get_position()) or obj_new_position == tuple(self.get_position()):
+            return True
+
+        return False
 
     judge_action_method_list = [judge_go, judge_eat, judge_drink, judge_attack, judge_rest,
                                 judge_pick_up, judge_put_down, judge_handling, judge_collect, judge_push_pull,

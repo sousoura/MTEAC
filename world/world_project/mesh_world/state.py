@@ -339,17 +339,16 @@ class Mesh_state(State):
                     print("暂不能收集沙子和泥土")
 
         def human_push_pull(state, human, derection, obj):
-            old_position = tuple(human.get_position())
-            new_position = state.position_and_direction_get_new_position(old_position, derection)
+            human_old_position = tuple(human.get_position())
+            human_new_position = state.position_and_direction_get_new_position(human_old_position, derection)
 
             # 执行移动 改变状态（但是不改变生物的属性）
-            state.change_animal_position(human, old_position, new_position)
+            state.change_animal_position(human, human_old_position, human_new_position)
             # 行动成功对于动物的内部影响
-            human.action_interior_outcome(action_type="push_pull", parameter=new_position)
+            human.action_interior_outcome(action_type="push_pull", parameter=human_new_position)
 
-            obj_old_position = obj.get_position()
-            obj_new_position = (int(old_position[0]), int(old_position[1]))
-            obj.new_position(obj_new_position)
+            obj_old_position = tuple(obj.get_position())
+            obj_new_position = state.position_and_direction_get_adjacent(obj_old_position, derection)
 
             if obj_new_position in state.objs_position:
                 state.objs_position[obj_new_position].append(obj)
@@ -359,6 +358,8 @@ class Mesh_state(State):
             state.objs_position[obj_old_position].remove(obj)
             if len(state.objs_position[obj_old_position]) == 0:
                 del state.objs_position[obj_old_position]
+
+            obj.new_position(list(obj_new_position))
 
         if command[0] == "pick_up":
             human_pick_up(self, human, command[2])

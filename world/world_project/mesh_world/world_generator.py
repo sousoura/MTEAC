@@ -167,7 +167,7 @@ class Concrete_world_generator(World_generator):
                                       [[0 for a in range(terrain_size[1])] for b in range(terrain_size[0])],
                                       terrain_size, [], [], [])
             print("\t开始进行水流预演")
-            for time in range(50):
+            for time in range(500):
                 print("\t装在进行第", time, "次水流预演")
                 builder_state.water_flow()
             print("\t水流预演完毕")

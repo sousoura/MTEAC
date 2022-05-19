@@ -40,7 +40,7 @@ class World_controller:
         """
         # 创建可视化窗口 后面那个数是世界的格子大小
         print("开始创建可视化")
-        self.exhibitor = Exhibitor(self.world, 1)
+        self.exhibitor = Exhibitor(self.world, 15)
         print("可视化创建结束")
 
         # 如果世界生成成功 则进入该世界 否则退出程序
@@ -86,7 +86,7 @@ class World_controller:
 
         # 使用世界生成器参数化生成世界
         # map_size规定了有 几行（高 纵坐标） 和 几列（宽 横坐标）
-        def get_world(generator, maximum_height=30, map_size=(250, 500),
+        def get_world(generator, maximum_height=30, map_size=(50, 100),
                       animals_para="random_animals", plants_para="random_plants",
                       obj_para="random_obj",
                       water_para="default_water",
@@ -99,14 +99,14 @@ class World_controller:
                                               landform_para=landform_para, terrain_para=terrain_para)
 
         # 读取命令 这个也可以用前端干
-        entry_mode = input("Please choose world mode(generate or load): ")
-        while entry_mode not in ["generate", "load"]:
-            entry_mode = input("Input is illegal, please try again(generate or load): ")
-        # entry_mode = "generate"
+        # entry_mode = input("Please choose world mode(generate or load): ")
+        # while entry_mode not in ["generate", "load"]:
+        #     entry_mode = input("Input is illegal, please try again(generate or load): ")
+        entry_mode = "generate"
         # entry_mode = "load"
 
-        world_type_name = input("Please input world type name: ")
-        # world_type_name = "mesh_world"
+        # world_type_name = input("Please input world type name: ")
+        world_type_name = "mesh_world"
         # 根据世界类型获取世界生成器
         self.generator = get_generator(world_type_name)
         while self.generator is None:
