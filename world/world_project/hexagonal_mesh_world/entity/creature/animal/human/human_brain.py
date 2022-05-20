@@ -11,16 +11,13 @@ class Human_brain(Brain):
         """
            人脑
        """
+
         def find_running_direction(perception):
-            direction = "down"
+            direction = "left_up"
             if self_information.position[1] == len(perception[0]) - 1 and self_information.position[0] != 0:
                 direction = "left"
-            elif self_information.position[0] == 0 and self_information.position[1] != 0:
-                direction = "up"
             elif self_information.position[1] == 0 and self_information.position[0] != len(perception[0][0]) - 1:
                 direction = "right"
-            elif self_information.position[0] == len(perception[0][0]) - 1 and self_information.position[1] != 0:
-                direction = "down"
             for position in perception[1]:
                 for animal in perception[1][position]:
                     if type(animal).__name__ == "Wolf":
@@ -32,11 +29,6 @@ class Human_brain(Brain):
                                 direction = "right"
                             if delta_x <= 0:
                                 direction = "left"
-                        else:
-                            if delta_y > 0:
-                                direction = "down"
-                            if delta_y <= 0:
-                                direction = "up"
                     break
 
             return direction

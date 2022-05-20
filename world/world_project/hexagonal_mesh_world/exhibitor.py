@@ -82,14 +82,14 @@ class Exhibitor(Exhibitor_super):
                 self.top = self.hex_row * self.cell_height
 
             def rect(self, color):
-                # pygame.draw.rect(self.exhibitor.window, color,
-                #                  (self.left, self.top, self.cell_width + 1, self.cell_height + 1))
-                points = [(self.left, self.top + 2 / 3),
-                          (self.left, self.top + 1 / 3),
-                          (self.left + 1 / 2, self.top - 1 / 3),
-                          (self.left + 1, self.top + 1 / 3),
-                          (self.left + 1, self.top + 2 / 3),
-                          (self.left + 1 / 2, self.top + 4 / 3)]
+                hex_h = 1 / 3 * self.cell_height
+                hex_w = 1 / 2 * self.cell_width
+                points = [(self.left, self.top + 2 * hex_h),
+                          (self.left, self.top + hex_h),
+                          (self.left + hex_w, self.top - hex_h),
+                          (self.left + 2 * hex_w, self.top + hex_h),
+                          (self.left + 2 * hex_w, self.top + 2 * hex_h),
+                          (self.left + hex_w, self.top + 4 * hex_h)]
                 pygame.draw.polygon(self.exhibitor.window, color, points)
 
             def mid_rect(self, color):
@@ -122,12 +122,9 @@ class Exhibitor(Exhibitor_super):
                 self.exhibitor.window.blit(water_surface, (self.left, self.top))
 
             def hex_new_centre(self, old_pos):
-                print()
-                print(old_pos)
                 new_pos = (old_pos[0], old_pos[1])
                 if old_pos[1] % 2 == 1:
                     new_pos = (old_pos[0] + 1 / 2, old_pos[1])
-                print(new_pos)
                 return new_pos
 
 
@@ -702,36 +699,36 @@ class Exhibitor(Exhibitor_super):
                     if event.key == self.pygame.K_UP:
                         if len(last_code) == 0:
                             last_code.append("go")
-                            last_code.append("up")
+                            last_code.append("left_up")
                             # if not waiting_for_para(last_code):
                             #     return False
                         elif last_code[0] in direction_and_obj_action:
-                            last_code.append("up")
+                            last_code.append("left_up")
                             if not choose_object(last_code):
                                 self.pygame.quit()
                                 return False
                         elif last_code[0] in direction_action:
-                            last_code.append("up")
+                            last_code.append("left_up")
                         elif last_code[0] in direction_and_objs_action:
-                            last_code.append("up")
+                            last_code.append("left_up")
                             choose_objs_from_backpack_and_position(last_code)
                         door = False
 
                     elif event.key == self.pygame.K_DOWN:
                         if len(last_code) == 0:
                             last_code.append("go")
-                            last_code.append("down")
+                            last_code.append("left_down")
                             # if not waiting_for_para(last_code):
                             #     return False
                         elif last_code[0] in direction_and_obj_action:
-                            last_code.append("down")
+                            last_code.append("left_down")
                             if not choose_object(last_code):
                                 self.pygame.quit()
                                 return False
                         elif last_code[0] in direction_action:
-                            last_code.append("down")
+                            last_code.append("left_down")
                         elif last_code[0] in direction_and_objs_action:
-                            last_code.append("down")
+                            last_code.append("left_down")
                             choose_objs_from_backpack_and_position(last_code)
                         door = False
 
@@ -768,6 +765,42 @@ class Exhibitor(Exhibitor_super):
                             last_code.append("right")
                         elif last_code[0] in direction_and_objs_action:
                             last_code.append("right")
+                            choose_objs_from_backpack_and_position(last_code)
+                        door = False
+
+                    elif event.key == self.pygame.K_o:
+                        if len(last_code) == 0:
+                            last_code.append("go")
+                            last_code.append("right_up")
+                            # if not waiting_for_para(last_code):
+                            #     return False
+                        elif last_code[0] in direction_and_obj_action:
+                            last_code.append("right_up")
+                            if not choose_object(last_code):
+                                self.pygame.quit()
+                                return False
+                        elif last_code[0] in direction_action:
+                            last_code.append("right_up")
+                        elif last_code[0] in direction_and_objs_action:
+                            last_code.append("right_up")
+                            choose_objs_from_backpack_and_position(last_code)
+                        door = False
+
+                    elif event.key == self.pygame.K_p:
+                        if len(last_code) == 0:
+                            last_code.append("go")
+                            last_code.append("right_down")
+                            # if not waiting_for_para(last_code):
+                            #     return False
+                        elif last_code[0] in direction_and_obj_action:
+                            last_code.append("right_down")
+                            if not choose_object(last_code):
+                                self.pygame.quit()
+                                return False
+                        elif last_code[0] in direction_action:
+                            last_code.append("right_down")
+                        elif last_code[0] in direction_and_objs_action:
+                            last_code.append("right_down")
                             choose_objs_from_backpack_and_position(last_code)
                         door = False
 

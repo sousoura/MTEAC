@@ -12,15 +12,11 @@ class Wolf_brain(Brain):
             狼脑
         """
         def find_running_direction(perception):
-            direction = "down"
+            direction = "left_up"
             if self_information.position[1] == len(perception[0]) - 1 and self_information.position[0] != 0:
                 direction = "left"
-            elif self_information.position[0] == 0 and self_information.position[1] != 0:
-                direction = "up"
             elif self_information.position[1] == 0 and self_information.position[0] != len(perception[0][0]) - 1:
                 direction = "right"
-            elif self_information.position[0] == len(perception[0][0]) - 1 and self_information.position[1] != 0:
-                direction = "down"
             return direction
 
         def get_command(word):
