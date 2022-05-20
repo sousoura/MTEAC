@@ -1,4 +1,5 @@
 from world.exhibitor_super import Exhibitor_super
+from math import sqrt
 
 
 """
@@ -72,19 +73,31 @@ class Exhibitor(Exhibitor_super):
                 self.cell_width = exhibitor.world_win_size[1] / exhibitor.terrain_size[1]
                 # 屏幕长度除以纵向有几个格
                 self.cell_height = exhibitor.world_win_size[0] / exhibitor.terrain_size[0]
+
+                # 六边形变换
+                self.hex_col, self.hex_row = self.hex_new_centre((col, row))
+
                 # 求本格的位置
-                self.left = self.col * self.cell_width
-                self.top = self.row * self.cell_height
+                self.left = self.hex_col * self.cell_width
+                self.top = self.hex_row * self.cell_height
 
             def rect(self, color):
-                pygame.draw.rect(self.exhibitor.window, color,
-                                 (self.left, self.top, self.cell_width + 1, self.cell_height + 1))
+                # pygame.draw.rect(self.exhibitor.window, color,
+                #                  (self.left, self.top, self.cell_width + 1, self.cell_height + 1))
+                points = [(self.left, self.top + 2 / 3),
+                          (self.left, self.top + 1 / 3),
+                          (self.left + 1 / 2, self.top - 1 / 3),
+                          (self.left + 1, self.top + 1 / 3),
+                          (self.left + 1, self.top + 2 / 3),
+                          (self.left + 1 / 2, self.top + 4 / 3)]
+                pygame.draw.polygon(self.exhibitor.window, color, points)
 
             def mid_rect(self, color):
                 pygame.draw.rect(self.exhibitor.window, color,
                                  (self.left + self.mid_interspace, self.top + self.mid_interspace,
-                                  self.cell_width,
-                                  self.cell_height))
+                                  self.cell_width / 1.5,
+                                  self.cell_height / 1.5))
+
 
             def mid_small_rect(self, color):
                 pygame.draw.rect(self.exhibitor.window, color,
@@ -107,6 +120,16 @@ class Exhibitor(Exhibitor_super):
             def draw_bar(self, water_high, water_surface, max_water_high):
                 water_surface.fill((0, 0, 255, max(0, min(water_high / (max_water_high + 5) * 200, 255))))
                 self.exhibitor.window.blit(water_surface, (self.left, self.top))
+
+            def hex_new_centre(self, old_pos):
+                print()
+                print(old_pos)
+                new_pos = (old_pos[0], old_pos[1])
+                if old_pos[1] % 2 == 1:
+                    new_pos = (old_pos[0] + 1 / 2, old_pos[1])
+                print(new_pos)
+                return new_pos
+
 
         self.Point = Point
 

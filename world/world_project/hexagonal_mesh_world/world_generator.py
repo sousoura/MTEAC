@@ -2,8 +2,8 @@ import random
 import math
 
 from world.world_generator import World_generator
-from world.world_project.mesh_world.mods import *
-from world.world_project.mesh_world.entity.mesh_entities import *
+from world.world_project.hexagonal_mesh_world.mods import *
+from world.world_project.hexagonal_mesh_world.entity.hexagonal_mesh_entity import *
 
 """
     世界类型为网格世界的世界的世界生成器
@@ -170,7 +170,7 @@ class Concrete_world_generator(World_generator):
             import time as Time
             start = Time.time()
             print("\t开始进行水流预演")
-            for time in range(500):
+            for time in range(100):
                 print("\t装在进行第", time, "次水流预演")
                 builder_state.water_flow()
                 # builder_state.water_flow_old()

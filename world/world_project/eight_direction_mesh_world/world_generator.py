@@ -2,8 +2,8 @@ import random
 import math
 
 from world.world_generator import World_generator
-from world.world_project.mesh_world.mods import *
-from world.world_project.mesh_world.entity.mesh_entities import *
+from world.world_project.eight_direction_mesh_world.mods import *
+from world.world_project.eight_direction_mesh_world.entity.eight_direction_mesh_entity import *
 
 """
     世界类型为网格世界的世界的世界生成器

@@ -1,6 +1,5 @@
 import importlib
 import threading
-from openAI_gym_env import GymEnv
 from world.file_processor import File_processor
 
 import gym
@@ -28,7 +27,11 @@ class WorldEnv(Env):
     """
 
     def __init__(self):
-        self.world_type_name = ""
+        # self.world_type_name = input("Please input world type name: ")
+        # self.world_type_name = "mesh_world"
+        # self.world_type_name = "eight_direction_mesh_world"
+        self.world_type_name = "hexagonal_mesh_world"
+
         self.generator = None
 
         # 整个程序的起点
@@ -37,61 +40,27 @@ class WorldEnv(Env):
             用户选择进入哪个世界 生成还是读取
         """
         print("开始创建世界")
-        self.world = self.entry()
+        self.world = self.world_create()
         print("世界创建结束")
 
         if self.world:
             """
                 Exhibitor负责窗口的可视化呈现
+                每个世界方案都必须有一个Exhibitor类 哪怕为空
             """
             # 创建可视化窗口 后面那个数是世界的格子大小
             print("开始创建可视化")
             exhibitor_file = 'world.world_project.' + self.world_type_name + '.' + 'exhibitor'
             exhibitor_module = importlib.import_module(exhibitor_file)
+            """
+                参数是每个格的大小
+            """
             self.exhibitor = exhibitor_module.Exhibitor(self.world, 15)
             print("可视化创建结束")
 
         self.seed()
 
-        # 定义行动空间
-        """
-            1 - 14 对应 14个行为
-            1 - 5 对应 5个方向
-            对象选择属性取消 采取默认选择第一个的策略
-        """
-        self.action_space = spaces.Box(low=np.array([1, 1]),
-                                       high=np.array([5, 5]),
-                                       dtype=np.int64)
-
-        """
-            用六个数组表示感知
-            前三个是地形
-            第四个是实体
-            当实体重合时只显示第一个实体
-                实体类型映射为数字
-        """
-        # Define a 2-D observation space
-        observation_shape = self.world.state.get_terrain_size()
-        self.observation_shape = (observation_shape[1], observation_shape[0])
-        self.observation_space = spaces.Tuple((
-            spaces.Box(low=0,
-                       high=self.world.state.maximum_height,
-                       shape=self.observation_shape,
-                       dtype=np.int64),
-            spaces.Box(low=0,
-                       high=self.world.state.maximum_height,
-                       shape=self.observation_shape,
-                       dtype=np.float16),
-            spaces.Box(low=0,
-                       high=self.world.state.terrain_range,
-                       shape=self.observation_shape,
-                       dtype=np.int64),
-            spaces.Box(low=0,
-                       high=self.world.state.entity_type_num - 1,
-                       shape=self.observation_shape,
-                       dtype=np.int64),
-        )
-        )
+        self.action_space, self.observation_space = self.world.get_openai_action_space_and_observation_space()
 
     # 程序入口
     """
@@ -102,9 +71,9 @@ class WorldEnv(Env):
         该功能有待GUI窗口化
     """
 
-    def entry(self):
+    def world_create(self):
         # 通过世界类型名得到相应的世界生成器
-        def get_generator_and_exhibitor(generator_file):
+        def get_generator(generator_file):
             generator_file = 'world.world_project.' + generator_file + '.' + 'world_generator'
 
             try:
@@ -113,7 +82,6 @@ class WorldEnv(Env):
             except ModuleNotFoundError:
                 # can not find this type of world
                 return None
-            # from world.mesh_world.mesh_world_generator import Concrete_world_generator as Generator
 
             return generator_module.Concrete_world_generator()
 
@@ -136,118 +104,48 @@ class WorldEnv(Env):
         # entry_mode = input("Please choose world mode(generate or load): ")
         # while entry_mode not in ["generate", "load"]:
         #     entry_mode = input("Input is illegal, please try again(generate or load): ")
-        entry_mode = "generate"
+
         # entry_mode = "load"
+        entry_mode = "generate"
 
-        # world_type_name = input("Please input world type name: ")
-        world_type_name = "mesh_world"
         # 根据世界类型获取世界生成器
-        self.generator = get_generator_and_exhibitor(world_type_name)
+        self.generator = get_generator(self.world_type_name)
         while self.generator is None:
-            world_type_name = input("can not find this type of world, please input other world type name: ")
-            self.generator = get_generator_and_exhibitor(world_type_name)
+            self.world_type_name = input("can not find this type of world, please input other world type name: ")
+            self.generator = get_generator(self.world_type_name)
 
-        self.world_type_name = world_type_name
-
+        """
+            
+        """
         world = None
         # 如果生成一个世界
         if entry_mode == "generate":
-            """
-                待改进： 可以进一步询问生成参数
-            """
-
             # 通过世界生成器生成世界
             world = get_world(self.generator)
+
+        # 读档一世界
         elif entry_mode == "load":
             world_name = input("Please input world name: ")
             while world is None:
                 try:
                     # 通过读档器读取世界
-                    world = self.load(world_type_name, world_name)
+                    world = self.load(self.world_type_name, world_name)
                 except FileNotFoundError:
                     world = None
                     world_name = input("Can't find this file, Please correct input and input world name again: ")
 
         return world
 
-    def test(self):
-        # 如果世界生成成功 则进入该世界 否则退出程序
-        if self.world:
-            print("世界创建成功")
-            # 初始化线程和运行门 后台线程和主线程同步进行
-            self.background_thread = threading.Thread(target=self.background)
-            # 初始化用户操作并规定程序是否允许
-            self.player_cmd = 1
-            self.gate = True
-
-            """
-                两个线程
-            """
-            # 后台和世界开始不停运作
-            self.background_thread.setDaemon(True)
-            print("创建后台")
-            self.background_thread.start()
-            print("世界开始运作")
-            self.world_evolution()
-        else:
-            print("世界创建失败")
-
     """
-        让世界不断运作的死循环 除非后台要求退出或程序被x掉
+        ======================
+            openAI环境方法
+        ======================
     """
-
-    # 世界不断运作
-    def world_evolution(self):
-        self.player_cmd = self.render("normal")
-        print("玩家指令为: ", self.player_cmd)
-        # 用gate判断是否结束
-        while self.gate:
-            print("世界开始运作一次")
-            self.world.take_action(self.player_cmd)
-            self.world.evolution()
-            print("世界运作结束")
-            # 可视化等操作
-            self.player_cmd = self.render("normal")
-            print("玩家指令为: ", self.player_cmd)
-            if not self.player_cmd:
-                self.gate = False
-
     # 世界运作
     def step(self, action):
         print(action)
-        self.world.take_action(translate_openai_command_to_mteac(action))
-        return translate_mteac_state_to_openai(self.world.state), 0, False, None
-
-    """
-        终端后台 用户可以输入指令来控制程序
-            目前的指令有：
-                quit: 退出程序
-                        目前有瑕疵 需要玩家移动一格才会真的退出
-                        另一个瑕疵 玩家叉掉程序以后 input会滞留
-                save 存档名: 保存当前世界到【存档名.save】文件中 
-    """
-
-    # 后台
-    def background(self):
-        while self.gate:
-            background_cmd = input("Please input command: \n")
-
-            cmd = background_cmd.split(' ')
-            if cmd[0] == "quit":
-                self.gate = False
-                self.exhibitor.set_out()
-                break
-            elif cmd[0] == "save":
-                if len(cmd) == 1:
-                    cmd.append('save')
-                self.save(cmd[1])
-            elif cmd[0] == "stat":
-                try:
-                    print(self.statistics(cmd))
-                except ValueError:
-                    print("The parameter format is incorrect, please check the parameters and input again")
-            else:
-                print("wrong command,please check and input again")
+        self.world.take_action(self.world.translate_openai_command_to_mteac(self.world.state, action))
+        return self.world.translate_mteac_state_to_openai(self.world.state), 0, False, None
 
     """
         世界每运行一轮都会调用一次该方法 统计和可视化在这里进行
@@ -258,7 +156,7 @@ class WorldEnv(Env):
         # 可视化 读入状态 由状态类实现 地形地图和生物列表 然后可视化
         # 关闭时返回False
         def visualization():
-            return self.exhibitor.display(self.world, mode)
+            return self.exhibitor.display(mode)
 
         # 终端「可视化」输出
         # for map_line in self.state.get_map():
@@ -267,9 +165,112 @@ class WorldEnv(Env):
 
         return visualization()
 
+    def reset(self):
+        self.world.evolution()
+        return self.world.translate_mteac_state_to_openai(self.world.state)
+
+    def seed(self, seed=None):
+        pass
+
+    def close(self):
+        pass
+
+
+    """
+        ======================
+            游戏模式方法
+        ======================
+        目前仅仅对mesh_world有效
+        类变量play_mode定义了是否可以进行game_mode
+    """
+    def game_mode(self):
+        """
+            让世界不断运作的死循环 除非后台要求退出或程序被x掉
+        """
+        # 世界不断运作
+        def world_evolution():
+            self.player_cmd = self.render("normal")
+            print("玩家指令为: ", self.player_cmd)
+            # 用gate判断是否结束
+            while self.gate:
+                print("世界开始运作一次")
+                self.world.take_action(self.player_cmd)
+                self.world.evolution()
+                print("世界运作结束")
+                # 可视化等操作
+                self.player_cmd = self.render("normal")
+                print("玩家指令为: ", self.player_cmd)
+                if not self.player_cmd:
+                    self.gate = False
+
+        """
+            终端后台 用户可以输入指令来控制程序
+                目前的指令有：
+                    quit: 退出程序
+                            目前有瑕疵 需要玩家移动一格才会真的退出
+                            另一个瑕疵 玩家叉掉程序以后 input会滞留
+                    save 存档名: 保存当前世界到【存档名.save】文件中 
+        """
+        # 后台
+        def background():
+            if self.world.backgroundable:
+                while self.gate:
+                    background_cmd = input("Please input command: \n")
+
+                    cmd = background_cmd.split(' ')
+                    if cmd[0] == "quit":
+                        self.gate = False
+                        self.exhibitor.set_out()
+                        break
+                    elif cmd[0] == "save":
+                        if len(cmd) == 1:
+                            cmd.append('save')
+                        self.save(cmd[1])
+                    elif cmd[0] == "stat":
+                        if self.world.statistical:
+                            try:
+                                print(self.world.statistics(cmd))
+                            except ValueError:
+                                print("The parameter format is incorrect, please check the parameters and input again")
+                        else:
+                            print("The program is not statistical.")
+                    else:
+                        print("wrong command,please check and input again")
+            else:
+                print("The world has no background function.")
+
+        """
+            游戏模式下的世界运作
+        """
+        # 如果世界生成成功 则进入该世界 否则退出程序
+        if self.world:
+            if self.world.play_mode:
+                print("世界创建成功")
+                # 初始化线程和运行门 后台线程和主线程同步进行
+                self.background_thread = threading.Thread(target=background)
+                # 初始化用户操作并规定程序是否允许
+                self.player_cmd = 1
+                self.gate = True
+
+                """
+                    两个线程
+                """
+                # 后台和世界开始不停运作
+                self.background_thread.setDaemon(True)
+                print("创建后台")
+                self.background_thread.start()
+                print("世界开始运作")
+                world_evolution()
+            else:
+                print("该世界方案无玩家模式")
+        else:
+            print("世界创建失败")
+
     """
         当玩家调用并指定存档名后会调用File_processor对象进行存档 将当前世界以json格式存在save文件夹中
         具体功能由File_processor对象实现
+        
+        后台存档指令格式: save 存档名
     """
 
     # 存档
@@ -294,110 +295,3 @@ class WorldEnv(Env):
         state = File_processor.load(world_type_name, file_name)
         world = self.generator.generate_a_world_by_state(state)
         return world
-
-    """
-        统计数据 指定要统计的数据类型 筛选条件的分类 具体筛选条件（以数组形式）
-        数据类型：num, avg_life
-        筛选条件的分类，用哈夫曼编码：
-            物种为1;
-            生命值为2;
-            饥饿值为4;
-            位置为8.
-        具体筛选条件以物种、生命值、饥饿值、位置的顺序排序，如没有则不用填，其中生命值、饥饿值为具体数值，位置暂时留在这里，尚未开发
-        例如:
-            stat num 3 Human_being 5  为查询生命值为5的人类的个数
-            stat num 1 Human_being 为查询人类的个数
-    """
-
-    # 统计数据
-    def statistics(self, cmd):
-        str_to_print = None
-
-        # 这里默认了所有世界都有生物
-        creatures = self.world.state.animals + self.world.state.plants
-        num = 0
-        sum_life = 0
-        for creature in creatures:
-            pos = len(cmd) - 1
-            if pos <= 0:
-                str_to_print = "need more parameters, please try again"
-                return str_to_print
-
-            # 对于未死亡的生物，进行大量的筛选
-            if not creature.is_die():
-                if pos != 1:
-                    cmd_num = int(cmd[2])
-                else:
-                    cmd_num = 0
-                if cmd_num >= 8:
-                    cmd_num -= 8
-                    # 进行位置的相关筛选
-                    pos -= 1
-                if cmd_num >= 4:
-                    cmd_num -= 4
-                    # 进行饥饿值的相关筛选
-                    pos -= 1
-                if cmd_num >= 2:
-                    cmd_num -= 2
-                    # 进行生命值的相关筛选
-                    if creature.life != int(cmd[pos]):
-                        continue
-                    pos -= 1
-                if cmd_num >= 1:
-                    cmd_num -= 1
-                    # 进行物种的相关筛选
-                    if type(creature).__name__ != cmd[pos]:
-                        continue
-
-            # 走到这里，就完成了筛选
-            num += 1
-            if cmd[1] == "avg_life":
-                sum_life += creature.life
-
-        # 完成了遍历
-        if cmd[1] == "num":
-            str_to_print = num
-        elif cmd[1] == "avg_life":
-            str_to_print = sum_life / num
-        else:
-            str_to_print = "wrong command,please input again"
-
-        return str_to_print
-
-    def reset(self):
-        self.world.evolution()
-        return translate_mteac_state_to_openai(self.world.state)
-
-    def seed(self, seed=None):
-        pass
-
-    def close(self):
-        pass
-
-
-def translate_openai_command_to_mteac(openai_command):
-    mteac_command = []
-
-    mteac_command_list = ["go", "eat", "drink", "attack", "rest",
-     "pick_up", "put_down", "handling", "collect", "push",
-     "fabricate", "construct", "interaction", "use", ]
-
-    mteac_direction_list = ["up", "down", "left", "right", "stay"]
-    mteac_command.append(mteac_command_list[openai_command[0] - 1])
-    mteac_command.append(mteac_direction_list[openai_command[1] - 1])
-    mteac_command.append(-1)
-
-    return mteac_command
-
-
-def translate_mteac_state_to_openai(mteac_state):
-    pass
-
-
-# 暂时用不上
-def translate_mteac_command_to_openai(mteac_command):
-    pass
-
-
-def translate_openai_state_to_mteac(openai_state):
-    pass

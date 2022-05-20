@@ -15,7 +15,7 @@ if __name__ == "__main__":
 else:
     from world.state import State
     from world.entity.entity_import import *
-    from world.world_project.mesh_world.entity.mesh_entities import *
+    from world.world_project.eight_direction_mesh_world.entity.eight_direction_mesh_entity import *
 
 """
     网格状态
@@ -48,7 +48,7 @@ else:
 """
 
 
-class Mesh_state(State):
+class Hexagonal_mesh_state(State):
     # 有 terrain_range + 1 种地形
     terrain_range = 6
     # 有 entity_type_num 种实体
@@ -58,7 +58,7 @@ class Mesh_state(State):
                           "pick_up", "put_down", "handling", "collect", "push",
                           "fabricate", "construct", "interaction", "use", ]
 
-    mteac_direction_list = ["up", "down", "left", "right", "stay"]
+    mteac_direction_list = ["up", "down", "left", "right", "stay", "left_up", "left_down", "right_up", "right_down"]
 
     entity_types = ["Human_being", "Alpaca", "Fish", "Mouse", "Wolf", "Algae", "Birch", "Birch_wood", "Grass",
                     "Grassland", "Alpaca_corpse", "Axe", "Bucket", "Cart", "Crafting_table", "Door", "Fruit",
@@ -78,7 +78,7 @@ class Mesh_state(State):
         self.terrain_map = terrain_map
 
         # 地图属性
-        super(Mesh_state, self).__init__(terrain_size)
+        super(Hexagonal_mesh_state, self).__init__(terrain_size)
         self.legal_direction = ["up", "down", "left", "right", "stay"]
 
         # 实体表
@@ -279,6 +279,7 @@ class Mesh_state(State):
             elif kakusa:
                 return adjacent
 
+        # 意外操作
         print("accidental movement")
         return tuple(old_position)
 
@@ -594,6 +595,18 @@ class Mesh_state(State):
         elif direction == 'up':
             if old_position[0] > 0:
                 return old_position[0] - 1, old_position[1]
+        elif direction == 'left_up':
+            if old_position[0] > 0 and old_position[1] > 0:
+                return old_position[0] - 1, old_position[1] - 1
+        elif direction == 'left_down':
+            if old_position[0] < self.terrain_size[0] - 1 and old_position[1] > 0:
+                return old_position[0] + 1, old_position[1] - 1
+        elif direction == 'right_up':
+            if old_position[0] > 0 and old_position[1] < self.terrain_size[1] - 1:
+                return old_position[0] - 1, old_position[1] + 1
+        elif direction == 'right_down':
+            if old_position[0] < self.terrain_size[0] - 1 and old_position[1] < self.terrain_size[1] - 1:
+                return old_position[0] + 1, old_position[1] + 1
         return False
 
     # 返回地图的方法

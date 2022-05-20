@@ -13,13 +13,13 @@ else:
 """
 
 
-class Mesh_world(World):
+class Hexagonal_mesh_world(World):
     play_mode = True
-    backgroundable = True
-    statistical = True
+    backgroundable = False
+    statistical = False
 
     def __init__(self, state):
-        super(Mesh_world, self).__init__(state)
+        super(Hexagonal_mesh_world, self).__init__(state)
 
     def take_action(self, player_cmd=None):
         self.state.player_action(player_cmd)

@@ -1,0 +1,2 @@
+from world.world_project.eight_direction_mesh_world.world import Eight_direction_mesh_world as World
+from world.world_project.eight_direction_mesh_world.state import Eight_direction_mesh_state as State
