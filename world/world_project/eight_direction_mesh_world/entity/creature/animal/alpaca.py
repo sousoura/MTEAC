@@ -1,5 +1,7 @@
 from world.entity.entity_import import *
 from world.world_project.eight_direction_mesh_world.entity.obj.alpaca_corpse import Alpaca_corpse
+from world.world_project.eight_direction_mesh_world.entity.creature.animal.eight_direction_mesh_animal \
+    import Eight_direction_mesh_animal
 
 """
     草泥马 物种类
@@ -7,7 +9,7 @@ from world.world_project.eight_direction_mesh_world.entity.obj.alpaca_corpse imp
 """
 
 
-class Alpaca(Animal, Big_obj):
+class Alpaca(Eight_direction_mesh_animal, Big_obj):
     # 物种属性
     feeding_habits = ["Grass", "Grassland", "Fruit"]
     swimming_ability = 4

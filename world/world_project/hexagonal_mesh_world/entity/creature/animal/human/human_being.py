@@ -3,13 +3,15 @@ from world.world_project.hexagonal_mesh_world.entity.creature.plant.birch_wood i
 from world.world_project.hexagonal_mesh_world.entity.obj.human_corpse import Human_corpse
 from world.world_project.hexagonal_mesh_world.entity.obj.axe import Axe
 
+from world.world_project.hexagonal_mesh_world.entity.creature.animal.hexagonal_mesh_animal import Hexagonal_mesh_animal
+
 """
     人类类 物种类
     方法用于物种的行为的内部影响
 """
 
 
-class Human_being(Human, Big_obj):
+class Human_being(Hexagonal_mesh_animal, Human, Big_obj):
     # 物种属性
     feeding_habits = ["Fruit"]
     swimming_ability = 4
@@ -494,9 +496,8 @@ class Human_being(Human, Big_obj):
     def get_backpack(self):
         return self.backpack[:]
 
-    # 增益改变
-    def post_turn_change(self):
-        super(Human_being, self).post_turn_change()
+    def move(self, new_position):
+        self.position = new_position
 
 
 def names_orderly_tuplize(objs_list):

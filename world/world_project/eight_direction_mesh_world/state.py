@@ -78,7 +78,7 @@ class Eight_direction_mesh_state(State):
         self.terrain_map = terrain_map
 
         # 地图属性
-        super(Eight_direction_mesh_state, self).__init__(terrain_size)
+        self.terrain_size = terrain_size
         self.legal_direction = ["up", "down", "left", "right", "stay"]
 
         # 实体表
@@ -95,8 +95,9 @@ class Eight_direction_mesh_state(State):
         CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]  # 当前目录
         config_path = CURRENT_DIR.rsplit('\\', 3)[0]  # 上三级目录
 
-        self.pDll = ctypes.CDLL(config_path + "/c++/MTEAC-C++.dll")
-        self.Double_Len = ctypes.c_double*(self.terrain_size[0]*self.terrain_size[1])
+        dll_name = "MTEAC-C++.dll"
+        self.pDll = ctypes.CDLL(config_path + "/c++/" + dll_name)
+        self.Double_Len = ctypes.c_double * (self.terrain_size[0] * self.terrain_size[1])
         self.in_water_map = self.Double_Len()
         self.in_landform_map = self.Double_Len()
 

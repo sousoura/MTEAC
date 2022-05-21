@@ -6,12 +6,6 @@ from world.entity.creature.animal.animal import Animal
 from abc import ABCMeta, abstractmethod
 
 
-class Human(Animal):
-    def __init__(self, position, life, brain, full_value, drinking_value, body_state, gender,
-                 crawl_ability, speed, aggressivity):
-        super(Human, self).__init__(position, life, brain, full_value, drinking_value, body_state, gender,
-                                    crawl_ability, speed, aggressivity)
+class Human(Animal, metaclass=ABCMeta):
+    pass
 
-    @abstractmethod
-    def die(self):
-        pass

@@ -1,6 +1,6 @@
 from world.entity.entity_import import *
 from world.world_project.mesh_world.entity.obj.wolf_corpse import Wolf_corpse
-
+from world.world_project.mesh_world.entity.creature.animal.mesh_animal import Mesh_animal
 
 """
     狼类 物种类
@@ -8,7 +8,7 @@ from world.world_project.mesh_world.entity.obj.wolf_corpse import Wolf_corpse
 """
 
 
-class Wolf(Animal, Big_obj):
+class Wolf(Mesh_animal, Big_obj):
     # 物种属性
     feeding_habits = ["Human_being", "Human", "Alpaca", "Human_corpse", "Alpaca_corpse", "Mouse"]
     swimming_ability = 1

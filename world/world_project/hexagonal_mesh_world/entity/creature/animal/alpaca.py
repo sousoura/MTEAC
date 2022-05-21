@@ -1,5 +1,6 @@
 from world.entity.entity_import import *
 from world.world_project.hexagonal_mesh_world.entity.obj.alpaca_corpse import Alpaca_corpse
+from world.world_project.hexagonal_mesh_world.entity.creature.animal.hexagonal_mesh_animal import Hexagonal_mesh_animal
 
 """
     草泥马 物种类
@@ -7,7 +8,7 @@ from world.world_project.hexagonal_mesh_world.entity.obj.alpaca_corpse import Al
 """
 
 
-class Alpaca(Animal, Big_obj):
+class Alpaca(Hexagonal_mesh_animal, Big_obj):
     # 物种属性
     feeding_habits = ["Grass", "Grassland", "Fruit"]
     swimming_ability = 4

@@ -1,7 +1,8 @@
 from world.entity.entity_import import *
+from world.world_project.hexagonal_mesh_world.entity.creature.animal.hexagonal_mesh_animal import Hexagonal_mesh_animal
 
 
-class Fish(Animal, Food):
+class Fish(Hexagonal_mesh_animal, Food):
     # 物种属性
     feeding_habits = ["Algae"]
     swimming_ability = 100

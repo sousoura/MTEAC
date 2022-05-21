@@ -1,13 +1,13 @@
 from world.entity.entity_import import *
 from world.world_project.mesh_world.entity.obj.alpaca_corpse import Alpaca_corpse
-
+from world.world_project.mesh_world.entity.creature.animal.mesh_animal import Mesh_animal
 """
     草泥马 物种类
     方法用于物种的内部影响
 """
 
 
-class Alpaca(Animal, Big_obj):
+class Alpaca(Mesh_animal, Big_obj):
     # 物种属性
     feeding_habits = ["Grass", "Grassland", "Fruit"]
     swimming_ability = 4

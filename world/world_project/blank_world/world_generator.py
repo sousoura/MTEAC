@@ -1,4 +1,7 @@
 from world.world_generator import World_generator
+"""
+    here "blank_world"
+"""
 from world.world_project.blank_world.mods import *
 from world.world_project.blank_world.entity.blank_entities import *
 

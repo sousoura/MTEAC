@@ -4,7 +4,7 @@ from gym.utils.env_checker import check_env
 # 程序入口
 
 if __name__ == "__main__":
-    ai_mode = 1
+    ai_mode = 2
     env = WorldEnv()
 
     if ai_mode == 1:

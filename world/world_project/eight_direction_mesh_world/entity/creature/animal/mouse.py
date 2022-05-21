@@ -1,7 +1,9 @@
 from world.entity.entity_import import *
+from world.world_project.eight_direction_mesh_world.entity.creature.animal.eight_direction_mesh_animal \
+    import Eight_direction_mesh_animal
 
 
-class Mouse(Animal, Food):
+class Mouse(Eight_direction_mesh_animal, Food):
     # 物种属性
     feeding_habits = ["Grass", "Grassland", "Fruit"]
     swimming_ability = 6

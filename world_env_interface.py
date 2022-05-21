@@ -35,8 +35,9 @@ class WorldEnv(Env):
 
     def __init__(self):
         # self.world_type_name = input("Please input world type name: ")
-        self.world_type_name = "blank_world"
-        # self.world_type_name = "mesh_world"
+        # self.world_type_name = "blank_world"
+        # self.world_type_name = "block_world"
+        self.world_type_name = "mesh_world"
         # self.world_type_name = "eight_direction_mesh_world"
         # self.world_type_name = "hexagonal_mesh_world"
 
@@ -183,7 +184,10 @@ class WorldEnv(Env):
         """
         # 世界不断运作
         def world_evolution():
-            self.player_cmd = self.render("normal")
+            mode = "no_waiting"
+            # mode = "normal"
+
+            self.player_cmd = self.render(mode)
             print("玩家指令为: ", self.player_cmd)
             # 用gate判断是否结束
             while self.gate:
@@ -192,10 +196,12 @@ class WorldEnv(Env):
                 self.world.evolution()
                 print("世界运作结束")
                 # 可视化等操作
-                self.player_cmd = self.render("normal")
+                self.player_cmd = self.render(mode)
                 print("玩家指令为: ", self.player_cmd)
                 if not self.player_cmd:
                     self.gate = False
+
+            print(110)
 
         """
             终端后台 用户可以输入指令来控制程序

@@ -1,7 +1,8 @@
 from world.entity.entity_import import *
+from world.world_project.hexagonal_mesh_world.entity.creature.animal.hexagonal_mesh_animal import Hexagonal_mesh_animal
 
 
-class Mouse(Animal, Food):
+class Mouse(Hexagonal_mesh_animal, Food):
     # 物种属性
     feeding_habits = ["Grass", "Grassland", "Fruit"]
     swimming_ability = 6

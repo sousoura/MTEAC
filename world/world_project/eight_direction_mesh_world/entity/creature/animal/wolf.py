@@ -1,5 +1,7 @@
 from world.entity.entity_import import *
 from world.world_project.eight_direction_mesh_world.entity.obj.wolf_corpse import Wolf_corpse
+from world.world_project.eight_direction_mesh_world.entity.creature.animal.eight_direction_mesh_animal \
+    import Eight_direction_mesh_animal
 
 
 """
@@ -8,7 +10,7 @@ from world.world_project.eight_direction_mesh_world.entity.obj.wolf_corpse impor
 """
 
 
-class Wolf(Animal, Big_obj):
+class Wolf(Eight_direction_mesh_animal, Big_obj):
     # 物种属性
     feeding_habits = ["Human_being", "Human", "Alpaca", "Human_corpse", "Alpaca_corpse", "Mouse"]
     swimming_ability = 1
