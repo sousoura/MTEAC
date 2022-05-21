@@ -7,13 +7,13 @@ else:
     from world.world import World
 
 
-class Blank_world(World):
+class Physics_world(World):
     play_mode = False
     backgroundable = False
     statistical = False
 
     def __init__(self, state):
-        super(Blank_world, self).__init__(state)
+        super(Physics_world, self).__init__(state)
 
     def take_action(self, player_cmd=None):
         pass
@@ -24,7 +24,7 @@ class Blank_world(World):
 
     # 地图推进一次
     def evolution(self):
-        pass
+        self.state.step()
 
     def get_state(self):
         return self.state
@@ -34,8 +34,9 @@ class Blank_world(World):
         import numpy as np
 
         # 定义行动空间
-        direction_num = len(self.state.mteac_direction_list)
-        action_space = spaces.Box(low=np.array([1, 1]), high=np.array([1, direction_num]), dtype=np.int64)
+        # direction_num = len(self.state.mteac_direction_list)
+        direction_num = (10, 10)
+        action_space = spaces.Discrete(10)
 
         # Define a 2-D observation space
         # observation_shape = self.state.get_terrain_size()

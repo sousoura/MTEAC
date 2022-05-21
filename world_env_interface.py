@@ -36,10 +36,11 @@ class WorldEnv(Env):
     def __init__(self):
         # self.world_type_name = input("Please input world type name: ")
         # self.world_type_name = "blank_world"
-        self.world_type_name = "block_world"
+        # self.world_type_name = "block_world"
         # self.world_type_name = "mesh_world"
         # self.world_type_name = "eight_direction_mesh_world"
         # self.world_type_name = "hexagonal_mesh_world"
+        self.world_type_name = "physics_world"
 
         self.generator = None
 
