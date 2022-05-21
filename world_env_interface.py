@@ -1,11 +1,18 @@
 import importlib
 import threading
-from world.file_processor import File_processor
 
 import gym
 import random
 import numpy as np
 from gym import Env, spaces
+
+if __name__ == "__main__":
+    from world.file_processor import File_processor
+else:
+    import sys, os
+    sys.path.append(os.path.dirname(__file__))
+
+    from world.file_processor import File_processor
 
 """
     代表MTEAC程序的类
@@ -28,9 +35,10 @@ class WorldEnv(Env):
 
     def __init__(self):
         # self.world_type_name = input("Please input world type name: ")
+        self.world_type_name = "blank_world"
         # self.world_type_name = "mesh_world"
         # self.world_type_name = "eight_direction_mesh_world"
-        self.world_type_name = "hexagonal_mesh_world"
+        # self.world_type_name = "hexagonal_mesh_world"
 
         self.generator = None
 
@@ -85,20 +93,6 @@ class WorldEnv(Env):
 
             return generator_module.Concrete_world_generator()
 
-        # 使用世界生成器参数化生成世界
-        # map_size规定了有 几行（高 纵坐标） 和 几列（宽 横坐标）
-        def get_world(generator, maximum_height=30, map_size=(50, 100),
-                      animals_para="random_animals", plants_para="random_plants",
-                      obj_para="random_obj",
-                      water_para="default_water",
-                      landform_para="default_landform",
-                      terrain_para="default_terrain"):
-            # 输入参数为 地形类型的数量 地图大小 生物生成参数 物品生成参数
-            return generator.generate_a_world(maximum_height=maximum_height, map_size=map_size,
-                                              animals_para=animals_para, plants_para=plants_para,
-                                              obj_para=obj_para, water_para=water_para,
-                                              landform_para=landform_para, terrain_para=terrain_para)
-
         # 读取命令 这个也可以用前端干
         # 选择世界进入模式
         # entry_mode = input("Please choose world mode(generate or load): ")
@@ -121,7 +115,7 @@ class WorldEnv(Env):
         # 如果生成一个世界
         if entry_mode == "generate":
             # 通过世界生成器生成世界
-            world = get_world(self.generator)
+            world = self.generator.default_generate_a_world()
 
         # 读档一世界
         elif entry_mode == "load":

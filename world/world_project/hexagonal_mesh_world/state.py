@@ -92,7 +92,10 @@ class Hexagonal_mesh_state(State):
         self.objs_position = self.init_position_list(self.objects)
 
         # c++代码模块
-        self.pDll = ctypes.CDLL("c++/MTEAC-C++.dll")
+        CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]  # 当前目录
+        config_path = CURRENT_DIR.rsplit('\\', 3)[0]  # 上三级目录
+
+        self.pDll = ctypes.CDLL(config_path + "/c++/MTEAC-C++.dll")
         self.Double_Len = ctypes.c_double*(self.terrain_size[0]*self.terrain_size[1])
         self.in_water_map = self.Double_Len()
         self.in_landform_map = self.Double_Len()

@@ -17,3 +17,7 @@ class World_generator(metaclass=ABCMeta):
     @abstractmethod
     def generate_a_world_by_state(self, *generate_parameters):
         pass
+
+    @abstractmethod
+    def default_generate_a_world(self, *generate_parameters):
+        pass

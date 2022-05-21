@@ -436,3 +436,11 @@ class Concrete_world_generator(World_generator):
     # 以state构造世界
     def generate_a_world_by_state(self, state):
         return World(state)
+
+    def default_generate_a_world(self):
+        return self.generate_a_world(maximum_height=30, map_size=(50, 100),
+                                     animals_para="random_animals", plants_para="random_plants",
+                                     obj_para="random_obj",
+                                     water_para="default_water",
+                                     landform_para="default_landform",
+                                     terrain_para="default_terrain")
