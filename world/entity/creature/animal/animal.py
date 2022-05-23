@@ -56,5 +56,9 @@ class Animal(Creature, Active_thing, metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def get_perception(self, *world_information):
+        pass
+
+    @abstractmethod
     def die(self):
         pass

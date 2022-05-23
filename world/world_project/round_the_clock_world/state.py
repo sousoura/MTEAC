@@ -15,7 +15,7 @@ if __name__ == "__main__":
 else:
     from world.state import State
     from world.entity.entity_import import *
-    from world.world_project.mesh_world.entity.mesh_entities import *
+    from world.world_project.round_the_clock_world.entity.round_the_clock_entities import *
 
 """
     网格状态
@@ -48,7 +48,7 @@ else:
 """
 
 
-class Mesh_state(State):
+class Round_the_clock_state(State):
     # 有 terrain_range + 1 种地形
     terrain_range = 6
     # 有 entity_type_num 种实体
@@ -101,6 +101,8 @@ class Mesh_state(State):
         self.in_water_map = self.Double_Len()
         self.in_landform_map = self.Double_Len()
 
+        self.day_time = 0
+
     """
         ***
             以下是动物的运动
@@ -141,7 +143,7 @@ class Mesh_state(State):
         for animal in self.animals:
             # 判断生物是否死亡
             if not animal.is_die():
-                cmd = animal.devise_an_act(animal.get_perception(self))
+                cmd = animal.devise_an_act(animal.get_perception(self.landform_map, self.animals_position))
                 """
                     判断该对象是不是玩家
                     判断有没有指令
@@ -683,6 +685,10 @@ class Mesh_state(State):
 
         return False
 
+    # return day_time
+    def get_day_time(self):
+        return self.day_time
+
     # 更新新地图
     def renew_map(self, new_map):
         self.landform_map = new_map
@@ -771,6 +777,10 @@ class Mesh_state(State):
                 for product in products:
                     self.add_exist_to_map(product)
 
+    # 增加一分钟
+    def day_time_change(self):
+        self.day_time = (self.day_time + 1) % 720
+
 
 def names_orderly_tuplize(objs_list):
     def get_onj_name(obj):
@@ -804,11 +814,10 @@ if __name__ == "__main__":
         [1, 1, 1, 1, 1]
     ]
     terrain_size = (5, 5)
-    maximum_height = 30
     animals = []
     plants = []
     objects = []
-    state = Mesh_state(maximum_height, landform_map, water_map, terrain_map, terrain_size, animals, plants, objects)
+    state = Mesh_state(landform_map, water_map, terrain_map, terrain_size, animals, plants, objects)
     print(1)
     for line in state.get_water_map():
         print(line)

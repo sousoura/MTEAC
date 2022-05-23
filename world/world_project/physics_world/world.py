@@ -8,15 +8,15 @@ else:
 
 
 class Physics_world(World):
-    play_mode = False
+    play_mode = True
     backgroundable = False
     statistical = False
 
     def __init__(self, state):
         super(Physics_world, self).__init__(state)
 
-    def take_action(self, player_cmd=None):
-        pass
+    def take_action(self, player_cmd=(0, 0)):
+        self.state.plater_ctrl(player_cmd)
 
     """
         规定世界调用哪些state方法来推进

@@ -38,9 +38,10 @@ class WorldEnv(Env):
         # self.world_type_name = "blank_world"
         # self.world_type_name = "block_world"
         # self.world_type_name = "mesh_world"
+        self.world_type_name = "round_the_clock_world"
         # self.world_type_name = "eight_direction_mesh_world"
         # self.world_type_name = "hexagonal_mesh_world"
-        self.world_type_name = "physics_world"
+        # self.world_type_name = "physics_world"
 
         self.generator = None
 
@@ -189,16 +190,16 @@ class WorldEnv(Env):
             mode = "normal"
 
             self.player_cmd = self.render(mode)
-            print("玩家指令为: ", self.player_cmd)
+            # print("玩家指令为: ", self.player_cmd)
             # 用gate判断是否结束
             while self.gate:
-                print("世界开始运作一次")
+                # print("世界开始运作一次")
                 self.world.take_action(self.player_cmd)
                 self.world.evolution()
-                print("世界运作结束")
+                # print("世界运作结束")
                 # 可视化等操作
                 self.player_cmd = self.render(mode)
-                print("玩家指令为: ", self.player_cmd)
+                # print("玩家指令为: ", self.player_cmd)
                 if not self.player_cmd:
                     self.gate = False
 

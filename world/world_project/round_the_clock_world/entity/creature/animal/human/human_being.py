@@ -1,7 +1,7 @@
 from world.entity.entity_import import *
-from world.world_project.mesh_world.entity.creature.plant.birch_wood import Birch_wood
-from world.world_project.mesh_world.entity.obj.human_corpse import Human_corpse
-from world.world_project.mesh_world.entity.obj.axe import Axe
+from world.world_project.round_the_clock_world.entity.creature.plant.birch_wood import Birch_wood
+from world.world_project.round_the_clock_world.entity.obj.human_corpse import Human_corpse
+from world.world_project.round_the_clock_world.entity.obj.axe import Axe
 
 from world.world_project.mesh_world.entity.creature.animal.mesh_animal import Mesh_animal
 
@@ -481,6 +481,14 @@ class Human_being(Mesh_animal, Human, Big_obj):
         if not backpack:
             self.backpack = []
         self.equipment = None
+
+    # 得到感知
+    '''
+        感知的结构： 整个是一个元组 其中：一个元组表示地形 另一个字典表示生物表
+    '''
+
+    def get_perception(self, landform_map, things_position):
+        return tuple(landform_map), things_position
 
     def die(self):
         return [Human_corpse(self.get_position(), 20)]

@@ -1,6 +1,6 @@
 from world.entity.entity_import import *
-from world.world_project.mesh_world.entity.obj.wolf_corpse import Wolf_corpse
-from world.world_project.mesh_world.entity.creature.animal.mesh_animal import Mesh_animal
+from world.world_project.round_the_clock_world.entity.obj.wolf_corpse import Wolf_corpse
+from world.world_project.round_the_clock_world.entity.creature.animal.mesh_animal import Mesh_animal
 
 """
     狼类 物种类
@@ -18,6 +18,10 @@ class Wolf(Mesh_animal, Big_obj):
                  crawl_ability, speed, aggressivity):
         super(Wolf, self).__init__(position, life, brain, full_value, drinking_value, body_state, gender,
                                    crawl_ability, speed, aggressivity)
+
+    # 得到感知
+    def get_perception(self, landform_map, things_position):
+        return tuple(landform_map), things_position
 
     def die(self):
         return [Wolf_corpse(self.get_position(), 20)]

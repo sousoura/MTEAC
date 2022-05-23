@@ -1,19 +1,14 @@
 """
     动物是会运动 会行动的生物
 """
-import os
 import random
-import sys
+
+from world.entity.creature.creature import Creature
+from world.entity.big_obj import Big_obj
+from world.entity.obj.food import Food
 from abc import ABCMeta, abstractmethod
 
-from world.entity.big_obj import Big_obj
 from world.entity.creature.animal.animal import Animal
-from world.entity.creature.creature import Creature
-from world.entity.obj.food import Food
-
-# CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]  # 当前目录
-# config_path = CURRENT_DIR.rsplit('\\', 6)[0]  # 上五级目录
-# sys.path.insert(0, config_path)
 
 
 class Mesh_animal(Animal, metaclass=ABCMeta):
@@ -239,8 +234,6 @@ class Mesh_animal(Animal, metaclass=ABCMeta):
         self.speed = speed
         self.aggressivity = aggressivity
 
-        self.perceived_ability = 10
-
         self.crawl_ability_change_value = 0
         self.speed_change_value = 0
         self.aggressivity_change_value = 0
@@ -260,92 +253,9 @@ class Mesh_animal(Animal, metaclass=ABCMeta):
     def move(self, new_position):
         self.position = new_position
 
-    # 得到感知
-    def get_perception(self, state):
-        import math
-        from world.world_project.mesh_world.state import Mesh_state
-        # 计算出位置为当前点时， 视野范围 的 左上角和右下角两个点 xy 的最大值和最小值
-        distance = self.perceived_ability
-
-        landform_map = state.get_landform_map()
-        water_map = state.get_water_map()
-        terrain_map = state.get_terrain_map()
-
-        animals_position = state.get_animals_position()
-        plants_position = state.get_plants_position()
-        objs_position = state.get_objs_position()
-
-        centre_position = (self.get_position()[0], self.get_position()[1])
-
-        old_x_max_range = math.floor(centre_position[0]) + distance  # 右下角
-        old_x_min_range = math.floor(centre_position[0]) - distance  # 左上角
-
-        old_y_max_range = math.floor(centre_position[1]) + distance  # 右下角
-        old_y_min_range = math.floor(centre_position[1]) - distance  # 左上角
-
-        max_value_x = state.terrain_size[1] - 1  # xy 的 最大值
-        max_value_y = state.terrain_size[0] - 1
-
-        # 重新定义左上和右下两个点的xy极值
-        x_min_range = max(old_x_min_range, 0)
-        x_max_range = min(old_x_max_range, max_value_x)
-
-        y_min_range = max(old_y_min_range, 0)
-        y_max_range = min(old_y_max_range, max_value_y)
-
-        # 得到map（二维数组）类型的感知范围
-        def map_range(mesh_map, centre_position):
-            # 框大小
-            dist_num = 2 * distance + 1
-            target = []
-
-            for row_index in range(old_y_min_range, old_y_max_range):
-                if row_index < 0 or row_index > max_value_x:
-                    target.append([-1 for i in range(dist_num)])
-                else:
-                    target.append([-1 for i in range(old_x_min_range, x_min_range)] +
-                                  mesh_map[row_index][x_min_range: x_max_range + 1] +
-                                  [-1 for i in range(x_max_range, old_x_max_range)])
-
-            return target
-
-        def dict_range(mesh_dict, centre_position):
-            import copy
-            the_dict_final = copy.deepcopy(mesh_dict)
-
-            # 保留了观察者自己的位置，确定output的dict里有多少动物在可视范围内
-            for key, value in mesh_dict.items():
-                if "x" in value:
-                    value.remove("x")
-                if key[0] >= x_min_range and key[0] <= x_max_range and key[-1] >= y_min_range and key[
-                    -1] <= y_max_range:
-                    if len(value) != 0:
-                        the_dict_final[key] = value
-
-            return the_dict_final
-
-        perception_landform = map_range(landform_map, (centre_position[0], centre_position[1]))
-        perception_water_map = map_range(water_map, (centre_position[0], centre_position[1]))
-        perception_terrain = map_range(terrain_map, (centre_position[0], centre_position[1]))
-
-        perception_animals_dic = dict_range(animals_position, (centre_position[0], centre_position[1]))
-        perception_plants_dic = dict_range(plants_position, (centre_position[0], centre_position[1]))
-        perception_objs_dic = dict_range(objs_position, (centre_position[0], centre_position[1]))
-
-        def get_entities(dic):
-            entities = []
-            for key, value in dic.items():
-                entities += value
-            return entities
-
-        perception_animals = get_entities(perception_animals_dic)
-        perception_plants = get_entities(perception_plants_dic)
-        perception_objs = get_entities(perception_objs_dic)
-
-        return Mesh_state(30,
-                          perception_landform, perception_water_map, perception_terrain,
-                          state.terrain_size,
-                          perception_animals, perception_plants, perception_objs)
+    @abstractmethod
+    def get_perception(self, landform_map, things_position):
+        pass
 
     # 想出一个行为
     def devise_an_act(self, perception):
