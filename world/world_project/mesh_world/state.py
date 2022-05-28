@@ -72,12 +72,12 @@ class Mesh_state(State):
         :param objects:         类型：列表 值为物品对象      意义表示：世界中的所有物品
         """
         # 地图
-        self.maximum_height = maximum_height
         self.landform_map = landform_map
         self.water_map = water_map
         self.terrain_map = terrain_map
 
         # 地图属性
+        self.maximum_height = maximum_height
         self.terrain_size = terrain_size
         self.legal_direction = ["up", "down", "left", "right", "stay"]
 

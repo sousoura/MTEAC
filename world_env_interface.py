@@ -37,8 +37,8 @@ class WorldEnv(Env):
         # self.world_type_name = input("Please input world type name: ")
         # self.world_type_name = "blank_world"
         # self.world_type_name = "block_world"
-        # self.world_type_name = "mesh_world"
-        self.world_type_name = "round_the_clock_world"
+        self.world_type_name = "mesh_world"
+        # self.world_type_name = "round_the_clock_world"
         # self.world_type_name = "eight_direction_mesh_world"
         # self.world_type_name = "hexagonal_mesh_world"
         # self.world_type_name = "physics_world"
@@ -69,6 +69,9 @@ class WorldEnv(Env):
             self.exhibitor = exhibitor_module.Exhibitor(self.world, 15)
             print("可视化创建结束")
 
+        """
+            待优化
+        """
         self.seed()
 
         self.action_space, self.observation_space = self.world.get_openai_action_space_and_observation_space()
@@ -83,7 +86,7 @@ class WorldEnv(Env):
     """
 
     def world_create(self):
-        # 通过世界类型名得到相应的世界生成器
+        # 通过【世界类型名】得到相应的世界生成器
         def get_generator(generator_file):
             generator_file = 'world.world_project.' + generator_file + '.' + 'world_generator'
 
@@ -107,9 +110,9 @@ class WorldEnv(Env):
 
         # 根据世界类型获取世界生成器
         self.generator = get_generator(self.world_type_name)
-        while self.generator is None:
-            self.world_type_name = input("can not find this type of world, please input other world type name: ")
-            self.generator = get_generator(self.world_type_name)
+        # while self.generator is None:
+        #     self.world_type_name = input("can not find this type of world, please input other world type name: ")
+        #     self.generator = get_generator(self.world_type_name)
 
         """
             
@@ -140,7 +143,8 @@ class WorldEnv(Env):
     """
     # 世界运作
     def step(self, action):
-        print(action)
+        # print(action)
+        print(self.world.translate_openai_command_to_mteac(self.world.state, action))
         self.world.take_action(self.world.translate_openai_command_to_mteac(self.world.state, action))
         return self.world.translate_mteac_state_to_openai(self.world.state), 0, False, None
 

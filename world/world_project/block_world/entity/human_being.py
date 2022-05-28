@@ -69,3 +69,6 @@ class Human_being(Human):
 
     def post_turn_change(self):
         pass
+
+    def get_perception(self):
+        pass

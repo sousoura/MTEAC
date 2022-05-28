@@ -36,7 +36,7 @@ class Physics_world(World):
         # 定义行动空间
         # direction_num = len(self.state.mteac_direction_list)
         direction_num = (10, 10)
-        action_space = spaces.Discrete(10)
+        action_space = spaces.Tuple((spaces.Discrete(10000), spaces.Discrete(10000)))
 
         # Define a 2-D observation space
         # observation_shape = self.state.get_terrain_size()
@@ -51,7 +51,8 @@ class Physics_world(World):
 
     def translate_openai_command_to_mteac(self, mteac_state, openai_command):
         mteac_command = []
-        pass
+        mteac_command.append(openai_command[0] - 5000)
+        mteac_command.append(openai_command[1] - 5000)
         return mteac_command
 
     def translate_mteac_state_to_openai(self, mteac_state):

@@ -1,0 +1,229 @@
+{
+    "FileType": "TextureTable",
+    "DirMapping": {
+        "Texture": "world/Texture"
+    },
+	"TextureTable":{
+		"7": {
+			"name": "Water",
+			"filepath": "Texture:Landform/Water.jpg",
+			"surface": null
+		},
+		"6": {
+			"name": "UnderWater",
+			"filepath": "Texture:Landform/Underwater.png",
+			"surface": null
+		},
+		"5": {
+			"name": "Wetland",
+			"filepath": "Texture:Landform/Wetland.png",
+			"surface": null
+		},
+		"4": {
+			"name": "Soil",
+			"filepath": "Texture:Landform/Soil.png",
+			"surface": null
+		},
+		"3": {
+			"name": "Normal",
+			"filepath": "Texture:Landform/Grassland1.png",
+			"surface": null
+		},
+		"2": {
+			"name": "Desert",
+			"filepath": "Texture:Landform/desert.png",
+			"surface": null
+		},
+		"1": {
+			"name": "Cobblestone",
+			"filepath": "Texture:Landform/Cobble.png",
+			"surface": null
+		},
+		"0": {
+			"name": "BigStone",
+			"filepath": "Texture:Landform/Bigstone.png",
+			"surface": null
+		},
+		
+		"Human_being": {
+			"name": "Human_being",
+			"filepath": "Texture:Animal/Human_being.png",
+			"surface": null
+		},
+		"Alpaca": {
+			"name": "Alpaca",
+			"filepath": "Texture:Animal/Alpaca.png",
+			"surface": null
+		},
+		"Wolf": {
+			"name": "Wolf",
+			"filepath": "Texture:Animal/Wolf.png",
+			"surface": null
+		},
+		"Mouse": {
+			"name": "Mouse",
+			"filepath": "Texture:Animal/Mouse.png",
+			"surface": null
+		},
+		"Fish": {
+			"name": "Fish",
+			"filepath": "Texture:Animal/Fish.png",
+			"surface": null
+		},
+		"Grass": {
+			"name": "Grass",
+			"filepath": "Texture:Plant/Grass.png",
+			"surface": null
+		},
+		"Grassland": {
+			"name": "Grassland",
+			"filepath": "Texture:Plant/Grassland.png",
+			"surface": null
+		},
+		"Algae": {
+			"name": "Algae",
+			"filepath": "Texture:Plant/Algae.png",
+			"surface": null
+		},
+		"Birch_wood": {
+			"name": "Birch_wood",
+			"filepath": "Texture:Plant/Birch_wood.png",
+			"surface": null
+		},
+		"Birch": {
+			"name": "Birch",
+			"filepath": "Texture:Plant/Birch.png",
+			"surface": null
+		},
+		
+		"Fruit": {
+			"name": "Fruit",
+			"filepath": "Texture:Object/Fruit.png",
+			"surface": null
+		},
+		
+		"Stone": {
+			"name": "Stone",
+			"filepath": "Texture:Object/Stone.png",
+			"surface": null
+		},
+		
+		"Wood": {
+			"name": "Wood",
+			"filepath": "Texture:Object/Wood.png",
+			"surface": null
+		},	
+		"Wall": {
+			"name": "Wall",
+			"filepath": "Texture:Object/Wall.png",
+			"surface": null
+		},	
+		"Fruit": {
+			"name": "Fruit",
+			"filepath": "Texture:Object/Fruit.png",
+			"surface": null
+		},
+		
+		"Door": {
+			"name": "Door",
+			"filepath": "Texture:Object/Door.png",
+			"surface": null
+		},
+		"Crafting_table": {
+			"name": "Crafting_table",
+			"filepath": "Texture:Object/Crafting_table.png",
+			"surface": null
+		},
+		"Cart": {
+			"name": "Cart",
+			"filepath": "Texture:Object/Cart.png",
+			"surface": null
+		},
+		"Bucket": {
+			"name": "Bucket",
+			"filepath": "Texture:Object/Bucket.png",
+			"surface": null
+		},
+		"Axe": {
+			"name": "Axe",
+			"filepath": "Texture:Object/Axe.png",
+			"surface": null
+		},
+		
+		
+		"Fruit": {
+			"name": "Fruit",
+			"filepath": "Texture:Object/Fruit.png",
+			"surface": null
+		},
+		
+		"Alpaca_corpse": {
+			"name": "Alpaca_corpse",
+			"filepath": "Texture:Object/Alpaca_corpse.png",
+			"surface": null
+		},
+		"Human_corpse": {
+			"name": "Human_corpse",
+			"filepath": "Texture:Object/Human_corpse.png",
+			"surface": null
+		},	
+		"Wolf_corpse": {
+			"name": "Wolf_corpse",
+			"filepath": "Texture:Object/Wolf_corpse.png",
+			"surface": null
+		},
+		
+		"cliff_1": {
+			"name": "cliff_1",
+			"filepath": "Texture:Cliff/cliff_1.png",
+			"surface": null
+		},
+		"cliff_2": {
+			"name": "cliff_2",
+			"filepath": "Texture:Cliff/cliff_2.png",
+			"surface": null
+		},
+		"cliff_3": {
+			"name": "cliff_3",
+			"filepath": "Texture:Cliff/cliff_3.png",
+			"surface": null
+		},
+		"cliff_4": {
+			"name": "cliff_4",
+			"filepath": "Texture:Cliff/cliff_4.png",
+			"surface": null
+		},
+		"cliff_5": {
+			"name": "cliff_5",
+			"filepath": "Texture:Cliff/cliff_5.png",
+			"surface": null
+		},
+		"cliff_up": {
+			"name": "cliff_up",
+			"filepath": "Texture:Cliff/cliff_up.png",
+			"surface": null
+		},
+		"cliff_down": {
+			"name": "cliff_down",
+			"filepath": "Texture:Cliff/cliff_down.png",
+			"surface": null
+		},
+		"cliff_left": {
+			"name": "cliff_left",
+			"filepath": "Texture:Cliff/cliff_left.png",
+			"surface": null
+		},
+		"cliff_right": {
+			"name": "cliff_right",
+			"filepath": "Texture:Cliff/cliff_right.png",
+			"surface": null
+		}
+		
+	}
+	
+	
+	
+}
+
+
+

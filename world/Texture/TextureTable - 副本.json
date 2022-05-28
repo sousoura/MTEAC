@@ -1,0 +1,49 @@
+{
+    "FileType": "AnimalTextureTable",
+    "DirMapping": {
+        "Texture": "world/world_project/mesh_world/Texture/Animal"
+    },
+	"AnimalTextureTable":{
+		"0": {
+			"name": "UnderWater",
+			"filepath": "Texture:Underwater..png",
+			"surface": null
+		},
+		"1": {
+			"name": "Wetland",
+			"filepath": "Texture:Wetland.png",
+			"surface": null
+		},
+		"2": {
+			"name": "Soil",
+			"filepath": "Texture:Soil.png",
+			"surface": null
+		},
+		"3": {
+			"name": "Normal",
+			"filepath": "Texture:Grassland1.png",
+			"surface": null
+		},
+		"4": {
+			"name": "Desert",
+			"filepath": "Texture:desert.png",
+			"surface": null
+		},
+		"5": {
+			"name": "Cobblestone",
+			"filepath": "Texture:Cobble.png",
+			"surface": null
+		},
+		"6": {
+			"name": "BigStone",
+			"filepath": "Texture:Bigstone.png",
+			"surface": null
+		}
+	}
+	
+	
+	
+}
+
+
+

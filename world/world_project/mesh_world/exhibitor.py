@@ -1,5 +1,6 @@
 from world.exhibitor_super import Exhibitor_super
-
+from world.world_project.mesh_world.PlayerViewWindow import PlayerView
+import sys
 
 """
     展示器类
@@ -41,6 +42,11 @@ class Exhibitor(Exhibitor_super):
 
         self.gate = True
 
+        self.playerControllingUnit = None
+
+        self.directionPressed = [20, 20]
+        self.cubeSize = 64  # 每个格的大小，素材全是64*64的
+
     # 初始化展示器
     def __init_exhibitor(self):
         # 初始化框架
@@ -53,6 +59,7 @@ class Exhibitor(Exhibitor_super):
 
         # 规定大小 生成窗口
         self.window = pygame.display.set_mode(self.win_size)
+        self.PlayerView = PlayerView()
 
         # 设置标题
         pygame.display.set_caption("MTEAC")
@@ -154,7 +161,10 @@ class Exhibitor(Exhibitor_super):
         """
             画方格世界
         """
-        self.draw_world(landform_map, water_map, terrain_map, animals_position, plants_position, objs_position)
+        # self.draw_world(landform_map, water_map, terrain_map, animals_position, plants_position, objs_position)
+
+        self.player_view(terrain_map, animals_position, plants_position, objs_position, landform_map, self.win_size,
+                         water_map, list(player_controlling_unit.position), mode)
 
         """
             画状态栏
@@ -166,7 +176,6 @@ class Exhibitor(Exhibitor_super):
 
         # 设置帧率
         self.clock.tick(30)
-
 
         player_cmd = None
         # 读取玩家操作
@@ -316,6 +325,52 @@ class Exhibitor(Exhibitor_super):
         # 画植物
         for position in plants_position:
             draw_plants(position, plants_position[position])
+
+    def player_view(self, landFormMap, animals_position, plants_position, objs_position, HeightMap, win_size, water_map,
+                    player_At, mode):
+        # 画地图
+        self.PlayerView.ReceiveVariable(landFormMap, animals_position, plants_position, objs_position, HeightMap,
+                                        win_size, water_map)
+        if mode != "ai":  # 玩家模式和AI模式中获取摄像机的逻辑有些许不同
+            self.PlayerView.set_camera_topleft(player_At)
+        else:
+            self.PlayerView.set_camera_topleft_Ai(self.directionPressed)
+
+        self.PlayerView.Update()
+
+    """
+        检测玩家输入 玩家输入之前不会跳出循环 可能递归
+    """
+
+    # Ai模式的输入为根据方向键移动摄像机
+    def MoveCamera_input(self, landFormMap, win_size, cube_size):
+        worldWidth = len(landFormMap[0])
+        worldHeight = len(landFormMap)
+        win_size[0] / cube_size / 2
+
+        for event in self.pygame.event.get():
+            if event.type == self.pygame.QUIT:
+                self.pygame.quit()
+                sys.exit()
+                return ["exit"]
+
+            elif event.type == self.pygame.KEYDOWN:
+                # 检测， 如果碰到边缘的话摄影机就不动
+                if event.key == self.pygame.K_UP:
+                    if 0 < self.directionPressed[0]:
+                        self.directionPressed[0] -= 1
+
+                elif event.key == self.pygame.K_DOWN:
+                    if self.directionPressed[0] < worldHeight - int(win_size[1] / cube_size):
+                        self.directionPressed[0] += 1
+
+                elif event.key == self.pygame.K_LEFT:
+                    if 0 < self.directionPressed[1]:
+                        self.directionPressed[1] -= 1
+
+                elif event.key == self.pygame.K_RIGHT:
+                    if self.directionPressed[1] < worldWidth - int(win_size[0] / cube_size):
+                        self.directionPressed[1] += 1
 
     def draw_status_bar(self, player_controlling_unit):
 

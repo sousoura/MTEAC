@@ -283,8 +283,8 @@ class Mesh_animal(Animal, metaclass=ABCMeta):
         old_y_max_range = math.floor(centre_position[1]) + distance  # 右下角
         old_y_min_range = math.floor(centre_position[1]) - distance  # 左上角
 
-        max_value_x = state.terrain_size[1] - 1  # xy 的 最大值
-        max_value_y = state.terrain_size[0] - 1
+        max_value_x = state.terrain_size[0] - 1  # xy 的 最大值
+        max_value_y = state.terrain_size[1] - 1
 
         # 重新定义左上和右下两个点的xy极值
         x_min_range = max(old_x_min_range, 0)
