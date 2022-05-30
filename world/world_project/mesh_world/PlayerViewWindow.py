@@ -178,9 +178,9 @@ class PlayerView():
         elif self.camera_top_left[0] > worldHight_grid - windowHight_grid:
             self.camera_top_left[0] = worldHight_grid - windowHight_grid
 
-        print("win_size_grid: " + str(windowWidth_grid) + ", " + str(windowHight_grid))
-        print("location_player: " + str(camera_focus[0]) + ", " + str(camera_focus[1]))
-        print("\tlocation_camera: " + str(self.camera_top_left[0]) + ", " + str(self.camera_top_left[1]))
+        # print("win_size_grid: " + str(windowWidth_grid) + ", " + str(windowHight_grid))
+        # print("location_player: " + str(camera_focus[0]) + ", " + str(camera_focus[1]))
+        # print("\tlocation_camera: " + str(self.camera_top_left[0]) + ", " + str(self.camera_top_left[1]))
 
     def set_camera_topleft_Ai(self, directionPressed):
         self.camera_top_left = directionPressed

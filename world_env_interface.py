@@ -42,6 +42,7 @@ class WorldEnv(Env):
         # self.world_type_name = "eight_direction_mesh_world"
         # self.world_type_name = "hexagonal_mesh_world"
         # self.world_type_name = "physics_world"
+        # self.world_type_name = "new_world"
 
         self.generator = None
 
@@ -144,7 +145,7 @@ class WorldEnv(Env):
     # 世界运作
     def step(self, action):
         # print(action)
-        print(self.world.translate_openai_command_to_mteac(self.world.state, action))
+        # print(self.world.translate_openai_command_to_mteac(self.world.state, action))
         self.world.take_action(self.world.translate_openai_command_to_mteac(self.world.state, action))
         return self.world.translate_mteac_state_to_openai(self.world.state), 0, False, None
 

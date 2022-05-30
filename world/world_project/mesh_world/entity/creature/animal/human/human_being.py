@@ -5,6 +5,8 @@ from world.world_project.mesh_world.entity.obj.axe import Axe
 
 from world.world_project.mesh_world.entity.creature.animal.mesh_animal import Mesh_animal
 
+import random
+
 """
     人类类 物种类
     方法用于物种的行为的内部影响

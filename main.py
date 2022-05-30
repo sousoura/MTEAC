@@ -4,7 +4,7 @@ from gym.utils.env_checker import check_env
 # 程序入口
 
 if __name__ == "__main__":
-    ai_mode = 2
+    ai_mode = 1
     env = WorldEnv()
 
     if ai_mode == 1:
@@ -18,7 +18,7 @@ if __name__ == "__main__":
             obs = env.reset()
 
             # Render the game
-            env.render()
+            env.render("ai")
 
             if done is True:
                 break

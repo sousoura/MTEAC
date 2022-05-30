@@ -155,6 +155,16 @@ class Exhibitor(Exhibitor_super):
 
         # 玩家控制的生物
         player_controlling_unit = self.world.get_state().get_entity_by_id(1)
+        if not player_controlling_unit:
+            if len(self.world.get_state().get_animals()) != 0:
+                player_controlling_unit = self.world.get_state().get_animals()[0]
+            else:
+                player_controlling_unit = None
+
+        if player_controlling_unit:
+            player_controlling_unit_position = list(player_controlling_unit.position)
+        else:
+            player_controlling_unit_position = [0, 0]
 
         # win_event = True
 
@@ -164,7 +174,7 @@ class Exhibitor(Exhibitor_super):
         # self.draw_world(landform_map, water_map, terrain_map, animals_position, plants_position, objs_position)
 
         self.player_view(terrain_map, animals_position, plants_position, objs_position, landform_map, self.win_size,
-                         water_map, list(player_controlling_unit.position), mode)
+                         water_map, player_controlling_unit_position, mode)
 
         """
             画状态栏
@@ -328,13 +338,15 @@ class Exhibitor(Exhibitor_super):
 
     def player_view(self, landFormMap, animals_position, plants_position, objs_position, HeightMap, win_size, water_map,
                     player_At, mode):
+
         # 画地图
         self.PlayerView.ReceiveVariable(landFormMap, animals_position, plants_position, objs_position, HeightMap,
                                         win_size, water_map)
         if mode != "ai":  # 玩家模式和AI模式中获取摄像机的逻辑有些许不同
             self.PlayerView.set_camera_topleft(player_At)
         else:
-            self.PlayerView.set_camera_topleft_Ai(self.directionPressed)
+            # self.PlayerView.set_camera_topleft_Ai(self.directionPressed)
+            self.PlayerView.set_camera_topleft(player_At)
 
         self.PlayerView.Update()
 
