@@ -1,0 +1,47 @@
+MTEAC
+©¦  main.py
+©¦  world_env_interface.py  
+©¦                  
+©À©¤world
+©¦  ©¦  exhibitor_super.py
+©¦  ©¦  file_processor.py
+©¦  ©¦  state.py
+©¦  ©¦  world.py
+©¦  ©¦  world_generator.py
+©¦  ©¦  
+©¦  ©À©¤entity
+©¦  ©¦  ©¦  active_thing.py
+©¦  ©¦  ©¦  big_obj.py
+©¦  ©¦  ©¦  entity.py
+©¦  ©¦  ©¦  entity_import.py
+©¦  ©¦  ©¦  id_maker.py
+©¦  ©¦  ©¦  
+©¦  ©¦  ©À©¤creature
+©¦  ©¦  ©¦  ©¦  creature.py
+©¦  ©¦  ©¦  ©¦  
+©¦  ©¦  ©¦  ©À©¤animal
+©¦  ©¦  ©¦  ©¦  ©¦  animal.py
+©¦  ©¦  ©¦  ©¦  ©¦  brain.py
+©¦  ©¦  ©¦  ©¦  ©¦  
+©¦  ©¦  ©¦  ©¦  ©¸©¤human
+©¦  ©¦  ©¦  ©¦        human.py
+©¦  ©¦  ©¦  ©¦        
+©¦  ©¦  ©¦  ©¦          
+©¦  ©¦  ©¦  ©¸©¤plant
+©¦  ©¦  ©¦        plant.py
+©¦  ©¦  ©¦        plant_cluster.py
+©¦  ©¦  ©¦        
+©¦  ©¦  ©¦             
+©¦  ©¦  ©¦          
+©¦  ©¦  ©¸©¤obj
+©¦  ©¦        container.py
+©¦  ©¦        corpse.py
+©¦  ©¦        equipment.py
+©¦  ©¦        food.py
+©¦  ©¦        obj.py
+©¦  ©¦                  
+©¦  ©¦     
+©¦  ©¦          
+©¦  ©À©¤world_project
+©¦  ©¦  ©À©¤world projects
+...

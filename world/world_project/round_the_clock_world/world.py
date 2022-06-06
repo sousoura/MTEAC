@@ -21,8 +21,9 @@ class Round_the_clock_world(World):
     def __init__(self, state):
         super(Round_the_clock_world, self).__init__(state)
 
-    def take_action(self, player_cmd=None):
+    def take_action(self, player_cmd=None, ai_id=1):
         self.state.player_action(player_cmd)
+        return 0, False
 
     """
         规定世界调用哪些state方法来推进

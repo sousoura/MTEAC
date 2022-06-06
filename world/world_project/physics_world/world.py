@@ -15,8 +15,9 @@ class Physics_world(World):
     def __init__(self, state):
         super(Physics_world, self).__init__(state)
 
-    def take_action(self, player_cmd=(0, 0)):
+    def take_action(self, player_cmd=(0, 0), ai_id=1):
         self.state.plater_ctrl(player_cmd)
+        return 0, False
 
     """
         规定世界调用哪些state方法来推进

@@ -47,6 +47,8 @@ class Exhibitor(Exhibitor_super):
         self.directionPressed = [20, 20]
         self.cubeSize = 64  # 每个格的大小，素材全是64*64的
 
+        self.player_id = 1
+
     # 初始化展示器
     def __init_exhibitor(self):
         # 初始化框架
@@ -154,12 +156,7 @@ class Exhibitor(Exhibitor_super):
         objs_position = self.world.get_state().get_objs_position()
 
         # 玩家控制的生物
-        player_controlling_unit = self.world.get_state().get_entity_by_id(1)
-        if not player_controlling_unit:
-            if len(self.world.get_state().get_animals()) != 0:
-                player_controlling_unit = self.world.get_state().get_animals()[0]
-            else:
-                player_controlling_unit = None
+        player_controlling_unit = self.world.get_state().get_entity_by_id(self.player_id)
 
         if player_controlling_unit:
             player_controlling_unit_position = list(player_controlling_unit.position)
@@ -478,7 +475,7 @@ class Exhibitor(Exhibitor_super):
 
     def detect_player_input(self, last_code):
         if len(self.world.get_state().get_animals()) > 0:
-            player_animal = self.world.get_state().get_animals()[0]
+            player_animal = self.world.get_state().get_entity_by_id(self.player_id)
         else:
             print("动物死光光")
             return False
@@ -930,7 +927,7 @@ class Exhibitor(Exhibitor_super):
 
     def no_waiting_detect(self, last_code):
         if len(self.world.get_state().get_animals()) > 0:
-            player_animal = self.world.get_state().get_animals()[0]
+            player_animal = self.world.get_state().get_entity_by_id(self.player_id)
         else:
             print("动物死光光")
             return False

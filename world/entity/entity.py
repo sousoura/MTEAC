@@ -31,3 +31,7 @@ class Entity(metaclass=ABCMeta):
 
     def new_position(self, new_position):
         self.position = new_position
+
+    # @abstractmethod
+    # def post_turn_change(self):
+    #     pass

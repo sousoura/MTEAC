@@ -25,17 +25,5 @@ else:
 
 class Blank_state(State):
 
-    mteac_direction_list = []
-
     def __init__(self):
         pass
-
-        # # c++代码模块
-        # CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]  # 当前目录
-        # config_path = CURRENT_DIR.rsplit('\\', 3)[0]  # 上三级目录
-        #
-        # dll_name = "MTEAC-C++.dll"
-        # self.pDll = ctypes.CDLL(config_path + "/c++/" + dll_name)
-        # self.Double_Len = ctypes.c_double * (self.terrain_size[0] * self.terrain_size[1])
-        # self.in_water_map = self.Double_Len()
-        # self.in_landform_map = self.Double_Len()

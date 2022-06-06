@@ -274,6 +274,11 @@ class Concrete_world_generator(World_generator):
                                            full_value=70, drinking_value=70, body_state=0, gender=True,
                                            crawl_ability=1, speed=2, aggressivity=50
                                            ))
+            animal_list.append(Human_being(position=[3, 4], life=100, brain=Human_brain(),
+                                           full_value=70, drinking_value=70, body_state=0,
+                                           gender=True,
+                                           crawl_ability=1, speed=2, aggressivity=50
+                                           ))
             animal_list.append(Wolf(position=[1, 15], life=100, brain=Wolf_brain(),
                                     full_value=70, drinking_value=70, body_state=0, gender=True,
                                     crawl_ability=1, speed=2, aggressivity=50
@@ -287,11 +292,6 @@ class Concrete_world_generator(World_generator):
                                     full_value=70, drinking_value=70, body_state=0, gender=True,
                                     crawl_ability=1, speed=2, aggressivity=50
                                     ))
-            animal_list.append(Human_being(position=[3, 4], life=100, brain=Human_brain(),
-                                           full_value=70, drinking_value=70, body_state=0,
-                                           gender=True,
-                                           crawl_ability=1, speed=2, aggressivity=50
-                                           ))
             animal_list.append(Human_being(position=[3, 5], life=100, brain=Human_brain(),
                                            full_value=70, drinking_value=70, body_state=0,
                                            gender=True,

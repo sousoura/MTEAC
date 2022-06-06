@@ -7,24 +7,23 @@ else:
     from world.world import World
 
 
-class Blank_world(World):
+class Pac_man_world(World):
     play_mode = False
     backgroundable = False
     statistical = False
 
     def __init__(self, state):
-        super(Blank_world, self).__init__(state)
+        super(Pac_man_world, self).__init__(state)
 
+    # the specified entity executes the instruction
     def take_action(self, player_cmd=None, ai_id=1):
-        return 0, False
+        # return reward and done
+        return 0, self.state.pac_man_action(player_cmd)
 
-    """
-        规定世界调用哪些state方法来推进
-    """
-
-    # 地图推进一次
+    # the environment evolves in a turn
     def evolution(self):
-        pass
+        if self.state.ghosts_action() is not None:
+            return [-1]
 
     def get_state(self):
         return self.state
@@ -33,13 +32,11 @@ class Blank_world(World):
         from gym import spaces
         import numpy as np
 
-        # 定义行动空间
-        direction_num = len(self.state.mteac_direction_list)
-        action_space = spaces.Box(low=np.array([1, 1]), high=np.array([1, direction_num]), dtype=np.int64)
+        # define action space
+        action_space = spaces.Discrete(4)
 
         # Define a 2-D observation space
-        # observation_shape = self.state.get_terrain_size()
-        observation_shape = (10, 10)
+        observation_shape = (9, 9)
         observation_shape = (observation_shape[1], observation_shape[0])
         observation_space = spaces.Box(low=0,
                                        high=1,

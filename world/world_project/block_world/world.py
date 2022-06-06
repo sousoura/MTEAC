@@ -17,9 +17,10 @@ class Block_world(World):
     def __init__(self, state):
         super(Block_world, self).__init__(state)
 
-    def take_action(self, player_cmd=None):
+    def take_action(self, player_cmd=None, ai_id=1):
         if player_cmd:
             self.state.controled_huamn_action(player_cmd)
+        return 0, False
 
     """
         规定世界调用哪些state方法来推进

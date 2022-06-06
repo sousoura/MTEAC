@@ -16,6 +16,7 @@ else:
 
 """
     代表MTEAC程序的类
+        既作为符合openAI要求的环境类 也作为管理world projects的管理器
     负责的功能：
         程序的入口
         整个程序的不断运行
@@ -37,12 +38,13 @@ class WorldEnv(Env):
         # self.world_type_name = input("Please input world type name: ")
         # self.world_type_name = "blank_world"
         # self.world_type_name = "block_world"
-        self.world_type_name = "mesh_world"
+        # self.world_type_name = "mesh_world"
         # self.world_type_name = "round_the_clock_world"
         # self.world_type_name = "eight_direction_mesh_world"
         # self.world_type_name = "hexagonal_mesh_world"
         # self.world_type_name = "physics_world"
-        # self.world_type_name = "new_world"
+        self.world_type_name = "pac_man_world"
+
 
         self.generator = None
 
@@ -76,6 +78,7 @@ class WorldEnv(Env):
         self.seed()
 
         self.action_space, self.observation_space = self.world.get_openai_action_space_and_observation_space()
+        self.ai_num = 1
 
     # 程序入口
     """
@@ -144,10 +147,24 @@ class WorldEnv(Env):
     """
     # 世界运作
     def step(self, action):
-        # print(action)
-        # print(self.world.translate_openai_command_to_mteac(self.world.state, action))
-        self.world.take_action(self.world.translate_openai_command_to_mteac(self.world.state, action))
-        return self.world.translate_mteac_state_to_openai(self.world.state), 0, False, None
+        obs = []
+        reward = []
+        done = []
+        info = []
+
+        for ai_id in range(1, self.ai_num + 1):
+            rwd, dn = self.world.take_action\
+                (self.world.translate_openai_command_to_mteac(self.world.state, action[ai_id - 1]), ai_id)
+            obs.append(self.world.translate_mteac_state_to_openai(self.world.state))
+            reward.append(rwd)
+            done.append(dn)
+            info.append(None)
+
+        is_done = self.world.evolution()
+        if is_done:
+            done = is_done
+
+        return obs, reward, done, info
 
     """
         世界每运行一轮都会调用一次该方法 统计和可视化在这里进行
@@ -168,7 +185,6 @@ class WorldEnv(Env):
         return visualization()
 
     def reset(self):
-        self.world.evolution()
         return self.world.translate_mteac_state_to_openai(self.world.state)
 
     def seed(self, seed=None):
@@ -177,6 +193,8 @@ class WorldEnv(Env):
     def close(self):
         pass
 
+    def set_ai_num(self, ai_num):
+        self.ai_num = ai_num
 
     """
         ======================
@@ -199,7 +217,7 @@ class WorldEnv(Env):
             # 用gate判断是否结束
             while self.gate:
                 # print("世界开始运作一次")
-                self.world.take_action(self.player_cmd)
+                self.world.take_action(self.player_cmd, 1)
                 self.world.evolution()
                 # print("世界运作结束")
                 # 可视化等操作

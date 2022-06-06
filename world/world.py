@@ -21,7 +21,7 @@ class World(metaclass=ABCMeta):
         self.state = state
 
     @abstractmethod
-    def take_action(self):
+    def take_action(self, player_cmd, ai_id):
         pass
 
     @abstractmethod

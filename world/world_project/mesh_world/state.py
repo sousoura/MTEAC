@@ -115,19 +115,16 @@ class Mesh_state(State):
         效果  某个动作被执行的效果
     """
 
-    def player_action(self, player_cmd):
-        # 判断是否输入指令
+    def player_action(self, player_cmd, ai_id):
         if not player_cmd:
             return
 
-        if len(self.animals) == 0:
-            print("死光光咯")
+        player = self.get_entity_by_id(ai_id)
+
+        if not player:
+            print("警告：玩家", ai_id, "不存在或已死亡")
             return
 
-        player = self.animals[0]
-        if not player.is_id(1):
-            print("警告：玩家不在第一位")
-            return
         if not player.is_die():
             cmd = player_cmd
             # 根据指令进行操作
