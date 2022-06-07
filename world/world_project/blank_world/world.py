@@ -19,9 +19,8 @@ class Blank_world(World):
         return 0, False
 
     """
-        规定世界调用哪些state方法来推进
+        规定世界调用哪些state方法来推
     """
-
     # 地图推进一次
     def evolution(self):
         pass

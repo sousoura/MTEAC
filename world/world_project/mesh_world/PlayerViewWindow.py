@@ -58,7 +58,7 @@ class TextureTable:
             dir_and_path = self.table_texture[id][self.key_filepath].split(":")
             filepath_full = self.mapping_dirmapping[dir_and_path[0]] + "/" + dir_and_path[1]
         self.table_texture[id][self.key_sexture] = self.pygame.image.load(filepath_full)
-        print(filepath_full)
+        # print(filepath_full)
         return self.table_texture[id][self.key_sexture]
 
     # 获取纹理, 通过纹理id获取纹理surfase

@@ -5,8 +5,10 @@ from world.entity.entity_import import *
 
 """
     文件处理类
-    职能：读档和存档之类的 所有和储存读取相关的都在这类
-    已经实现泛化和自动化
+        实现了默认的存档和读档功能
+        职能：读档和存档之类的 所有和储存读取相关的都在这类
+        已经实现泛化和自动化
+        （该逻辑待优化）
 """
 
 
@@ -18,6 +20,11 @@ class File_processor:
     # 存档
     @classmethod
     def archive(cls, state, world_type_name, file_name):
+        """
+            state:              某个world project 的state实例 该实例存有所有世界此刻的状态的信息
+            world_type_name:    world project的名字 格式同MTEAC类中的self.world_type_name
+            file_name:          存档文件的名称 不需要加后缀 存档成功后 存档文件会出现在world project的save文件夹下
+        """
         def state_obj_to_json(state_obj):
             new_dict = instance_archiver(state_obj)
             return new_dict
@@ -110,18 +117,23 @@ class File_processor:
     """
         实例读档器
     """
-
     @classmethod
     def load(cls, world_type_name, file_name):
+        """
+            world_type_name:    world project的名字 格式同MTEAC类中的self.world_type_name
+            file_name:          存档文件的名称 不需要加后缀 load方法会读取*file_name*.json文件 并生成一个相应的State实例
+        """
 
         """
             使用字符串进行自动import
-            此处的命名规范:
+            此处要求world project中state.py和world.py中的类的命名规范:
                 世界类型名： 名称_world
                 世界类名要和世界类型名一致
                 State名： 名称_state
             以及构造器中 属性名要和输入的参数名一致
             每个世界类型都应该有一个mods.py文件用于import world和state类
+            如果不使用默认读档器则不需要在意这些规范
+            （该逻辑待优化）
         """
         # 没有mods时使用 已经弃用
         # # 把 名称_world 转换为 名称_state
@@ -145,9 +157,16 @@ class File_processor:
 
         # 读取json字典的内容并结构化创建对象
         def json_to_state_obj(class_name, json_dict):
+            if class_name == 'CDLL':
+                return 0
+
             para_json = {}
             # 逐一取出属性名
             for para_name in json_dict:
+
+                # if class_name == "State":
+                #     print()
+
                 # 判断属性值的类型
                 if isinstance(json_dict[para_name], (int, str, float, bool)):
                     para_json[para_name] = json_dict[para_name]
@@ -160,15 +179,22 @@ class File_processor:
                     para_json[para_name] = tuple_json_read(json_dict[para_name])
                 elif isinstance(json_dict[para_name], dict):
                     para_json[para_name] = dict_json_read(json_dict[para_name])
-            if class_name != "State":
+
+            if class_name != "State" and class_name != "CDLL":
                 Class_class = globals()[class_name]
             else:
                 Class_class = State
 
+            # if class_name == "State":
+                # print()
             para_dict = {}
+
             for para in Class_class.__init__.__code__.co_varnames:
                 if para in para_json:
                     para_dict[para] = para_json[para]
+
+            # print(para_dict)
+            # print(Class_class.__init__.__code__.co_varnames)
 
             instance = Class_class(**para_dict)
 
@@ -197,7 +223,11 @@ class File_processor:
 
         def dict_json_read(json_dic):
             goal_data = 0
-            # 判断为普通词典还是对象词典
+
+            # 判断为普通词典还是对象词典还是function
+            if "function" in json_dic:
+                if json_dic["function"] == {}:
+                    return 0
             # 对象字典的情况
             if len(json_dic) == 1 and \
                     isinstance([a for a in json_dic][0], str) and \

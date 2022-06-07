@@ -15,44 +15,58 @@ else:
     from world.file_processor import File_processor
 
 """
-    代表MTEAC程序的类
+    代表MTEAC的类
         既作为符合openAI要求的环境类 也作为管理world projects的管理器
-    负责的功能：
-        程序的入口
-        整个程序的不断运行
-        输入输出：窗口化显示 后台
 """
 
 
 # 控制整个程序的进程
 class WorldEnv(Env):
     """
-        程序入口 让用户做初始化选择
-        让程序不断运作下去
-        分为两个线程
-            程序和窗口线程
-            后台命令线程
+        该类的主要方法有：
+            初始化方法
+            openAI所要求的方法
+                step()
+                reset()
+                render()
+                等...
+            game_mode()方法
+            save(), load()方法
+
+        初始化
+            选择 world project
+            选择 生成世界还是读档
+            初始化中会生成一个World实例作为world project来运行
+
+        如果world project支持后台 则会开启后台
+            此时程序分为两个线程
+                主程序线程
+                后台命令线程（该线程会使用input()方法读入后台命令)
+            目前只有mesh_world支持后台
+            （该逻辑待改进）
     """
 
+    """
+            ======================
+                   初始化方法
+            ======================
+    """
     def __init__(self):
+        """
+            在此处选择MTEAC指向哪个world project
+        """
         # self.world_type_name = input("Please input world type name: ")
         # self.world_type_name = "blank_world"
-        # self.world_type_name = "block_world"
+        self.world_type_name = "block_world"
         # self.world_type_name = "mesh_world"
         # self.world_type_name = "round_the_clock_world"
         # self.world_type_name = "eight_direction_mesh_world"
         # self.world_type_name = "hexagonal_mesh_world"
         # self.world_type_name = "physics_world"
-        self.world_type_name = "pac_man_world"
-
+        # self.world_type_name = "pac_man_world"
 
         self.generator = None
 
-        # 整个程序的起点
-        # 生成世界
-        """
-            用户选择进入哪个世界 生成还是读取
-        """
         print("开始创建世界")
         self.world = self.world_create()
         print("世界创建结束")
@@ -67,12 +81,13 @@ class WorldEnv(Env):
             exhibitor_file = 'world.world_project.' + self.world_type_name + '.' + 'exhibitor'
             exhibitor_module = importlib.import_module(exhibitor_file)
             """
-                参数是每个格的大小
+                第二个参数的值和用途由具体的world project中的exhibitor类中的逻辑决定
             """
             self.exhibitor = exhibitor_module.Exhibitor(self.world, 15)
             print("可视化创建结束")
 
         """
+            暂时没有实现seed()方法
             待优化
         """
         self.seed()
@@ -103,33 +118,25 @@ class WorldEnv(Env):
 
             return generator_module.Concrete_world_generator()
 
-        # 读取命令 这个也可以用前端干
-        # 选择世界进入模式
-        # entry_mode = input("Please choose world mode(generate or load): ")
-        # while entry_mode not in ["generate", "load"]:
-        #     entry_mode = input("Input is illegal, please try again(generate or load): ")
-
+        """
+           Choose whether to generate a new world or read an existing archive
+        """
         # entry_mode = "load"
         entry_mode = "generate"
 
         # 根据世界类型获取世界生成器
         self.generator = get_generator(self.world_type_name)
-        # while self.generator is None:
-        #     self.world_type_name = input("can not find this type of world, please input other world type name: ")
-        #     self.generator = get_generator(self.world_type_name)
 
-        """
-            
-        """
         world = None
         # 如果生成一个世界
         if entry_mode == "generate":
             # 通过世界生成器生成世界
             world = self.generator.default_generate_a_world()
 
-        # 读档一世界
+        # load a world
         elif entry_mode == "load":
             world_name = input("Please input world name: ")
+            # world_name = "114514"
             while world is None:
                 try:
                     # 通过读档器读取世界
@@ -142,7 +149,7 @@ class WorldEnv(Env):
 
     """
         ======================
-            openAI环境方法
+            openAI gym的方法
         ======================
     """
     # 世界运作
@@ -209,6 +216,10 @@ class WorldEnv(Env):
         """
         # 世界不断运作
         def world_evolution():
+            """
+                "normal"模式下 world会等待玩家输入才会运作
+                "no_waiting"模式下 玩家不做输入输入也会运作
+            """
             # mode = "no_waiting"
             mode = "normal"
 
@@ -228,6 +239,7 @@ class WorldEnv(Env):
 
         """
             终端后台 用户可以输入指令来控制程序
+                目前只有mesh_world和其同类的world_project支持该方法
                 目前的指令有：
                     quit: 退出程序
                             目前有瑕疵 需要玩家移动一格才会真的退出
@@ -276,7 +288,7 @@ class WorldEnv(Env):
                 self.gate = True
 
                 """
-                    两个线程
+                    创建后台线程
                 """
                 # 后台和世界开始不停运作
                 self.background_thread.setDaemon(True)
@@ -290,15 +302,19 @@ class WorldEnv(Env):
             print("世界创建失败")
 
     """
+        ======================
+            存档和读档方法
+        ======================
+    """
+    """
         当玩家调用并指定存档名后会调用File_processor对象进行存档 将当前世界以json格式存在save文件夹中
         具体功能由File_processor对象实现
         
         后台存档指令格式: save 存档名
     """
-
     # 存档
     def save(self, file_name):
-        print("正在存档...")
+        print("archiving...")
         world_type_name = type(self.world).__name__
         state = self.world.get_state()
         File_processor.archive(state, world_type_name, file_name)
@@ -314,7 +330,7 @@ class WorldEnv(Env):
 
     # 读档
     def load(self, world_type_name, file_name):
-        print("正在读档...")
+        print("loading...")
         state = File_processor.load(world_type_name, file_name)
         world = self.generator.generate_a_world_by_state(state)
         return world

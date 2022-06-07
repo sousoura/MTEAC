@@ -122,7 +122,7 @@ class Mesh_state(State):
         player = self.get_entity_by_id(ai_id)
 
         if not player:
-            print("警告：玩家", ai_id, "不存在或已死亡")
+            print("Warning：Animal", ai_id, "does not exist or has dead.")
             return
 
         if not player.is_die():
@@ -174,33 +174,35 @@ class Mesh_state(State):
         def judge_action_validity(animal, command):
             return animal.judge_action_validity(self, command)
 
-        # 判断基本行为执行几次
-        # 中间行为不合法则中断后面的行为
+        # Determine the number of times the action is performed(It's only greater than one when the animal is running)
         for time in range(int(basic_act_number(animal, command))):
-            # 产生尝试该行为造成的成本
+            # The cost of attempting the action
             animal.action_cost(command[0])
             if judge_action_validity(animal, command):
+                # If the action is valid, the action is executed
                 self.animal_action_command_execute(animal, command)
             else:
                 break
 
-    # 执行指令 改变世界和生物的状态
+    # Execute commands to change the state of the world and creatures
     def animal_action_command_execute(self, animal, command):
         if command[0] == 'go':
-            # 走一步
+            # walk
             self.moving_a_pace(animal, command[1])
         elif command[0] == 'eat':
-            # 动物吃生物
+            # eat
             self.animal_eating(animal, command[2])
         elif command[0] == 'drink':
-            # 动物喝水
+            # drink
             self.animal_drinking(animal, command[1])
         elif command[0] == 'attack':
-            # 动物攻击
+            # attack
             self.animal_attack(animal, command[2])
         elif command[0] == 'rest':
-            # 动物休息
+            # rest
             self.animal_rest(animal)
+
+        # If the action is unique to humans
         elif isinstance(animal, Human):
             if command[0] in animal.action_list:
                 # 人类行为
@@ -699,9 +701,9 @@ class Mesh_state(State):
     def add_exist_to_map(self, entity, position=None):
         entity_position_list, entity_list = self.determine_entities_category(entity)
         if not position:
-            die_position = entity.get_position()
+            die_position = tuple(entity.get_position())
         else:
-            die_position = position
+            die_position = tuple(position)
 
         if entity_position_list != -1:
             entity_list.append(entity)

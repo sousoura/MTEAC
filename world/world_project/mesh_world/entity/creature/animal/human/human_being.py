@@ -14,15 +14,15 @@ import random
 
 
 class Human_being(Mesh_animal, Human, Big_obj):
-    # 物种属性
+    # Attributes of species
     feeding_habits = ["Fruit"]
     swimming_ability = 4
     life_area = "terrestrial"
 
-    # 可以放进背包的物品
+    # Items which can be put into backpack
     pickable_objs = ["Fruit", "Stone", "Wood", "Axe", "Bucket"]
 
-    # 合成表
+    # Composed_table
     composed_table = {("Stone", "Wood"): ("Axe",),
                       ("Axe", "Wood", "Wood", "Wood"): ("Crafting_table",),
                       ("Axe", "Crafting_table", "Wood", "Wood", "Wood"): ("Axe", "Bucket", "Crafting_table"),
@@ -32,18 +32,20 @@ class Human_being(Mesh_animal, Human, Big_obj):
                       ("Axe", "Soil", "Soil", "Stone", "Stone", "Stone"): ("Axe", "Wall"),
                       }
 
-    # 可以推拉的物品
+    # Items which can be pushed
     pushable = ["Cart"]
 
-    # 可以收集的地貌 泥地 沙地 石头地
+    # The terrains where collecting can be performed are: mud, sand, and stone
     collectable = [1, 2, 4]
+
+    # action list
+    action_list = ["go", "eat", "drink", "attack", "rest",
+                   "pick_up", "put_down", "handling", "collect", "push",
+                   "fabricate", "construct", "interaction", "use", ]
 
     """
         行为合法性判断
     """
-    action_list = ["go", "eat", "drink", "attack", "rest",
-                   "pick_up", "put_down", "handling", "collect", "push",
-                   "fabricate", "construct", "interaction", "use", ]
 
     def judge_go(self, world_state, command):
         direction = command[1]

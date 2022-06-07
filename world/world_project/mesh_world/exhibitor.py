@@ -49,6 +49,11 @@ class Exhibitor(Exhibitor_super):
 
         self.player_id = 1
 
+        """
+            choose the version of visualization
+        """
+        self.version = 2
+
     # 初始化展示器
     def __init_exhibitor(self):
         # 初始化框架
@@ -166,12 +171,13 @@ class Exhibitor(Exhibitor_super):
         # win_event = True
 
         """
-            画方格世界
+            draw the world
         """
-        # self.draw_world(landform_map, water_map, terrain_map, animals_position, plants_position, objs_position)
-
-        self.player_view(terrain_map, animals_position, plants_position, objs_position, landform_map, self.win_size,
-                         water_map, player_controlling_unit_position, mode)
+        if self.version == 1:
+            self.draw_world(landform_map, water_map, terrain_map, animals_position, plants_position, objs_position)
+        elif self.version == 2:
+            self.player_view(terrain_map, animals_position, plants_position, objs_position, landform_map, self.win_size,
+                             water_map, player_controlling_unit_position, mode)
 
         """
             画状态栏
@@ -185,7 +191,7 @@ class Exhibitor(Exhibitor_super):
         self.clock.tick(30)
 
         player_cmd = None
-        # 读取玩家操作
+        # Read player actions by listening to the keyboard
         if mode == "normal":
             player_cmd = self.detect_player_input([])
         elif mode == "ai":

@@ -17,16 +17,15 @@ from world.entity.obj.food import Food
 
 
 class Mesh_animal(Animal, metaclass=ABCMeta):
-    # 物种属性
+    # Attributes of species
     feeding_habits = []
     swimming_ability = 1
     life_area = "terrestrial"
+    action_list = ["go", "eat", "drink", "attack", "rest"]
 
     """
         行为合法性判断
     """
-    action_list = ["go", "eat", "drink", "attack", "rest"]
-
     def judge_go(self, world_state, command):
         direction = command[1]
         old_position = tuple(self.get_position())

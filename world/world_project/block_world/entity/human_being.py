@@ -8,9 +8,6 @@ class Human_being(Human):
     def move(self, new_position):
         self.position = new_position
 
-    def action_cost(self, command):
-        pass
-
     def judge_action_validity(self, state, player_cmd):
         new_position = state.position_and_direction_get_adjacent(self.get_position(), player_cmd)
         if new_position:
@@ -57,6 +54,9 @@ class Human_being(Human):
     def action_interior_outcome(self, state, player_cmd):
         new_position = state.position_and_direction_get_adjacent(self.get_position(), player_cmd)
         self.move(new_position)
+
+    def action_cost(self, command):
+        pass
 
     def body_attribute_change(self):
         pass

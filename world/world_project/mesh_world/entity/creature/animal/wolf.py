@@ -9,7 +9,7 @@ from world.world_project.mesh_world.entity.creature.animal.mesh_animal import Me
 
 
 class Wolf(Mesh_animal, Big_obj):
-    # 物种属性
+    # Attributes of species
     feeding_habits = ["Human_being", "Human", "Alpaca", "Human_corpse", "Alpaca_corpse", "Mouse"]
     swimming_ability = 1
     life_area = "terrestrial"

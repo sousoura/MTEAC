@@ -37,7 +37,7 @@ class Block_world(World):
         from gym import spaces
         import numpy as np
 
-        # 定义行动空间
+        # define action space
         direction_num = len(self.state.mteac_direction_list)
         action_space = spaces.Discrete(4)
 
