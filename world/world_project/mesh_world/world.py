@@ -7,9 +7,9 @@ else:
 
 
 """
-    网格世界类
-        状态类型为网格状态的世界
-        规定世界如何推进
+    Mesh world class
+        world class of Mesh_world world project
+        It specifies how the world advances
 """
 
 
@@ -26,9 +26,8 @@ class Mesh_world(World):
         return 0, False
 
     """
-        规定世界调用哪些state方法来推进
+        Specifies which state functions the world calls to step the world
     """
-    # 地图推进一次
     def evolution(self):
         self.state.animal_action()
         self.state.plant_change()
@@ -42,21 +41,21 @@ class Mesh_world(World):
         from gym import spaces
         import numpy as np
 
-        # 定义行动空间
+        # define action space
         """
-            1 - 14 对应 14个行为
-            1 - 5 对应 5个方向
-            对象选择属性取消 采取默认选择第一个的策略
+            1 - 14 correspond 14 actions
+            1 - 5  correspond 5 directions
+            No need select objects, always select the first object
         """
         direction_num = len(self.state.mteac_direction_list)
         action_space = spaces.Box(low=np.array([1, 1]), high=np.array([1, direction_num]), dtype=np.int64)
 
         """
-            用六个数组表示感知
-            前三个是地形
-            第四个是实体
-            当实体重合时只显示第一个实体
-                实体类型映射为数字
+            Represent perception with for arrays
+             The first three are terrain
+             The fourth is the entity
+             Only show the first entity when the entities are coincident
+                 Entity types are mapped to numbers
         """
 
         # Define a 2-D observation space
@@ -119,24 +118,24 @@ class Mesh_world(World):
         return landform, water_map, terrain_map, entity_map
 
     """
-                   统计数据 指定要统计的数据类型 筛选条件的分类 具体筛选条件（以数组形式）
-                   数据类型：num, avg_life
-                   筛选条件的分类，用哈夫曼编码：
-                       物种为1;
-                       生命值为2;
-                       饥饿值为4;
-                       位置为8.
-                   具体筛选条件以物种、生命值、饥饿值、位置的顺序排序，如没有则不用填，其中生命值、饥饿值为具体数值，位置暂时留在这里，尚未开发
-                   例如:
-                       stat num 3 Human_being 5  为查询生命值为5的人类的个数
-                       stat num 1 Human_being 为查询人类的个数
-                """
+    statistical function
+       instruction：num, avg_life
+       Classification of filter conditions, encoded with Huffman code:
+            species is 1;
+            Life value is 2;
+            Hunger value is 4;
+            The position is 8.
+       The specific filter conditions are sorted in the order of species, health value, hunger value, and location. If there is none, do not fill in. The health value and hunger value are specific values. The location is temporarily left here and has not yet been developed.
+        E.g:
+           stat num 3 Human_being 5
+                Query the number of humans with a life value of 5
+           stat num 1 Human_being
+                Query the number of humans
+    """
 
-    # 统计数据
     def statistics(self, cmd):
         str_to_print = None
 
-        # 这里默认了所有世界都有生物
         creatures = self.state.animals + self.state.plants
         num = 0
         sum_life = 0
@@ -146,7 +145,6 @@ class Mesh_world(World):
                 str_to_print = "need more parameters, please try again"
                 return str_to_print
 
-            # 对于未死亡的生物，进行大量的筛选
             if not creature.is_die():
                 if pos != 1:
                     cmd_num = int(cmd[2])
@@ -154,30 +152,24 @@ class Mesh_world(World):
                     cmd_num = 0
                 if cmd_num >= 8:
                     cmd_num -= 8
-                    # 进行位置的相关筛选
                     pos -= 1
                 if cmd_num >= 4:
                     cmd_num -= 4
-                    # 进行饥饿值的相关筛选
                     pos -= 1
                 if cmd_num >= 2:
                     cmd_num -= 2
-                    # 进行生命值的相关筛选
                     if creature.life != int(cmd[pos]):
                         continue
                     pos -= 1
                 if cmd_num >= 1:
                     cmd_num -= 1
-                    # 进行物种的相关筛选
                     if type(creature).__name__ != cmd[pos]:
                         continue
 
-            # 走到这里，就完成了筛选
             num += 1
             if cmd[1] == "avg_life":
                 sum_life += creature.life
 
-        # 完成了遍历
         if cmd[1] == "num":
             str_to_print = num
         elif cmd[1] == "avg_life":

@@ -3,40 +3,39 @@ from world.world_project.mesh_world.PlayerViewWindow import PlayerView
 import sys
 
 """
-    展示器类
-    职能：窗口化和可视化都在这个类里头
-    属性：
-        地图大小
-        窗口大小
-        pygame
-        window对象
-        Point类
-        bg_color
-    方法：
-        两个用于初始化的方法
-            __init__
-            __init_exhibitor
-        display用于真正输出
-            本体为框架
-            真正需要编辑的在draw()里面
-                两个分别画地形和生物的工具方法 在draw中使用
-            其中detect_player_input用于渲染完毕后读取用户输入
+    Exhibitor class
+    Function: windowing and visualization are in this class
+    Attributes:
+         map size
+         window size
+         pygame instance
+         window object
+         Point class
+         bg_color
+    Functions:
+         Two methods for initialization
+             __init__
+             __init_exhibitor
+         display() is used to draw a turn in the window
+             What really needs to be edited is in draw()
+                 Two tool methods for drawing terrain and creatures are used in draw
+             where detect_player_input is used to read user input after rendering
 """
 
 
 class Exhibitor(Exhibitor_super):
     """
-        初始化在__init__和__init_exhibitor中
+        Initialization is in __init__ and __init_exhibitor
     """
 
     def __init__(self, world, block_size):
         self.world = world
         self.block_size = block_size
-        # 地图长宽各多少格
+        # What the length and width of the map is
         self.terrain_size = world.state.terrain_size
-        # 窗口中世界的大小
+        # The size of the world in the window
         self.world_win_size = (self.block_size * self.terrain_size[0], self.block_size * self.terrain_size[1])
-        # 窗口大小（加上状态栏）
+        # Window size (plus status bar)
         self.win_size = (self.world_win_size[1], self.world_win_size[0] + self.world_win_size[0] / 5)
         self.__init_exhibitor()
 
@@ -45,7 +44,7 @@ class Exhibitor(Exhibitor_super):
         self.playerControllingUnit = None
 
         self.directionPressed = [20, 20]
-        self.cubeSize = 64  # 每个格的大小，素材全是64*64的
+        self.cubeSize = 64  # The size of each grid, the material is all 64*64
 
         self.player_id = 1
 
@@ -54,40 +53,39 @@ class Exhibitor(Exhibitor_super):
         """
         self.version = 2
 
-    # 初始化展示器
+    # Initializing
     def __init_exhibitor(self):
-        # 初始化框架
+        # Initialize the frame
         import pygame
 
         self.pygame = pygame
 
-        # 初始化
         pygame.init()
 
-        # 规定大小 生成窗口
+        # Specified size and generate a window
         self.window = pygame.display.set_mode(self.win_size)
         self.PlayerView = PlayerView()
 
-        # 设置标题
+        # set title
         pygame.display.set_caption("MTEAC")
 
-        # 设定时间频率
+        # set time frequency
         self.clock = pygame.time.Clock()
 
-        # 定义点类
+        # define the Point class
         class Point:
             def __init__(self, exhibitor, row, col, interspace=5):
-                # 在第几行
+                # in which line
                 self.row = row
-                # 在第几列
+                # in which column
                 self.col = col
                 self.mid_interspace = interspace
                 self.exhibitor = exhibitor
-                # 屏幕宽度除以横向有几个格
+                # screen width divided by horizontal
                 self.cell_width = exhibitor.world_win_size[1] / exhibitor.terrain_size[1]
-                # 屏幕长度除以纵向有几个格
+                # screen length divided by vertical
                 self.cell_height = exhibitor.world_win_size[0] / exhibitor.terrain_size[0]
-                # 求本格的位置
+                # find the location of the block(point)
                 self.left = self.col * self.cell_width
                 self.top = self.row * self.cell_height
 
@@ -125,42 +123,42 @@ class Exhibitor(Exhibitor_super):
 
         self.Point = Point
 
-        # 定义颜色
+        # define color
         self.bg_color = (255, 255, 255)
 
     """
-        展示的框架
+        Draw the state of the world in a certain round in the window
     """
 
     def display(self, mode="normal"):
         """
-        可视化的入口
-            需要可视化的数据：
-                地图
-                    landform_map        [[int, int], [int, int], ...]            地势高低的地形地图                   每个数字代表该地方的高低值 可以为负数或任意正整数
-                    water_map           [[float, float], [float, float], ...]    水地图 某个格的水位的高低             每个数字代表了该地方水位的高低 可以为任意小数值 不可以为负数
-                    terrain_map         [[int, int], [int, int], ...]            地貌地图 描述某个地方的土是什么样的     由不同整数描述有土地 沙地 石地...等 数字从0到大 从干到湿 6为水底 5为沼泽 4为泥地 3为普通土地 2为沙地 1为鹅卵石地 0为大石地
+            Data to be visualized:：
+                map
+                    landform_map        [[int, int], [int, int], ...]            the height of the terrain                   Each number represents the high and low value of the place, which can be negative or any positive integer
+                    water_map           [[float, float], [float, float], ...]    Water map The level of the water level in a grid            Each number represents the level of the water level in the place, which can be any decimal value and cannot be negative.
+                    terrain_map         [[int, int], [int, int], ...]            terrain maps describe what the soil looks like in a place     Different integers describe land, sand, rock, etc. The numbers range from 0 to large, from dry to wet, 6 is water bottom, 5 is swamp, 4 is mud, 3 is normal land, 2 is sand, 1 is cobblestone, and 0 is boulder.
 
-                位置物体表
-                    字典对象 存位置和位置上有的物体
-                    animals_position    {(位置的横纵坐标): [<动物1>, <动物2>， ...], (a, b), [<>, ...], ...}
-                    plants_position     {(位置的横纵坐标): [<植物1>, <植物2>， ...], (a, b), [<>, ...], ...}
-                    objs_position       {(位置的横纵坐标): [<物品1>, <物品2>， ...], (a, b), [<>, ...], ...}
+                entities
+                    dictionary object
+                        The key is the position, the value is the object at the position
+                        animals_position    {(position): [<Animal1>, <Animal2>， ...], (a, b), [<>, ...], ...}
+                        plants_position     {(position): [<Plant1>, <Plant2>， ...], (a, b), [<>, ...], ...}
+                        objs_position       {(position): [<Obj1>, <Obj2>， ...], (a, b), [<>, ...], ...}
 
-                玩家控制的生物（用于状态栏显示）（这个可以不弄）
+                Player-controlled creatures (used for status bar display) (this can be omitted)
                     player_controlling_unit
         """
-        # 地图
+        # map
         landform_map = self.world.get_state().get_landform_map()
         water_map = self.world.get_state().get_water_map()
         terrain_map = self.world.get_state().get_terrain_map()
 
-        # 位置物体表
+        # position-entities dictionary
         animals_position = self.world.get_state().get_animals_position()
         plants_position = self.world.get_state().get_plants_position()
         objs_position = self.world.get_state().get_objs_position()
 
-        # 玩家控制的生物
+        # player controlled creature
         player_controlling_unit = self.world.get_state().get_entity_by_id(self.player_id)
 
         if player_controlling_unit:
@@ -180,14 +178,13 @@ class Exhibitor(Exhibitor_super):
                              water_map, player_controlling_unit_position, mode)
 
         """
-            画状态栏
+            draw status bar
         """
         self.draw_status_bar(player_controlling_unit)
 
-        # 让渡控制权
         self.pygame.display.flip()
 
-        # 设置帧率
+        # set frequency
         self.clock.tick(30)
 
         player_cmd = None
@@ -207,11 +204,11 @@ class Exhibitor(Exhibitor_super):
         return player_cmd
 
     """
-        画方格世界图
+        old visualization
     """
 
     def draw_world(self, landform_map, water_map, terrain_map, animals_position, plants_position, objs_position):
-        # 找到全地图的最高点
+        # Find the highest point on the whole map
         def get_maximum_height(landform_map):
             return max(map(max, landform_map))
 
@@ -219,14 +216,14 @@ class Exhibitor(Exhibitor_super):
         max_water_high = get_maximum_height(water_map)
 
         """
-            定义绘图函数
+            Define the drawing functions
         """
 
-        # 画地形和地貌
+        # draw terrain
         def draw_landform_map(position, terrain_type, max_height, terrain):
-            # 根据高度和地貌生成颜色
+            # Generate colors based on terrain
             def get_terrain_color(terrain_num, max_height, terrain):
-                # 白 绿 棕 灰 黄 红 紫
+                # White Green Brown Gray Yellow Red Purple
                 terrain_color = [(0.45, 0.1, 0.45),
                                  (0.8, 0.1, 0.1),
                                  (0.45, 0.45, 0.1),
@@ -238,7 +235,7 @@ class Exhibitor(Exhibitor_super):
                                  ]
 
                 """
-                    这里采用了我自己研究得出的亮度守恒公式
+                    Here is the luminance conservation formula derived from my own research.
                     luminance = 0.3r + 0.6g + 0.1b
                 """
                 color_alpha = terrain_color[terrain][0] / max(terrain_color[terrain][1], 0.001)
@@ -257,9 +254,9 @@ class Exhibitor(Exhibitor_super):
             self.Point \
                 (self, row=position[0], col=position[1]).rect(get_terrain_color(terrain_type, max_height, terrain))
 
-        # 画水地图
+        # draw water map
         def draw_water_map(position, water_high):
-            # 可视化半透明水层
+            # Visualize translucent water layers
             # water_surface = self.window.convert_alpha()
             water_surface = \
                 self.pygame.Surface(
@@ -268,12 +265,12 @@ class Exhibitor(Exhibitor_super):
                     , self.pygame.SRCALPHA, 32)
             self.Point(self, row=position[0], col=position[1]).draw_bar(water_high, water_surface, max_water_high)
 
-        # 画生物
-        # 画动物
+        # draw creatures
+        # draw animals
         def draw_animals(position, animals):
             def get_animal_color(animal):
                 import random
-                # 强行将类名字符串转化为ord数字 作为种子
+                # Forcibly convert the class name string to an ord number as a seed
                 random.seed(''.join(map(str, map(ord, type(animal).__name__))))
                 r = random.randrange(0, 255)
                 g = random.randrange(0, 255)
@@ -283,7 +280,7 @@ class Exhibitor(Exhibitor_super):
             for animal in animals:
                 self.Point(self, row=position[0], col=position[1]).mid_rect(get_animal_color(animal))
 
-        # 画植物
+        # draw plants
         def draw_plants(position, plants):
             def get_plant_color(plant_species):
                 return ((169, 208, 107), (205, 133, 63), (165, 42, 42), (0, 125, 0), (0, 255, 0))[plant_species]
@@ -308,15 +305,15 @@ class Exhibitor(Exhibitor_super):
                 self.Point(self, row=position[0], col=position[1]).small_circle(get_obj_color(obj))
 
         """
-            画图执行
+            drawing execution
         """
 
-        # 渲染
-        # 画方块
-        # 画背景
+        # render
+        # draw block
+        # draw background
         self.pygame.draw.rect(self.window, self.bg_color, (0, 0, self.win_size[0], self.win_size[1]))
 
-        # 画地势
+        # draw terrain
         for row_index in range(self.terrain_size[0]):
             for column_index in range(self.terrain_size[1]):
                 draw_landform_map \
@@ -326,26 +323,26 @@ class Exhibitor(Exhibitor_super):
                     draw_water_map \
                         ((row_index, column_index), water_map[row_index][column_index])
 
-        # 画物品
+        # draw objects
         for position in objs_position:
             draw_objs(position, objs_position[position])
 
-        # 画生物
-        # 画动物
+        # draw creatures
+        # draw animals
         for position in animals_position:
             draw_animals(position, animals_position[position])
 
-        # 画植物
+        # draw plants
         for position in plants_position:
             draw_plants(position, plants_position[position])
 
     def player_view(self, landFormMap, animals_position, plants_position, objs_position, HeightMap, win_size, water_map,
                     player_At, mode):
 
-        # 画地图
+        # draw map
         self.PlayerView.ReceiveVariable(landFormMap, animals_position, plants_position, objs_position, HeightMap,
                                         win_size, water_map)
-        if mode != "ai":  # 玩家模式和AI模式中获取摄像机的逻辑有些许不同
+        if mode != "ai":  # The logic of acquiring cameras in player mode and AI mode is slightly different
             self.PlayerView.set_camera_topleft(player_At)
         else:
             # self.PlayerView.set_camera_topleft_Ai(self.directionPressed)
@@ -354,10 +351,10 @@ class Exhibitor(Exhibitor_super):
         self.PlayerView.Update()
 
     """
-        检测玩家输入 玩家输入之前不会跳出循环 可能递归
+        Detects player input Does not break out of loop until player input May recurse
     """
 
-    # Ai模式的输入为根据方向键移动摄像机
+    # The input of Ai mode is to move the camera according to the direction keys
     def MoveCamera_input(self, landFormMap, win_size, cube_size):
         worldWidth = len(landFormMap[0])
         worldHeight = len(landFormMap)
@@ -389,24 +386,20 @@ class Exhibitor(Exhibitor_super):
 
     def draw_status_bar(self, player_controlling_unit):
 
-        """
-            三个标题
-        """
-
-        # # 创建字体对象
+        # # Create a font object
         # title_font_size = 20
         # title_font = self.pygame.font.Font(None, title_font_size)
         #
-        # # 文本与颜色
+        # # text and color
         # state_title_text = title_font.render("Creature state", True, (0, 0, 0))
         # attribute_title_text = title_font.render("Attribute state", True, (0, 0, 0))
         # species_characteristics_text = title_font.render("Species characteristics", True, (0, 0, 0))
         #
-        # # 文本坐标
+        # # text coordinates
         # state_title_position = (self.world_win_size[0] / 9, self.world_win_size[1] * 102 / 100)
         # attribute_title_position = (self.world_win_size[0] / 8 * 2, self.world_win_size[1] * 102 / 100)
         # species_characteristics_position = (self.world_win_size[0] / 8 * 3, self.world_win_size[1] * 102 / 100)
-        # # 获取设置后新的坐标区域
+        # # Get the new coordinate area after setting
         # state_title_rect = state_title_text.get_rect(center=state_title_position)
         # attribute_title_rect = state_title_text.get_rect(center=attribute_title_position)
         # species_characteristics_rect = state_title_text.get_rect(center=species_characteristics_position)
@@ -416,7 +409,7 @@ class Exhibitor(Exhibitor_super):
         # self.window.blit(species_characteristics_text, species_characteristics_rect)
 
         """
-            属性
+            Attributes
         """
 
         state_attribute = ["position", "life", "full_value", "drinking_value", "body_state", "backpack", "equipment"]
@@ -442,11 +435,11 @@ class Exhibitor(Exhibitor_super):
             line_width = self.world_win_size[1] / 4
             line_high = font_size * 1.2
 
-            # 遍历属性名
+            # iterate over property names
             for attribute_name in player_controlling_unit.__dir__():
-                # 排除内置方法和属性
+                # Exclude built-in functions and properties
                 if attribute_name[0] != "_":
-                    # 排除方法对象
+                    # Exclude function objects
                     if not hasattr(getattr(player_controlling_unit, attribute_name), '__call__'):
                         for attribute_list in attribute_lists_list:
                             if attribute_name in attribute_list:
@@ -476,26 +469,26 @@ class Exhibitor(Exhibitor_super):
                                     row += 1
 
     """
-        检测玩家输入 玩家输入之前不会跳出循环 可能递归
+        Detects player input Does not break out of loop until player input May recurse
     """
 
     def detect_player_input(self, last_code):
         if len(self.world.get_state().get_animals()) > 0:
             player_animal = self.world.get_state().get_entity_by_id(self.player_id)
         else:
-            print("动物死光光")
+            print("all animals die")
             return False
-        # 作用于方向和对象的动作的名称的数组
+        # an array of names of actions to act on the direction and object
         direction_and_obj_action = ["eat", "attack", "pick_up", "put_down", "push"]
         direction_and_objs_action = ["construct"]
         direction_action = ["drink", "collect"]
         backpack_action = ["put_down", "fabricate"]
 
-        # 等待输入数字参数
+        # Waiting for a numeric parameter to be entered
         def waiting_for_para(last_code):
-            # 等待按键 否则一直在循环里
+            # Wait for the keyboard, otherwise it will keep looping
             while True and self.gate:
-                # 处理事件
+                # handle events
                 for event_para_wait in self.pygame.event.get():
                     if event.type == self.pygame.QUIT:
                         return False
@@ -532,10 +525,10 @@ class Exhibitor(Exhibitor_super):
                             last_code.append("OK")
                             return True
 
-        # 请求选择作用对象
+        # request to select the target
         """
-            从世界取得该位置的实例
-            然后玩家输入下标选择对象是那个
+            Instances of getting the location from the world
+            Then the player enters the index to select the object that is
         """
 
         def choose_object(last_code):
@@ -546,29 +539,29 @@ class Exhibitor(Exhibitor_super):
                         entities = player_animal.get_backpack()
                         objects_num = len(entities)
                     else:
-                        print("警告 发现非人类调用人类背包动作 程序存在bug")
+                        print("Warning: There is a bug in the program that non-human calls the human backpack action")
                         return False
                 elif last_code[0] in direction_and_obj_action:
                     old_position = tuple(player_animal.get_position())
                     position = self.world.get_state().position_and_direction_get_adjacent(old_position, last_code[1])
                     entities = self.world.get_state().get_entities_in_position(position)
                     objects_num = len(entities)
-                # 如果只有一个可选对象 且符合条件 则马上返回之
+                # If there is only one optional object and the condition is met, it will be returned immediately
                 if objects_num == 1:
                     last_code.append(entities[0])
                     return True
-                # 若压根无对象 则返回-1
+                # Returns -1 if there is no object
                 if objects_num == 0:
                     last_code.append(-1)
                     return True
 
                 """
-                    目前只能通过终端给玩家呈现对象们以选择
-                    到时候可以直接在下面的呈现栏里给玩家呈现
+                    Currently can only present objects to the player through the terminal for selection
+                    plan to instead present to the player directly in the presentation bar below the screen
                 """
                 print_list_with_num(entities)
 
-                # 判断对象选择是否合法
+                # Determine whether the object selection is available
                 temp_list = []
                 while waiting_for_para(temp_list):
                     input_num = temp_list.pop()
@@ -576,7 +569,6 @@ class Exhibitor(Exhibitor_super):
                         be_eator = entities[input_num - 1]
                         last_code.append(be_eator)
                         return True
-                    # 反悔操作
                     elif input_num == -1:
                         last_code.append(-1)
                         return True
@@ -596,16 +588,16 @@ class Exhibitor(Exhibitor_super):
                 if type(player_animal).__name__ == "Human_being":
                     entities = player_animal.get_backpack()[:]
                 else:
-                    print("警告 发现非人类调用人类背包动作 程序存在bug")
+                    print("Warning: There is a bug in the program that non-human calls the human backpack action")
                     return -1
 
                 """
-                    目前只能通过终端给玩家呈现对象们以选择
-                    到时候可以直接在下面的呈现栏里给玩家呈现
+                    Currently can only present objects to the player through the terminal for selection
+                    plan to instead present to the player directly in the presentation bar below the screen
                 """
                 print_list_with_num(entities)
 
-                # 判断对象选择是否合法
+                # Determine whether the object selection is available
                 temp_list = []
                 while waiting_for_para(temp_list):
                     input_num = temp_list.pop()
@@ -615,7 +607,6 @@ class Exhibitor(Exhibitor_super):
                     elif 0 <= input_num - 1 < len(entities):
                         be_selector = entities.pop(input_num - 1)
                         return be_selector
-                    # 反悔操作
                     elif input_num == -1:
                         return -1
                     else:
@@ -634,23 +625,23 @@ class Exhibitor(Exhibitor_super):
                     entities = player_animal.get_backpack()[:]
                     objects_num = len(entities)
                 else:
-                    print("警告 发现非人类调用人类背包动作 程序存在bug")
+                    print("Warning: There is a bug in the program that non-human calls the human backpack action")
                     return -1
-                # 如果只有一个可选对象 且符合条件 则马上返回之
+
                 if objects_num == 1:
                     objs_list.append([entities[0]])
                     return objs_list
-                # 若压根无对象 则返回-1
+
                 if objects_num == 0:
                     return -1
 
                 """
-                    目前只能通过终端给玩家呈现对象们以选择
-                    到时候可以直接在下面的呈现栏里给玩家呈现
+                    Currently can only present objects to the player through the terminal for selection
+                    plan to instead present to the player directly in the presentation bar below the screen
                 """
                 print_list_with_num(entities)
 
-                # 判断对象选择是否合法
+                # Determine whether the object selection is available
                 temp_list = []
                 while waiting_for_para(temp_list):
                     input_num = temp_list.pop()
@@ -675,31 +666,28 @@ class Exhibitor(Exhibitor_super):
                 print("Waining: the id of the entity player controlling is not 1.")
                 return -1
 
-        # 建造用的 原材料选择
+        # Selection of raw materials for construction
         def choose_objs_from_backpack_and_position(last_code):
             material_list = []
             if type(player_animal).__name__ == "Human_being":
-                # 取得可选项目 从人类背包和该位置
+                # Get optional items from the Human Backpack and the location
                 old_position = tuple(player_animal.get_position())
                 position = self.world.get_state().position_and_direction_get_adjacent(old_position, last_code[1])
                 entities = \
                     player_animal.get_backpack()[:] + self.world.get_state().get_entities_in_position(position)[:]
                 objects_num = len(entities)
 
-                # 如果只有一个可选对象 且符合条件 则马上返回之
                 if objects_num == 1:
                     material_list.append(entities[0])
                     last_code.append(material_list)
                     return True
 
-                # 若压根无对象 则返回-1
                 if objects_num == 0:
                     last_code.append(-1)
                     return True
 
                 print_list_with_num(entities)
 
-                # 判断对象选择是否合法
                 temp_list = []
                 while waiting_for_para(temp_list):
                     input_num = temp_list.pop()
@@ -715,7 +703,6 @@ class Exhibitor(Exhibitor_super):
                         print_list_with_num(material_list)
                         print_list_with_num(entities)
 
-                    # 反悔操作
                     elif input_num == -1:
                         last_code.append(-1)
                         return True
@@ -724,7 +711,7 @@ class Exhibitor(Exhibitor_super):
                         return True
 
             else:
-                print("警告 发现非人类调用人类背包动作 程序存在bug")
+                print("Warning: There is a bug in the program that non-human calls the human backpack action")
                 last_code.append(-1)
                 return True
             last_code.append(material_list)
@@ -738,16 +725,16 @@ class Exhibitor(Exhibitor_super):
             print()
 
         """
-            吃 z       攻击 x     喝 c      休息 v
-            合成 f      建造 r     
-            拾起 a      放下 s      装备 e    收集 g   
-            推拉 t
+            eat z           attack x            drink c         rest v
+            fabricate f     construct r     
+            pick up a       put down s          handling e      collect g   
+            push t
         """
 
-        # 等待按键 否则一直在循环里
+        # Wait for the keyboard, otherwise it will keep looping
         door = True
         while door and self.gate:
-            # 处理事件
+            # dael with events
             for event in self.pygame.event.get():
                 if event.type == self.pygame.QUIT:
                     self.pygame.quit()
@@ -935,19 +922,16 @@ class Exhibitor(Exhibitor_super):
         if len(self.world.get_state().get_animals()) > 0:
             player_animal = self.world.get_state().get_entity_by_id(self.player_id)
         else:
-            print("动物死光光")
+            print("all animal die")
             return False
-        # 作用于方向和对象的动作的名称的数组
+
         direction_and_obj_action = ["eat", "attack", "pick_up", "put_down", "push"]
         direction_and_objs_action = ["construct"]
         direction_action = ["drink", "collect"]
         backpack_action = ["put_down", "fabricate"]
 
-        # 等待输入数字参数
         def waiting_for_para(last_code):
-            # 等待按键 否则一直在循环里
             while True and self.gate:
-                # 处理事件
                 for event_para_wait in self.pygame.event.get():
                     if event.type == self.pygame.QUIT:
                         return False
@@ -984,10 +968,10 @@ class Exhibitor(Exhibitor_super):
                             last_code.append("OK")
                             return True
 
-        # 请求选择作用对象
+        # request to select the target
         """
-            从世界取得该位置的实例
-            然后玩家输入下标选择对象是那个
+            Getting instances on the location of the world
+            Then the player enters the index to select the object that is
         """
 
         def choose_object(last_code):
@@ -998,29 +982,24 @@ class Exhibitor(Exhibitor_super):
                         entities = player_animal.get_backpack()
                         objects_num = len(entities)
                     else:
-                        print("警告 发现非人类调用人类背包动作 程序存在bug")
+                        print("Warning: There is a bug in the program that non-human calls the human backpack action")
                         return False
                 elif last_code[0] in direction_and_obj_action:
                     old_position = tuple(player_animal.get_position())
                     position = self.world.get_state().position_and_direction_get_adjacent(old_position, last_code[1])
                     entities = self.world.get_state().get_entities_in_position(position)
                     objects_num = len(entities)
-                # 如果只有一个可选对象 且符合条件 则马上返回之
+
                 if objects_num == 1:
                     last_code.append(entities[0])
                     return True
-                # 若压根无对象 则返回-1
+
                 if objects_num == 0:
                     last_code.append(-1)
                     return True
 
-                """
-                    目前只能通过终端给玩家呈现对象们以选择
-                    到时候可以直接在下面的呈现栏里给玩家呈现
-                """
                 print_list_with_num(entities)
 
-                # 判断对象选择是否合法
                 temp_list = []
                 while waiting_for_para(temp_list):
                     input_num = temp_list.pop()
@@ -1028,7 +1007,7 @@ class Exhibitor(Exhibitor_super):
                         be_eator = entities[input_num - 1]
                         last_code.append(be_eator)
                         return True
-                    # 反悔操作
+                    
                     elif input_num == -1:
                         last_code.append(-1)
                         return True
@@ -1048,16 +1027,11 @@ class Exhibitor(Exhibitor_super):
                 if type(player_animal).__name__ == "Human_being":
                     entities = player_animal.get_backpack()[:]
                 else:
-                    print("警告 发现非人类调用人类背包动作 程序存在bug")
+                    print("Warning: There is a bug in the program that non-human calls the human backpack action")
                     return -1
 
-                """
-                    目前只能通过终端给玩家呈现对象们以选择
-                    到时候可以直接在下面的呈现栏里给玩家呈现
-                """
                 print_list_with_num(entities)
 
-                # 判断对象选择是否合法
                 temp_list = []
                 while waiting_for_para(temp_list):
                     input_num = temp_list.pop()
@@ -1067,7 +1041,7 @@ class Exhibitor(Exhibitor_super):
                     elif 0 <= input_num - 1 < len(entities):
                         be_selector = entities.pop(input_num - 1)
                         return be_selector
-                    # 反悔操作
+
                     elif input_num == -1:
                         return -1
                     else:
@@ -1086,23 +1060,18 @@ class Exhibitor(Exhibitor_super):
                     entities = player_animal.get_backpack()[:]
                     objects_num = len(entities)
                 else:
-                    print("警告 发现非人类调用人类背包动作 程序存在bug")
+                    print("Warning: There is a bug in the program that non-human calls the human backpack action")
                     return -1
-                # 如果只有一个可选对象 且符合条件 则马上返回之
+
                 if objects_num == 1:
                     objs_list.append([entities[0]])
                     return objs_list
-                # 若压根无对象 则返回-1
+
                 if objects_num == 0:
                     return -1
 
-                """
-                    目前只能通过终端给玩家呈现对象们以选择
-                    到时候可以直接在下面的呈现栏里给玩家呈现
-                """
                 print_list_with_num(entities)
 
-                # 判断对象选择是否合法
                 temp_list = []
                 while waiting_for_para(temp_list):
                     input_num = temp_list.pop()
@@ -1115,7 +1084,6 @@ class Exhibitor(Exhibitor_super):
                         print("now selected: ")
                         print_list_with_num(objs_list)
                         print_list_with_num(entities)
-                    # 反悔操作
                     elif input_num == -1:
                         return -1
                     else:
@@ -1131,27 +1099,24 @@ class Exhibitor(Exhibitor_super):
         def choose_objs_from_backpack_and_position(last_code):
             material_list = []
             if type(player_animal).__name__ == "Human_being":
-                # 取得可选项目 从人类背包和该位置
+
                 old_position = tuple(player_animal.get_position())
                 position = self.world.get_state().position_and_direction_get_adjacent(old_position, last_code[1])
                 entities = \
                     player_animal.get_backpack()[:] + self.world.get_state().get_entities_in_position(position)[:]
                 objects_num = len(entities)
 
-                # 如果只有一个可选对象 且符合条件 则马上返回之
                 if objects_num == 1:
                     material_list.append(entities[0])
                     last_code.append(material_list)
                     return True
 
-                # 若压根无对象 则返回-1
                 if objects_num == 0:
                     last_code.append(-1)
                     return True
 
                 print_list_with_num(entities)
 
-                # 判断对象选择是否合法
                 temp_list = []
                 while waiting_for_para(temp_list):
                     input_num = temp_list.pop()
@@ -1167,7 +1132,6 @@ class Exhibitor(Exhibitor_super):
                         print_list_with_num(material_list)
                         print_list_with_num(entities)
 
-                    # 反悔操作
                     elif input_num == -1:
                         last_code.append(-1)
                         return True
@@ -1176,7 +1140,7 @@ class Exhibitor(Exhibitor_super):
                         return True
 
             else:
-                print("警告 发现非人类调用人类背包动作 程序存在bug")
+                print("Warning: There is a bug in the program that non-human calls the human backpack action")
                 last_code.append(-1)
                 return True
             last_code.append(material_list)
@@ -1190,10 +1154,10 @@ class Exhibitor(Exhibitor_super):
             print()
 
         """
-            吃 z       攻击 x     喝 c      休息 v
-            合成 f      建造 r     
-            拾起 a      放下 s      装备 e    收集 g   
-            推拉 t
+            eat z           attack x            drink c         rest v
+            fabricate f     construct r     
+            pick up a       put down s          handling e      collect g   
+            push t
         """
 
         # 等待按键 否则一直在循环里

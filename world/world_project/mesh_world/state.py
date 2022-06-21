@@ -1,7 +1,7 @@
 import random
 # ctypes，用于python和c++的交互
 import ctypes
-# 用于将多维数组转为一维数组
+# Used to convert multidimensional arrays to one-dimensional arrays
 from itertools import chain
 
 if __name__ == "__main__":
@@ -18,40 +18,37 @@ else:
     from world.world_project.mesh_world.entity.mesh_entities import *
 
 """
-    网格状态
-        其具有属性：
-            地形               用两层列表表示的方块的网格的世界
-                高低地形        某个格子的高度 目前用整数表示 以后会变成小数
-                水地图          某个地方的水高 水每回合会流动
-                地貌地形        某个格子是泥地 沙地还是石头地
-            生物列表            生物对象的列表
-                动物表
-                植被表          某个各自的有没有树木 是不是草地
-                    地形大小     网格世界的大小
-                位置-动物、植物字典   由位置找到位置上的生物的字典
-            物品列表            存物品对象的列表
-        网格世界的方法全都有关于状态的修改或状态
-            一回合内各个属性的变化的方法
-                动物行为 animal_action和animal_act
-                    动物移动        moving_a_pace
-                    动物吃          animal_eating
-                地形变化            (去掉了)
+    Mesh state
+        Attributes：
+            Terrain            A grid world of squares represented by a two-dimensional array
+                landform_map(higjt and low)        The height of a grid is currently expressed as an integer
+                water_map                          Water height in a certain place. Water will flow every turn
+                terrain_map                        Specify whether a grid is mud or sand or stone or any terrain else
+            Entity list
+                Animal list
+                Plant list
+                Obj list
+
+        Mesh world's functions are all about state modification or state reading
+            The functions by which each attribute changes for a turn
+                Animal action: animal_action and animal_act
+                    animal move        moving_a_pace
+                    animal eat          animal_eating
+                    ...
                 ...
-            更新属性的方法
+            renew an attribute:
                 renew_map
-            规定空间属性的方法
-                规定「相邻」的方法   position_and_direction_get_adjacent
-            得到某生物的类型的方法    print_show_animal（注释掉了）
-            得到状态属性的方法
-                得到各个属性的方法   
-                初始化位置词典的方法  init_things_position
+                ...
+            functions for specifying spatial attributes
+                function to specify what is "adjacent"   position_and_direction_get_adjacent
+            ...
 """
 
 
 class Mesh_state(State):
-    # 有 terrain_range + 1 种地形
+    # there are terrain_range+1 types of terrain
     terrain_range = 6
-    # 有 entity_type_num 种实体
+    # there are entity_type_num types of entity
     entity_type_num = 22
 
     mteac_command_list = ["go", "eat", "drink", "attack", "rest",
@@ -65,33 +62,27 @@ class Mesh_state(State):
                     "Human_corpse", "Stone", "Wall", "Wolf_corpse", "Wood"]
 
     def __init__(self, maximum_height, landform_map, water_map, terrain_map, terrain_size, animals, plants, objects):
-        """
-        :param landform_map:   类型：二维数组 值为int      意义表示：每个值都是整形 表示高低地形 数字越高地形越高
-        :param terrain_size:    类型：二元元组             意义表示：地图大小 第0个值是行数 第1个值是列数
-        :param animals:       类型：列表 值为动物对象      意义表示：世界中的所有生物
-        :param objects:         类型：列表 值为物品对象      意义表示：世界中的所有物品
-        """
-        # 地图
+        # maps
         self.landform_map = landform_map
         self.water_map = water_map
         self.terrain_map = terrain_map
 
-        # 地图属性
+        # map attributes
         self.maximum_height = maximum_height
         self.terrain_size = terrain_size
         self.legal_direction = ["up", "down", "left", "right", "stay"]
 
-        # 实体表
+        # entities
         self.animals = animals
         self.plants = plants
         self.objects = objects
 
-        # 得到位置字典 方便根据位置找到生物 而不必总是遍历生物表 以空间换时间
+        # position-entities dictionary
         self.animals_position = self.init_position_list(self.animals)
         self.plants_position = self.init_position_list(self.plants)
         self.objs_position = self.init_position_list(self.objects)
 
-        # c++代码模块
+        # c++ code module
         CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]  # 当前目录
         config_path = CURRENT_DIR.rsplit('\\', 3)[0]  # 上三级目录
 
@@ -103,16 +94,11 @@ class Mesh_state(State):
 
     """
         ***
-            以下是动物的运动
+            actions of animal
         ***
-        输入  player_cmd：玩家指令 为数组 格式是[第一段, 第二段, 第三段_...]
-                一般默认第一段为动作类型 第二段为动作对象 第三段为动作参数
-            中间的if 如果该生物被判断为是玩家控制的 就会使用玩家指令 否则就使用大脑返回的指令
-            指令分段 不同段用_隔开
-                第一段是类型 目前只有eat和go
-                    go的第二段是四个方向中的一个
-                    eat的第二段也是 作为吃这个动作的方向 第三段是吃的对象 不过还没有实现
-        效果  某个动作被执行的效果
+        input:  player_cmd：Player command, in array format [..., ..., ..., ...]
+                By default, the first element is the action type, the second element is the action object, and the third element is the action parameter
+            If the creature is judged to be controlled by the player(AI) it will use the player's commands otherwise it will use the commands returned by the brain
     """
 
     def player_action(self, player_cmd, ai_id):
@@ -127,40 +113,38 @@ class Mesh_state(State):
 
         if not player.is_die():
             cmd = player_cmd
-            # 根据指令进行操作
+            # Operate according to instructions
             self.animal_action_command_analysis_and_execute(player, cmd)
             player.post_turn_change()
 
-    # 更新动物行为
-    # 一回合内的动物运动
+    # Renewal animal behavior
+    # Animal movement in a round
     def animal_action(self):
-        # 遍历生物表
+        # Traversing creature list
         for animal in self.animals:
-            # 判断生物是否死亡
+            # Determine whether the creature die
             if not animal.is_die():
                 cmd = animal.devise_an_act(animal.get_perception(self))
                 """
-                    判断该对象是不是玩家
-                    判断有没有指令
+                    Determine if the object is a player and determine if there are commands
                 """
                 if animal.is_id(1):
                     continue
-                # 根据指令进行操作
+                # Operate according to command
                 self.animal_action_command_analysis_and_execute(animal, cmd)
                 animal.post_turn_change()
             else:
                 self.creature_die(animal)
                 del animal
 
-    # 分析生物行动命令的基本类型 并调用相应的执行函数
+    # Analyze the basic types of action commands and call the corresponding execution functions
     def animal_action_command_analysis_and_execute(self, animal, command):
         """
-            command指令的数据结构类似: ["go", 方向]
-            首先进行合法性判断 然后进行行为本身
+            If the action is legitimate, then the influence of the action will be produced
         """
 
         """
-           基本行为的行为次数判断
+           Some actions are performed multiple times in a turn
         """
         def basic_act_number(animal, command):
             time = 1
@@ -169,7 +153,7 @@ class Mesh_state(State):
             return time
 
         """
-            行为合法性判断方法
+            Judgment function of behavior legality
         """
         def judge_action_validity(animal, command):
             return animal.judge_action_validity(self, command)
@@ -209,46 +193,43 @@ class Mesh_state(State):
                 self.human_action(animal, command)
 
     """
-        输入  某个生物实例 移动的方向
-        效果  会分析移动是否合法 如果合法 则移动之 改变生物的位置状态并更新位置表 反之 不移动之
+        Input   the animal instance and direction of movement
+        Effect  If the move is legal, the move changes the creature's position state and updates the position-entities dictionary
     """
-    # 生物移动 外部和内部执行
     def moving_a_pace(self, animal, direction):
         old_position = tuple(animal.get_position())
         new_position = self.position_and_direction_get_new_position(old_position, direction)
 
-        # 执行移动 改变状态（但是不改变生物的属性）
+        # Impact of a successful move on the State instance
         self.change_animal_position(animal, old_position, new_position)
-        # 行动成功对于动物的内部影响
+        # The effect of successful movement on the animal instance
         animal.action_interior_outcome(action_type="go", parameter=new_position)
 
     # old_position + direction = new_position
     def position_and_direction_get_new_position(self, old_position, direction):
-        # 判断移动合法性和移动种类
+        # Determine the legality and type of movement
         def judge_movement_legality(old_position, new_position):
             """
-                移动判断是否合法 属于哪一类
-                之所以返回2和-2是因为1和0对应了True和False
+                determine whether movement is valid
             """
             if new_position:
-                # 升一格移动
+                # Move up one space
                 if self.landform_map[new_position[0]][new_position[1]] - \
                         self.landform_map[old_position[0]][old_position[1]] == 1:
                     return 2
-                # 降一格移动
+                # Move down one space
                 elif self.landform_map[new_position[0]][new_position[1]] - \
                         self.landform_map[old_position[0]][old_position[1]] == -1:
                     return -2
-                # 同级移动
+                # Move to a cell of the same height
                 return True
-            # 新位置超出地图 为空对象
-            # 冗余判断
+            # The new position exceeds the map as an empty object
             return False
 
         if direction == 'stay':
             return tuple(old_position)
 
-        # 若在左右半格上
+        # If it's on the left and right half-grid position
         if old_position[0] % 1 > 0:
             stride = 0.5
             if direction == 'down':
@@ -257,7 +238,7 @@ class Mesh_state(State):
             elif direction == 'up':
                 if old_position[0] > 0:
                     return old_position[0] - stride, old_position[1]
-        # 若在上下半格上
+        # If it's on the up and down half-grid position
         elif old_position[1] % 1 > 0:
             stride = 0.5
             if direction == 'right':
@@ -266,72 +247,66 @@ class Mesh_state(State):
             elif direction == 'left':
                 if old_position[1] > 0:
                     return old_position[0], old_position[1] - stride
-        # 若不在半格上
+        # If it is not on half grid position
         else:
             old_position = (int(old_position[0]), int(old_position[1]))
             adjacent = self.position_and_direction_get_adjacent(old_position, direction)
-            # 若升格移动
+            # Move up
             kakusa = judge_movement_legality(old_position, adjacent)
             if kakusa == 2:
                 return old_position[0] + (adjacent[0] - old_position[0]) * 0.5, \
                        old_position[1] + (adjacent[1] - old_position[1]) * 0.5
-            # 若降格移动
+            # Move down
             elif kakusa == -2:
                 return adjacent
-            # 若平级移动
+            # Move to a cell of the same height
             elif kakusa:
                 return adjacent
 
         print("accidental movement")
         return tuple(old_position)
 
-    # 生物吃
     """
-        生物的吃行为
-        输入      吃的主体 方向 客体
+        eat action of animal
+        input      the animal instance, direction, instance of what is eaten
     """
 
     def animal_eating(self, eator, be_eator):
 
-        # 动物内部改变 吃者和被吃者状态变化
+        # Changes in the state of the eater instance and the instance of what is eaten
         eator.action_interior_outcome("eat", obj=be_eator)
-        # 若被吃完 被吃者消失(死亡)
+        # If eaten, the victim disappears (dies)
         if be_eator.be_ate(eator):
-            # 地图改变
+            # map changes
             self.eliminate_exist_in_map(be_eator)
             del be_eator
 
-    # 生物喝
     """
-        生物的喝水行为
-        输入      吃的主体 方向
+        animal drink
+        input      the animal instance, direction
     """
 
     def animal_drinking(self, drinker, direction):
         drinker.action_interior_outcome("drink", parameter=direction)
 
-    # 生物攻击
     """
-        生物的喝水行为
-        输入      吃的主体 攻击的对象
+        animal attack
+        input      the animal instance, the instance that was attacked
     """
 
     def animal_attack(self, attacker, be_attackeder):
-        # 动物内部改变 攻击者和被攻击者状态变化
         attacker.action_interior_outcome("attack", obj=be_attackeder)
         be_attackeder.be_attack(attacker.get_aggressivity())
 
-        # 若被杀死 被杀者消失(死亡)
         if be_attackeder.is_die():
-            # 地图改变
             self.creature_die(be_attackeder)
             del be_attackeder
 
-    # 生物休息
+    # animal rest
     def animal_rest(self, rester):
         pass
 
-    # 人类行为
+    # human actions
     def human_action(self, human, command):
         def human_pick_up(state, human, obj):
             human.action_interior_outcome("pick_up", obj=obj)
@@ -344,12 +319,12 @@ class Mesh_state(State):
             obj.new_position(new_position)
 
         def human_construct(state, human, direction, objs):
-            # 生成新物品
+            # create new entity
             new_position = self.position_and_direction_get_adjacent(human.get_position(), direction)[:]
             item_names = human.composed_table[names_orderly_tuplize(objs)]
             for item_name in item_names:
                 self.add_exist_to_map(globals()[item_name](new_position))
-            # 抹去成本物体的存在
+            # Items disappear as costs
             human.action_interior_outcome("construct", obj=objs)
             for item in objs:
                 if item in state.objects:
@@ -358,11 +333,11 @@ class Mesh_state(State):
         def human_collect_things(state, human, direction):
             gether_things = []
 
-            # 得到收集处
+            # Get the position of collection place
             direction = command[1]
             direction_position = state.position_and_direction_get_adjacent(human.get_position(), direction)
 
-            # 收集处是否有森林
+            # Whether the collection place is forested
             if tuple(direction_position) in state.get_plants_position():
                 for plant in state.get_plants_position()[tuple(direction_position)]:
                     if isinstance(plant, (Birch_wood,)):
@@ -370,28 +345,26 @@ class Mesh_state(State):
                         human.action_interior_outcome("collect", obj=gether_things)
                         return
 
-            # 收集处是否是可收集地貌
+            # Whether the collection place is collectable
             if direction_position:
                 terrain_type = state.get_terrain_map()[int(direction_position[0])][int(direction_position[1])]
                 thing_type = ["Stone", "Sandpile", "Soil_pile"][human.collectable.index(terrain_type)]
 
                 """
-                    待补充：目前还没有桶 人无法捡起沙子和泥土
+                    To be supplemented: There are no barrel class yet, human can’t pick up sand and dirt
                 """
                 if thing_type == "Stone":
                     gether_things.append(Stone(human.get_position()))
                     human.action_interior_outcome("collect", obj=gether_things)
                     return
                 else:
-                    print("暂不能收集沙子和泥土")
+                    print("Sand and soil cannot be collected currently, this feature remain to be improved")
 
         def human_push(state, human, derection, obj):
             human_old_position = tuple(human.get_position())
             human_new_position = state.position_and_direction_get_new_position(human_old_position, derection)
 
-            # 执行移动 改变状态（但是不改变生物的属性）
             state.change_animal_position(human, human_old_position, human_new_position)
-            # 行动成功对于动物的内部影响
             human.action_interior_outcome(action_type="push", parameter=human_new_position)
 
             obj_old_position = tuple(obj.get_position())
@@ -431,14 +404,13 @@ class Mesh_state(State):
 
     """
         ***
-            以下是水地图的更新
+            update to the water map
         ***
     """
-
     # double * c_water_flow(int terrain_row, int terrain_col, double * in_water_map, double * in_landform_map, char * in_legal_direction)
 
     def water_flow(self):
-        # 数据初始化
+        # Data initialization
 
         legal_direction = ctypes.c_char_p()
         for y in range(0, self.terrain_size[0]):
@@ -456,7 +428,7 @@ class Mesh_state(State):
 
 
         self.pDll.c_water_flow.restype = ctypes.POINTER(ctypes.c_double)
-        # c++代码返回的会是一维数组形式的水地图
+        # C ++ code returns a water map in the form of a one -dimensional array
         # s = input("input 312312312s1")
         map_array = self.pDll.c_water_flow(self.terrain_size[0], self.terrain_size[1],
                                       self.in_water_map, self.in_landform_map, legal_direction)
@@ -471,22 +443,22 @@ class Mesh_state(State):
                 self.water_map[y][x] = (map_array[x + y * self.terrain_size[1]])
 
     def water_flow_old(self):
-        # 遍历水地图
+        # Traversing water map
         for row_index in range(self.terrain_size[0]):
             for col_index in range(self.terrain_size[1]):
-                # 若自身相对水高低于0.1 则被土地吸收
+                # If its relative water height is less than 0.1, it is absorbed by the land
                 if self.water_map[row_index][col_index] < 0.1:
                     self.water_map[row_index][col_index] = 0
                     continue
 
-                # 得到自己的绝对水高
+                # Get absolute water high
                 absolute_water_high = self.water_map[row_index][col_index] + self.landform_map[row_index][col_index]
                 land_high = self.landform_map[row_index][col_index]
 
-                # 得到所有合法方向的位置
+                # Get the positions of adjacent cells in all legal directions
                 """
-                    得到的位置的数据结构由输入的位置的数据结构决定
-                        故而此处是 (row_index, col_index)
+                    The data structure of the position is determined by the data structure of the input position
+                    so this is (row index, col index)
                 """
                 adjacent_positions = []
                 for direction in self.legal_direction:
@@ -495,9 +467,9 @@ class Mesh_state(State):
                         adjacent_positions. \
                             append(adjacent_position)
 
-                # 判断所有合法方向的绝对水高 并只保留可流的位置
+                # Determine absolute water height in all legal directions and reserve only the flowable position
                 """
-                    此处的数据结构： {位置：绝对水高}
+                    Data structure here: {position: absolute water height}
                 """
                 adjacent_absolute_water_highs = {}
                 sum_absolute_water_high = absolute_water_high
@@ -506,22 +478,19 @@ class Mesh_state(State):
                     adjacent_absolute_water_high = \
                         self.water_map[adjacent_position[0]][adjacent_position[1]] + \
                         self.landform_map[adjacent_position[0]][adjacent_position[1]]
-                    # 只保留高度更低的 因为水往低处流
+                    # Keep only the lower ones because the water goes down
                     if adjacent_absolute_water_high < absolute_water_high:
                         adjacent_absolute_water_highs[adjacent_position] = adjacent_absolute_water_high
                         sum_absolute_water_high += adjacent_absolute_water_high
 
-
-                # 如果四面都更高则水不流
+                # If all sides are higher, the water does not flow
                 if len(adjacent_absolute_water_highs) == 0:
                     continue
 
-                # 进行一个均值的求
+                # get mean value
                 avg_absolute_water_high = sum_absolute_water_high / (len(adjacent_absolute_water_highs) + 1)
 
-                # 若不可流平
                 if avg_absolute_water_high < self.landform_map[row_index][col_index]:
-                    # 当前剩余水量，流干为之
                     water_amount = self.water_map[row_index][col_index]
                     self.water_map[row_index][col_index] = 0
 
@@ -534,18 +503,9 @@ class Mesh_state(State):
                             sum_drop_high += drop_high
                             adjacent_drop_highs[position] = drop_high
 
-                    # 将字典变为数组 并排好序
-                    # {'a':21, 'b':5, 'c':3, 'd':54, 'e':74, 'f':0}
-                    # 变为
-                    # [('f', 0), ('c', 3), ('b', 5), ('a', 21), ('d', 54), ('e', 74)]
                     adjacent_drop_highs = sorted(adjacent_drop_highs.items(), key=lambda d: d[1], reverse=False)
                     drop_highs = tuple([i[1] for i in adjacent_drop_highs])
                     drop_num = len(adjacent_drop_highs)
-
-                    # # 计算阿尔法们
-                    # drop_high_each = [adjacent_drop_highs[ind + 1] - adjacent_drop_highs[ind]
-                    #                   for ind in range(len(adjacent_drop_highs) - 1)]
-                    # drop_high_each.append(land_high - adjacent_drop_highs[-1])
 
                     for step in range(len(adjacent_drop_highs)):
                         if water_amount < sum(drop_highs[:step + 1]):
@@ -557,10 +517,8 @@ class Mesh_state(State):
                             self.water_map[position[0]][position[1]] += water_amount
                             break
 
-                # 若可流平
+                # If it could just take the average
                 else:
-                    # 进行一个水的流
-                    # 流自己
                     self.water_map[row_index][col_index] += \
                         round(max(avg_absolute_water_high - absolute_water_high,
                                   - self.water_map[row_index][col_index]), 3)
@@ -568,7 +526,6 @@ class Mesh_state(State):
                     self.water_map[row_index][col_index] = \
                         round(self.water_map[row_index][col_index], 3)
 
-                    # 流相邻部分
                     for position in adjacent_absolute_water_highs:
                         self.water_map[position[0]][position[1]] += \
                             max(avg_absolute_water_high -
@@ -577,9 +534,9 @@ class Mesh_state(State):
                                 -self.water_map[position[0]][position[1]])
                         self.water_map[position[0]][position[1]] = round(self.water_map[position[0]][position[1]], 3)
 
-    # 这里定义了相邻的概念
+    # The concept of adjacency is defined here
     '''
-        输入的旧坐标不能在半格上
+        The input old coordinates cannot be on the half grid
     '''
 
     def position_and_direction_get_adjacent(self, old_position, direction):
@@ -599,63 +556,49 @@ class Mesh_state(State):
                 return old_position[0] - 1, old_position[1]
         return False
 
-    # 返回地图的方法
     def get_landform_map(self):
         return self.landform_map[:]
 
-    # 返回地图大小
     def get_terrain_size(self):
         return self.terrain_size
 
-    # 返回水地图
     def get_water_map(self):
         return self.water_map[:]
 
-    # 返回地貌图
     def get_terrain_map(self):
         return self.terrain_map[:]
 
-    # 返回生物表
     def get_animals(self):
         return self.animals
 
-    # 返回植物表
     def get_plants(self):
         return self.plants
 
-    # 返回物品表
     def get_objects(self):
         return self.objects
 
-    # 获取动物位置字典
     def get_animals_position(self):
         return self.animals_position
 
-    # 获取植物位置字典
     def get_plants_position(self):
         return self.plants_position
 
-    # 得到整个生物表
     def get_creatures_position(self):
         creatures_position = {}
-        # 动物表里的都挑出来和植物表里的有相同的合起来
         for position in self.animals_position:
             if position in self.plants_position:
                 creatures_position[position] = self.animals_position[position] + self.plants_position[position]
             else:
                 creatures_position[position] = self.animals_position[position]
 
-        # 弄植物表的 不过避免增加过已经有的
         for position in self.plants_position:
             if position not in self.animals_position:
                 creatures_position[position] = self.plants_position[position]
         return creatures_position
 
-    # 得到物体字典
     def get_objs_position(self):
         return self.objs_position
 
-    # 得到具体某个位置的实体
     def get_entities_in_position(self, position):
         entities = []
         if position in self.animals_position:
@@ -666,7 +609,6 @@ class Mesh_state(State):
             entities += self.objs_position[position]
         return entities
 
-    # 根据id得到实体
     def get_entity_by_id(self, id):
         for animal in self.animals:
             if animal.get_id() == id:
@@ -682,11 +624,9 @@ class Mesh_state(State):
 
         return False
 
-    # 更新新地图
     def renew_map(self, new_map):
         self.landform_map = new_map
 
-    # 削除一个东西的存在
     def eliminate_exist_in_map(self, entity):
         entity_position_list, entity_list = self.determine_entities_category(entity)
 
@@ -697,7 +637,6 @@ class Mesh_state(State):
                 del entity_position_list[tuple(entity.get_position())]
             del entity
 
-    # 增加一个新东西到地图
     def add_exist_to_map(self, entity, position=None):
         entity_position_list, entity_list = self.determine_entities_category(entity)
         if not position:
@@ -712,8 +651,6 @@ class Mesh_state(State):
             else:
                 entity_position_list[die_position] = [entity]
 
-    # 判断实体类别
-    # 如果实体没有被登记为实体 则返回负一
     def determine_entities_category(self, entity):
         entity_position_list = -1
         entity_list = -1
@@ -730,7 +667,6 @@ class Mesh_state(State):
 
         return entity_position_list, entity_list
 
-    # 改变动物位置的工具函数
     def change_animal_position(self, animal, old_position, new_position):
         if new_position in self.animals_position:
             self.animals_position[new_position].append(animal)
@@ -742,7 +678,6 @@ class Mesh_state(State):
             del self.animals_position[old_position]
         # animal.move(new_position)
 
-    # 动物死亡后消失
     def creature_die(self, creature):
         die_position = tuple(creature.get_position())
         corpse = creature.die()
@@ -752,7 +687,6 @@ class Mesh_state(State):
 
         self.eliminate_exist_in_map(creature)
 
-    # 初始化位置字典
     def init_position_list(self, entity_list):
         things_position = {}
         for entity in entity_list:
@@ -762,7 +696,6 @@ class Mesh_state(State):
                 things_position[tuple(entity.get_position())] = [entity]
         return things_position
 
-    # 植物每回合的变化
     def plant_change(self):
         for plant in self.plants:
             products = plant.post_turn_change()
@@ -780,6 +713,7 @@ def names_orderly_tuplize(objs_list):
     return tuple(objs_name_list)
 
 
+# The following code was used as a test and can be ignored
 if __name__ == "__main__":
     landform_map = [
         [5, 5, 5, 5, 5],

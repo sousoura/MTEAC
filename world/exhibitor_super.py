@@ -2,10 +2,10 @@ from abc import ABCMeta, abstractmethod
 
 
 """
-    可视化器的超类
-        该抽象类定义了world project中的可视化器的格式
-        display()会在MTEAC类中的render()方法中被调用
-        __init__的world参数是world project中的world的实例
+    The superclass for Exhibitor
+        This abstract class defines the format of the Exhibitor in the world project
+        display() will be called in the render() method of the MTEAC class
+        The world parameter of __init__ is the instance of the world in the world project
 """
 class Exhibitor_super:
     @abstractmethod
@@ -15,13 +15,13 @@ class Exhibitor_super:
     @abstractmethod
     def display(self, mode):
         """
-            当有多个可视化方案时 可以通过mode参数选择
+            When there are multiple visualization schemes, it can be selected by the mode parameter
         """
         pass
 
     @abstractmethod
     def set_out(self):
         """
-            退出可视化的方法
+            Ways to exit visualization
         """
         pass

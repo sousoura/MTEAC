@@ -15,50 +15,50 @@ else:
     from world.file_processor import File_processor
 
 """
-    代表MTEAC的类
-        既作为符合openAI要求的环境类 也作为管理world projects的管理器
+    The class representing MTEAC
+        Both as an environment class that meets the requirements of openAI and as a manager for managing world projects.
 """
 
 
 # 控制整个程序的进程
 class WorldEnv(Env):
     """
-        该类的主要方法有：
-            初始化方法
-            openAI所要求的方法
+        The main functions of this class are:
+            initialization method
+            functions required by openAI gym
                 step()
                 reset()
                 render()
-                等...
-            game_mode()方法
-            save(), load()方法
+                etc...
+            game_mode() function
+            save(), load() function
 
-        初始化
-            选择 world project
-            选择 生成世界还是读档
-            初始化中会生成一个World实例作为world project来运行
+        initialization
+            choose world project
+            choose between generating a world or reading a file
+            During initialization, a World instance will be generated to run as a world project
 
-        如果world project支持后台 则会开启后台
-            此时程序分为两个线程
-                主程序线程
-                后台命令线程（该线程会使用input()方法读入后台命令)
-            目前只有mesh_world支持后台
-            （该逻辑待改进）
+        If the world project supports the background, the background will be enabled
+            the program is divided into two threads
+                main program thread
+                Background command thread (this thread will use the input() method to read in background commands)
+            Currently only mesh_world supports backend
+            (This logic is waiting to be improved)
     """
 
     """
             ======================
-                   初始化方法
+                   initialization function
             ======================
     """
     def __init__(self):
         """
-            在此处选择MTEAC指向哪个world project
+            Select here which world project MTEAC points to
         """
         # self.world_type_name = input("Please input world type name: ")
         # self.world_type_name = "blank_world"
-        self.world_type_name = "block_world"
-        # self.world_type_name = "mesh_world"
+        # self.world_type_name = "block_world"
+        self.world_type_name = "mesh_world"
         # self.world_type_name = "round_the_clock_world"
         # self.world_type_name = "eight_direction_mesh_world"
         # self.world_type_name = "hexagonal_mesh_world"
@@ -67,28 +67,28 @@ class WorldEnv(Env):
 
         self.generator = None
 
-        print("开始创建世界")
+        print("start creating the world")
         self.world = self.world_create()
-        print("世界创建结束")
+        print("world creation is complete")
 
         if self.world:
             """
-                Exhibitor负责窗口的可视化呈现
-                每个世界方案都必须有一个Exhibitor类 哪怕为空
+                Exhibitor is responsible for the visual presentation of the window
+                Every world project must have an Exhibitor class, even if it is empty
             """
             # 创建可视化窗口 后面那个数是世界的格子大小
-            print("开始创建可视化")
+            print("Start creating visualizations")
             exhibitor_file = 'world.world_project.' + self.world_type_name + '.' + 'exhibitor'
             exhibitor_module = importlib.import_module(exhibitor_file)
             """
-                第二个参数的值和用途由具体的world project中的exhibitor类中的逻辑决定
+                The value and purpose of the second parameter is determined by the logic in the Exhibitor class in the specific world project.
             """
             self.exhibitor = exhibitor_module.Exhibitor(self.world, 15)
-            print("可视化创建结束")
+            print("visualization instance creation is complete")
 
         """
-            暂时没有实现seed()方法
-            待优化
+            The seed() function is not implemented yet
+            it is waiting to be improved
         """
         self.seed()
 
@@ -97,15 +97,15 @@ class WorldEnv(Env):
 
     # 程序入口
     """
-        负责用户的初始化选择
-        用户选择进入哪个世界 生成还是读取
-        根据用户的输入 生成并返回一个世界
+        This part is responsible for the user's initial selection
+        The user chooses which world to enter, generate or read
+        Generate and return a world instance based on user input
         
-        该功能有待GUI窗口化
+        This feature can be improved on the front end
     """
 
     def world_create(self):
-        # 通过【世界类型名】得到相应的世界生成器
+        # Get the corresponding world generator through world type name
         def get_generator(generator_file):
             generator_file = 'world.world_project.' + generator_file + '.' + 'world_generator'
 
@@ -124,22 +124,21 @@ class WorldEnv(Env):
         # entry_mode = "load"
         entry_mode = "generate"
 
-        # 根据世界类型获取世界生成器
+        # Get world generator based on world type
         self.generator = get_generator(self.world_type_name)
 
         world = None
-        # 如果生成一个世界
+        # generate a new world
         if entry_mode == "generate":
-            # 通过世界生成器生成世界
+            # Generate a world with the world generator
             world = self.generator.default_generate_a_world()
 
         # load a world
         elif entry_mode == "load":
             world_name = input("Please input world name: ")
-            # world_name = "114514"
             while world is None:
                 try:
-                    # 通过读档器读取世界
+                    # Read a world through the loader
                     world = self.load(self.world_type_name, world_name)
                 except FileNotFoundError:
                     world = None
@@ -149,10 +148,9 @@ class WorldEnv(Env):
 
     """
         ======================
-            openAI gym的方法
+            functions of openAI gym
         ======================
     """
-    # 世界运作
     def step(self, action):
         obs = []
         reward = []
@@ -174,20 +172,12 @@ class WorldEnv(Env):
         return obs, reward, done, info
 
     """
-        世界每运行一轮都会调用一次该方法 统计和可视化在这里进行
+        This method is called every turn the world runs. Statistics and visualizations happen here
     """
 
-    # 后续拓展
     def render(self, mode="ai"):
-        # 可视化 读入状态 由状态类实现 地形地图和生物列表 然后可视化
-        # 关闭时返回False
         def visualization():
             return self.exhibitor.display(mode)
-
-        # 终端「可视化」输出
-        # for map_line in self.state.get_map():
-        #     print(map_line)
-        # self.state.print_show_creature()
 
         return visualization()
 
@@ -205,48 +195,45 @@ class WorldEnv(Env):
 
     """
         ======================
-            游戏模式方法
+            functions of game mode
         ======================
-        目前仅仅对mesh_world有效
-        类变量play_mode定义了是否可以进行game_mode
+        Currently only valid for mesh_world
+        The class variable play_mode defines whether game_mode is available
     """
     def game_mode(self):
         """
-            让世界不断运作的死循环 除非后台要求退出或程序被x掉
+            An endless loop that keeps the world running until the background asks to quit or the program is closed
         """
-        # 世界不断运作
         def world_evolution():
             """
-                "normal"模式下 world会等待玩家输入才会运作
-                "no_waiting"模式下 玩家不做输入输入也会运作
+                In mesh_world:
+                    under "normal" mode, the world will wait for player input before it will work
+                    under "no_waiting" mode, the world works even without player input
             """
             # mode = "no_waiting"
             mode = "normal"
 
             self.player_cmd = self.render(mode)
-            # print("玩家指令为: ", self.player_cmd)
-            # 用gate判断是否结束
+            # print("The player command is: ", self.player_cmd)
+            # Use variable self.gate to determine whether to end
             while self.gate:
-                # print("世界开始运作一次")
+                # print("The world runs once")
                 self.world.take_action(self.player_cmd, 1)
                 self.world.evolution()
-                # print("世界运作结束")
-                # 可视化等操作
+                # print("Run once complete")
+                # subsequent operations: visualization, etc.
                 self.player_cmd = self.render(mode)
-                # print("玩家指令为: ", self.player_cmd)
+                # print("The player command is: ", self.player_cmd)
                 if not self.player_cmd:
                     self.gate = False
 
         """
-            终端后台 用户可以输入指令来控制程序
-                目前只有mesh_world和其同类的world_project支持该方法
-                目前的指令有：
-                    quit: 退出程序
-                            目前有瑕疵 需要玩家移动一格才会真的退出
-                            另一个瑕疵 玩家叉掉程序以后 input会滞留
-                    save 存档名: 保存当前世界到【存档名.save】文件中 
+            Terminal background, users can input commands to control the program
+                Currently only mesh_world and its cousin world_project support this function
+                Currently supported commands are：
+                    quit: exit the program
+                    save *name of save file*: Save the current world to the archive name.save file
         """
-        # 后台
         def background():
             if self.world.backgroundable:
                 while self.gate:
@@ -275,44 +262,44 @@ class WorldEnv(Env):
                 print("The world has no background function.")
 
         """
-            游戏模式下的世界运作
+            the world works in game mode
         """
-        # 如果世界生成成功 则进入该世界 否则退出程序
+        # If the world is successfully generated, enter the world, otherwise exit the program
         if self.world:
             if self.world.play_mode:
-                print("世界创建成功")
-                # 初始化线程和运行门 后台线程和主线程同步进行
+                print("The world is created successfully")
+                # Initialize the thread and run the gate, the background thread and the main thread are synchronized
                 self.background_thread = threading.Thread(target=background)
-                # 初始化用户操作并规定程序是否允许
+                # Initiate user action variable
                 self.player_cmd = 1
                 self.gate = True
 
                 """
-                    创建后台线程
+                    Create background thread
                 """
-                # 后台和世界开始不停运作
+                # Backstage and the world started to work non-stop
                 self.background_thread.setDaemon(True)
-                print("创建后台")
+                print("Create backend")
                 self.background_thread.start()
-                print("世界开始运作")
+                print("The world starts to work")
                 world_evolution()
             else:
-                print("该世界方案无玩家模式")
+                print("This world project does not support player mode")
         else:
-            print("世界创建失败")
+            print("world creation failed")
 
     """
         ======================
-            存档和读档方法
+            Archiving and loading functions
         ======================
     """
     """
-        当玩家调用并指定存档名后会调用File_processor对象进行存档 将当前世界以json格式存在save文件夹中
-        具体功能由File_processor对象实现
+        archiving function
+        When the player calls and specifies the save name, the File_processor object will be called to save the current world in the save folder in json format.
+        The specific function is implemented by the File_processor object
         
-        后台存档指令格式: save 存档名
+        Background archive command format: save archive name
     """
-    # 存档
     def save(self, file_name):
         print("archiving...")
         world_type_name = type(self.world).__name__
@@ -320,15 +307,13 @@ class WorldEnv(Env):
         File_processor.archive(state, world_type_name, file_name)
 
     """
-        读档 指定存档 读取后覆盖当前世界
-        具体功能由File_processor对象实现
-        输入:
-            world_type_name 世界类型
-            file_name       存档名
-        返回一个世界对象
+        loading function
+        The specific function is implemented by the File_processor object
+        parameters:
+             world_type_name world type
+             file_name Archive name
+        returns a world object
     """
-
-    # 读档
     def load(self, world_type_name, file_name):
         print("loading...")
         state = File_processor.load(world_type_name, file_name)

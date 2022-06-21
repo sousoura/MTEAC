@@ -6,17 +6,18 @@ from gym.utils.env_checker import check_env
 if __name__ == "__main__":
 
     """
-        ai_mode为1：以openAI gym的模式运行
-        ai_mode为2：以游戏模式运行 只有当world project支持game mode时才能运行 具体参见使用说明文档
-            游戏模式和ai模式的区别在于环境中的实体在游戏模式中由玩家而不是ai操控
-        ai_mode为3：检查WorldEnv是否符合openAI gym的要求 测试环境是否能跑通
+        when ai_mode is 1：Run in openAI gym mode
+        when ai_mode is 2：Run in game mode. It can only run when the world project supports game mode. 
+                           For details, please refer to the user manual.
+            The difference between game mode and ai mode is that the entities in the environment are controlled by the player instead of the ai in game mode.
+        ai_mode为3：Check whether WorldEnv meets the requirements of openAI gym and whether the test environment can run through
     """
-    ai_mode = 2
+    ai_mode = 1
 
     """
-        定义有几个 agent
-            该变量决定了action数组的长度
-            （该逻辑待改进）
+        Define how many agents there are
+            This variable determines the length of the action array
+            (This logic is waiting to be improved)
     """
     ai_num = 1
 
@@ -31,29 +32,29 @@ if __name__ == "__main__":
             # Take random actions
             action = [env.action_space.sample() for num in range(ai_num)]
 
-            # 执行动作 并得到结果
+            # perform the action and get the result
             obs, reward, done, info = env.step(action)
 
-            # 吃豆人胜利和失败判断
-            if done[0] == 1:
-                print("pac man win")
-                break
-            elif done[0] == -1:
-                print("pac man lost")
-                break
+            # # Pac-Man victory and defeat judgment
+            # if done[0] == 1:
+            #     print("pac man win")
+            #     break
+            # elif done[0] == -1:
+            #     print("pac man lost")
+            #     break
 
             # Render the game
             env.render("ai")
 
-            # 如果游戏结束 则退出游戏
+            # If the game is over then exit the game
             if done is True:
                 break
 
-        # 关闭gym的环境
+        # Close the gym's environment
         env.close()
     elif ai_mode == 2:
         """
-            游戏模式
+            game mode
         """
         env.game_mode()
 

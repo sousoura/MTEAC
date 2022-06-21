@@ -4,26 +4,21 @@ from world.world_project.mesh_world.entity.mesh_entities import *
 from world.entity.entity_import import *
 
 """
-    文件处理类
-        实现了默认的存档和读档功能
-        职能：读档和存档之类的 所有和储存读取相关的都在这类
-        已经实现泛化和自动化
-        （该逻辑待优化）
+    file processor class
+         Implemented default archive and load functions
+         Function: load files and archives, all related to storage and reading are in this class
+         (This logic is waiting to be improved)
 """
 
 
 class File_processor:
-    """
-        实例存档器
-    """
 
-    # 存档
     @classmethod
     def archive(cls, state, world_type_name, file_name):
         """
-            state:              某个world project 的state实例 该实例存有所有世界此刻的状态的信息
-            world_type_name:    world project的名字 格式同MTEAC类中的self.world_type_name
-            file_name:          存档文件的名称 不需要加后缀 存档成功后 存档文件会出现在world project的save文件夹下
+            state:              A state instance of a world project This instance holds all information about the current state of the worlds
+            world_type_name:    The name of the world project, it has the same format as self.world_type_name in the MTEAC class
+            file_name:          The name of the archive file, it does not need to be suffixed. After the archive is successful, the archive file will appear in the save folder of the world project
         """
         def state_obj_to_json(state_obj):
             new_dict = instance_archiver(state_obj)
@@ -74,7 +69,7 @@ class File_processor:
                     tem_list.append(tuple_json_ise(ele))
                 elif isinstance(ele, dict):
                     tem_list.append(dict_json_ise(ele))
-                # 若为实例
+                # if it is an instance
                 else:
                     tem_list.append({type(ele).__name__: instance_json_ise(ele)})
             return tem_list
@@ -104,7 +99,7 @@ class File_processor:
                     tem_dict[key_type] = {type(in_dict[key]).__name__: cls.instance_json_ise(in_dict[key])}
             return tem_dict
 
-        path = os.getcwd()  # 获取当前路径
+        path = os.getcwd()  # Get the current path
         with open(path + "\\" + "world\\world_project" + "\\" + world_type_name +
                   "\\save\\" + file_name + ".save", "w+") as save_file:
             # json.dump(state, save_file, default=state_obj_to_json, sort_keys=True, indent=4)
@@ -114,65 +109,66 @@ class File_processor:
 
         print("Successful archive.")
 
-    """
-        实例读档器
-    """
+
     @classmethod
     def load(cls, world_type_name, file_name):
         """
-            world_type_name:    world project的名字 格式同MTEAC类中的self.world_type_name
-            file_name:          存档文件的名称 不需要加后缀 load方法会读取*file_name*.json文件 并生成一个相应的State实例
+            world_type_name:    The name of the world project, its format is the same as the self.World_type_name in the MTEAC class
+            file_name:          The load function reads the file with the file_name and generates a corresponding State instance
+                                It does not need to be suffixed
         """
 
         """
-            使用字符串进行自动import
-            此处要求world project中state.py和world.py中的类的命名规范:
-                世界类型名： 名称_world
-                世界类名要和世界类型名一致
-                State名： 名称_state
-            以及构造器中 属性名要和输入的参数名一致
-            每个世界类型都应该有一个mods.py文件用于import world和state类
-            如果不使用默认读档器则不需要在意这些规范
-            （该逻辑待优化）
+            import using string
+            The naming conventions for classes in state.py and world.py in the world project are required here:
+                name of World class：*name* + _world
+                The world class name must be the same as the world type name
+                name of State class： *name* + _state
+            And the property name in the constructor should be the same as the input parameter name
+            In each world project there should be a mods.py file for importing world and state classes
+            You don't need to care about these specifications if you don't use the default file loader
+            (This logic is waiting to be improved)
         """
-        # 没有mods时使用 已经弃用
-        # # 把 名称_world 转换为 名称_state
+
+        # UThe following code is used without mods.py and is deprecated
+
+        # # find state_type_name
         # state_type_name_list = world_type_name.split("_")
         # state_type_name = '_'.join(state_type_name_list[:-1]) + "_state"
         # state_type_name = state_type_name.capitalize()
         #
-        # # 通过名称_state读取状态类作为State
+        # # Read state class as State by state_type_name
         # import importlib
         # # from world.world_project.mesh_world.state import Mesh_state as State
         # state_file = 'world.world_project.' + world_type_name + '.' + 'state'
         # generator_module = importlib.import_module(state_file)
         # State = getattr(generator_module, state_type_name)
 
-        # 通过名称_state读取状态类作为State
+        # Read state class as State
         import importlib
         # from world.world_project.mesh_world.state import Mesh_state as State
         state_file = 'world.world_project.' + world_type_name + '.' + 'mods'
         generator_module = importlib.import_module(state_file)
         State = getattr(generator_module, "State")
 
-        # 读取json字典的内容并结构化创建对象
+        # Read the contents of the json dictionary and create objects structuredly
         def json_to_state_obj(class_name, json_dict):
             if class_name == 'CDLL':
                 return 0
 
             para_json = {}
-            # 逐一取出属性名
+            # Extract property names one by one
             for para_name in json_dict:
 
                 # if class_name == "State":
                 #     print()
 
-                # 判断属性值的类型
+                # Determine the type of attribute value
                 if isinstance(json_dict[para_name], (int, str, float, bool)):
                     para_json[para_name] = json_dict[para_name]
                 elif json_dict[para_name] is None:
                     para_json[para_name] = None
-                # 若为数组 元组或字典
+                # If it is an array tuple or dictionary
                 elif isinstance(json_dict[para_name], list):
                     para_json[para_name] = list_json_read(json_dict[para_name])
                 elif isinstance(json_dict[para_name], tuple):
@@ -205,10 +201,10 @@ class File_processor:
             for ele in json_list:
                 if isinstance(ele, (int, str, float, bool)):
                     tem_list.append(ele)
-                # None 处理
+                # deal with None
                 elif ele is None:
                     tem_list.append(cls.list_json_ise(None))
-                # 若为数组 元组或字典
+                # If it is an array tuple or dictionary
                 elif isinstance(ele, list):
                     tem_list.append(list_json_read(ele))
                 elif isinstance(ele, tuple):
@@ -224,22 +220,21 @@ class File_processor:
         def dict_json_read(json_dic):
             goal_data = 0
 
-            # 判断为普通词典还是对象词典还是function
+            # Determine whether it is a normal dictionary or an object dictionary or a function
             if "function" in json_dic:
                 if json_dic["function"] == {}:
                     return 0
-            # 对象字典的情况
+            # The case of a dictionary representing an object
             if len(json_dic) == 1 and \
                     isinstance([a for a in json_dic][0], str) and \
                     [a for a in json_dic][0][0].isupper():
                 goal_data = \
                     json_to_state_obj([a for a in json_dic][0], json_dic[[a for a in json_dic][0]])
-            # 普通字典的情况
+            # For the case of a dictionary representing a normal dictionary
             else:
                 tem_dict = {}
 
                 for key in json_dic:
-                    # 元组字符串还原
                     key_type = key
                     if isinstance(key, str):
                         if '(' == key[0] and ')' == key[-1]:
@@ -248,7 +243,7 @@ class File_processor:
                         tem_dict[key_type] = json_dic[key]
                     elif json_dic[key] is None:
                         tem_dict[key_type] = None
-                    # 若为数组 元组或字典
+                    # If it is an array tuple or dictionary
                     elif isinstance(json_dic[key], list):
                         tem_dict[key_type] = list_json_read(json_dic[key])
                     elif isinstance(json_dic[key], tuple):
@@ -258,17 +253,17 @@ class File_processor:
                 goal_data = tem_dict
             return goal_data
 
-        # 读取json存档文件内容
-        path = os.getcwd()  # 获取当前路径
+        # read json archive file content
+        path = os.getcwd()  # get current path
         with open(path + "\\" + "world\\world_project" + "\\" + world_type_name +
                   "\\save\\" + file_name + ".save", "r") as save_file:
             json_str = save_file.read()
 
-        # json字符串转为字典
+        # convert json string to dictionary
         json_dict = json.loads(json_str)
         # print(json_dict)
 
-        # 根据字典结构化创建状态对象
+        # Create a state object based on a dictionary structure
         state = json_to_state_obj("State", json_dict)
 
         print("Successful load.")

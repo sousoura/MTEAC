@@ -2,10 +2,9 @@ from abc import ABCMeta, abstractmethod
 
 
 """
-    使用 山峰Peak 山脉Ridge 坑地Pit 谷地Valley的方法定义高低地形
-    eve在这里码代码
-    山峰已经完成了 现在打算做另外三个
-        注意所有地形类型都继承Landform
+    Define high and low terrain using the method of Peak, Ridge, Pit, Valley
+     The mountain is done, now going to do three more
+         Note that all terrain types inherit Landform
 """
 
 
@@ -57,10 +56,10 @@ class Peak(Landform):
 
         peak_value = cls.random.randrange(cls.peak_high_range[0], cls.peak_high_range[1])
         peak_surface_size = cls.random.randrange(2, 5)
-        # 上下左右的坡度
+
         slope = cls.random.random() * 0.05
         # slope = cls.random.random() * 0.7
-        # 当影响小于这一值时 峰值失效
+        # When the effect is less than this value, the peak fails
         scope = 1
 
         cls.peaks_position.append(position)
@@ -68,16 +67,16 @@ class Peak(Landform):
         return cls.peaks[-1]
 
     def affect(self, point_position):
-        # 计算改点离山顶的距离
+        # Calculate the distance from the point to the top of the mountain
         distance = (point_position[0] - self.position[0]) ** 2 + (point_position[1] - self.position[1]) ** 2
-        # 计算山对改点的高度的影响
-        # 山顶的高度 减去距离乘以陡峭度
+        # Calculate the effect of the mountain on the height of the point
+        # Height of summit minus distance times steepness
         affect = self.degree_value - distance * self.slope
-        # 如果影响为负 或太小 则取消该影响
+        # If the impact is negative or too small, cancel the impact
         # self.degree_value = 6
         if affect < self.scope:
             affect = 0
-        # 返回影响的值
+        # Returns the value of the effect
         return affect
 
     @classmethod
@@ -100,9 +99,9 @@ class Pit(Landform):
         self.pit_affect_size = pit_affect_size
 
     """
-        通过定义初始点和流向的方法定义一个沟渠
-            流向是一个单位向量 代表往下个方向生成的概率的权重
-            如果流向是向右下方的 就不会想左或上方走
+        Define a trench by defining an initial point and flow direction
+             The flow direction is a unit vector representing the weight of the probability generated in the next direction
+             If the flow is down to the right, it won't go left or up
     """
     @classmethod
     def init_new_landform(cls):
@@ -111,37 +110,37 @@ class Pit(Landform):
 
         def initial_position(flow_direction):
             position = (cls.map_size[0] - 1, cls.map_size[1] - 1)
-            # 如果流向是右下 谷底则应该从左边或者上面开始
+            # If the flow direction is bottom right bottom, it should start from left or top
             if flow_direction[0] > 0 and flow_direction[0] > 0:
                 if cls.random.random() > 0.5:
-                    # 在上面开始
+                    # start on top
                     position = (cls.random.randrange(0, cls.map_size[0]), 0)
                 else:
-                    # 在左面开始
+                    # start on left
                     position = (0, cls.random.randrange(0, cls.map_size[1]))
 
             elif flow_direction[0] < 0 and flow_direction[0] < 0:
                 if cls.random.random() > 0.5:
-                    # 在右边开始
+                    # start on right
                     position = (cls.map_size[0] - 1, cls.random.randrange(0, cls.map_size[1]))
                 else:
-                    # 在下边开始
+                    # start on below
                     position = (cls.random.randrange(0, cls.map_size[1]), cls.map_size[1] - 1)
 
             elif flow_direction[0] > 0 and flow_direction[0] < 0:
                 if cls.random.random() > 0.5:
-                    # 在左面开始
+                    # start on top
                     position = (0, cls.random.randrange(0, cls.map_size[1]))
                 else:
-                    # 在下边开始
+                    # start on below
                     position = (cls.random.randrange(0, cls.map_size[1]), cls.map_size[1] - 1)
 
             elif flow_direction[0] < 0 and flow_direction[0] > 0:
                 if cls.random.random() > 0.5:
-                    # 在右边开始
+                    # start on right
                     position = (cls.map_size[0] - 1, cls.random.randrange(0, cls.map_size[1]))
                 else:
-                    # 在上面开始
+                    # start on top
                     position = (cls.random.randrange(0, cls.map_size[0]), 0)
 
             return position
@@ -149,7 +148,7 @@ class Pit(Landform):
         def next_position(position, flow_direction):
             import numpy as np
 
-            # 依照流向得到下一个位置
+            # Get the next position according to the flow direction
             new_position = None
             direction = np.random.choice([0, 1], p=[flow_direction[0], flow_direction[1]])
             if direction == 0:
@@ -159,17 +158,17 @@ class Pit(Landform):
 
             return new_position
 
-        # 设置流向
+        # set flow direction
         left_right_flow = cls.random.random() * 2 - 1
         up_down_flow = cls.random.random() * 2 - 1
         flow_direction = (left_right_flow / ((left_right_flow ** 2 + up_down_flow ** 2) ** 0.5),
                           (up_down_flow / ((left_right_flow ** 2 + up_down_flow ** 2) ** 0.5)))
 
-        # 设置山谷的谷底的起始位置
+        # Sets the starting position of the valley bottom
         position = initial_position(flow_direction)
         cls.pits.append(position)
 
-        # 根据流向生成谷
+        # Generate valleys based on flow direction
         while cls.map_size[0] > position[0] >= 0 and cls.map_size[0] > position[1] >= 0:
             position = next_position(position, flow_direction)
             cls.pits_position.append(position)
@@ -177,9 +176,9 @@ class Pit(Landform):
             peak_surface_size = cls.random.randrange(2, 4)
 
             sub_value = 1
-            # 上下左右的坡度
+            # Slope up and down
             slope = cls.random.random()
-            # 当影响小于这一值时 峰值失效
+            # When the effect is less than this value, the peak fails
             scope = 1
             cls.pits.append()
 
